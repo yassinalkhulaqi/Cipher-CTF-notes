@@ -172,3 +172,31 @@ def test_keyboard_reorders_tree_siblings(
     assert [node.id for node in vault.children(None)] == [second.id, first.id]
     assert app.tree.selection() == (str(first.id),)
     assert not errors
+
+
+def test_editor_continues_quotes_and_lists(
+    window: tuple[MainWindow, tk.Tk, Vault, list[tuple[object, ...]]],
+) -> None:
+    app, _root, _vault, errors = window
+    editor = app.editor
+
+    editor.set_text("> quoted")
+    editor.text.mark_set("insert", "1.end")
+    assert editor._on_return() == "break"
+    assert editor.get_text() == "> quoted\n> "
+
+    editor.set_text("  >> nested")
+    editor.text.mark_set("insert", "1.end")
+    assert editor._on_return() == "break"
+    assert editor.get_text() == "  >> nested\n  >> "
+
+    editor.set_text("5. item")
+    editor.text.mark_set("insert", "1.end")
+    assert editor._on_return() == "break"
+    assert editor.get_text() == "5. item\n6. "
+
+    editor.set_text("> ")
+    editor.text.mark_set("insert", "1.end")
+    assert editor._on_return() == "break"
+    assert editor.get_text() == ""
+    assert not errors
