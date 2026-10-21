@@ -19,6 +19,9 @@ All notable changes to RedScribe are documented here. The format follows
 - Markdown and HTML export, whole-vault HTML report, vault backup, and
   Markdown import.
 - Trash with restore and permanent delete, dark/light themes, and persisted
-  window state.
-- Test suite, strict typing for the core, Ruff lint/format, and cross-platform
-  CI.
+  window and sash state.
+- Command-line options for vault path, demo seeding, theme, font size, and
+  version reporting.
+- Dashboard with recent/pinned notes, flags, tags, and quick actions.
+- Test suite with GUI smoke tests, strict typing for the core, Ruff
+  lint/format, and cross-platform CI.

@@ -7,16 +7,16 @@ editor, live preview, full-text search, CTF flag tracking, target metadata, and 
 searchable library of offensive-security command snippets. One SQLite vault. No
 accounts. No telemetry. No runtime dependencies beyond Python and Tkinter.
 
-![RedScribe screenshot](docs/demo.svg)
+![RedScribe editor with the tree, Markdown source, and live preview](docs/demo.png)
 
 ## Highlights
 
 - **Fast capture.** Hierarchical folders and notes, instant fuzzy jump with
-  `Ctrl+K`, full-text search with `Ctrl+Shift+F`, and auto-save.
+  `Ctrl+P`, full-text search with `Ctrl+Shift+F`, and auto-save.
 - **Built for security work.** Templates for CTF challenges, host recon, web
   assessments, findings, and engagement logs. Notes carry a target, status,
   difficulty, tags, and a captured flag.
-- **Useful snippets.** Around 50 built-in commands for recon, web, Active
+- **Useful snippets.** More than 70 built-in commands for recon, web, Active
   Directory, credentials, shells, privesc, pivoting, and CTF tooling. Copy with
   placeholders filled from the current note.
 - **Readable output.** Markdown editor with syntax highlighting and a split
@@ -45,10 +45,10 @@ Linux users need Tkinter: `sudo apt-get install python3-tk`.
 
 ## Quick start
 
-1. Launch RedScribe. The first-run dashboard offers templates.
+1. Launch RedScribe. The first-run dashboard can load the demo vault.
 2. Create a **CTF challenge** or **Host recon** note and fill in the target.
-3. Write notes in Markdown. Press `Ctrl+E` for the live preview.
-4. Press `Ctrl+K` to jump anywhere, or `Ctrl+Shift+S` for snippets.
+3. Write notes in Markdown. Press `Ctrl+E` to cycle editor, split, and preview.
+4. Press `Ctrl+P` to jump anywhere, or `Ctrl+Shift+S` for snippets.
 5. Export a single note or the whole vault from the **File** menu.
 
 The default vault lives in your OS data directory (`%APPDATA%\RedScribe` on
@@ -61,14 +61,23 @@ Windows, `~/Library/Application Support/RedScribe` on macOS, and
 | --- | --- |
 | `Ctrl+N` | New note (last template) |
 | `Ctrl+Shift+N` | New folder |
-| `Ctrl+K` | Quick switch |
+| `Ctrl+P` | Quick switch |
 | `Ctrl+Shift+F` | Full-text search |
 | `Ctrl+Shift+S` | Snippets |
+| `Ctrl+Shift+D` | Dashboard |
+| `Ctrl+Shift+P` | Pin or unpin the current note |
 | `Ctrl+E` | Cycle editor / split / preview |
 | `Ctrl+S` | Save now |
+| `Ctrl+,` | Settings |
 | `Ctrl+F` / `Ctrl+H` | Find / replace |
-| `F2` | Rename |
+| `F2` | Note properties |
+| `Delete` | Move the selected tree item to trash |
 | `F1` | All shortcuts |
+
+When the editor has focus: `Ctrl+B` bold, `Ctrl+I` italic, `Ctrl+K`
+inline code, `Ctrl+Shift+X` strikethrough, `Tab` / `Shift+Tab` indent, and
+`Ctrl+Z` / `Ctrl+Y` undo and redo. The full list is in
+[docs/SHORTCUTS.md](docs/SHORTCUTS.md).
 
 ## Development
 
@@ -80,7 +89,18 @@ python -m pytest -m "not gui"
 ```
 
 The GUI smoke test runs with `python -m pytest -m gui` on a machine with a
-display.
+display. Architecture notes live in
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+Command-line options:
+
+```bash
+redscribe --vault PATH     # use a specific SQLite vault
+redscribe --demo           # seed example notes into an empty vault
+redscribe --theme light    # override the stored theme
+redscribe --font-size 13   # override the stored UI font size
+redscribe --version
+```
 
 ## Authorized use only
 
