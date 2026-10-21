@@ -273,6 +273,7 @@ class SearchBox(tk.Frame):
         )
         self._theme = theme
         self._base = base
+        self._focused = False
         self.var = tk.StringVar()
         self.entry = tk.Entry(
             self,
@@ -301,8 +302,8 @@ class SearchBox(tk.Frame):
         self._placeholder.place(x=10, rely=0.5, anchor="w")
         self._change: Callable[[], None] | None = None
         self.var.trace_add("write", self._on_change)
-        self.entry.bind("<FocusIn>", self._update_placeholder, add="+")
-        self.entry.bind("<FocusOut>", self._update_placeholder, add="+")
+        self.entry.bind("<FocusIn>", self._on_focus_in, add="+")
+        self.entry.bind("<FocusOut>", self._on_focus_out, add="+")
         self.bind("<Button-1>", lambda _event: self.entry.focus_set())
 
     def _on_change(self, *_args: str) -> None:
@@ -310,12 +311,21 @@ class SearchBox(tk.Frame):
         if self._change is not None:
             self._change()
 
+    def _on_focus_in(self, _event: tk.Event | None = None) -> None:
+        self._focused = True
+        self._update_placeholder()
+
+    def _on_focus_out(self, _event: tk.Event | None = None) -> None:
+        self._focused = False
+        self._update_placeholder()
+
     def _update_placeholder(self, _event: tk.Event | None = None) -> None:
         if self.var.get():
             self._placeholder.place_forget()
         else:
             self._placeholder.place(x=10, rely=0.5, anchor="w")
-        self.configure(highlightbackground=self._theme.palette.border)
+        border = self._theme.palette.accent if self._focused else self._theme.palette.border
+        self.configure(highlightbackground=border, highlightcolor=border)
 
     def bind_change(self, callback: Callable[[], None]) -> None:
         self._change = callback
