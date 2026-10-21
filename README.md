@@ -1,0 +1,91 @@
+# RedScribe
+
+**A lightweight, local-first notebook for CTFs, pentests, and security research.**
+
+RedScribe is a desktop notes app with a CherryTree-style tree, a focused Markdown
+editor, live preview, full-text search, CTF flag tracking, target metadata, and a
+searchable library of offensive-security command snippets. One SQLite vault. No
+accounts. No telemetry. No runtime dependencies beyond Python and Tkinter.
+
+![RedScribe screenshot](docs/demo.svg)
+
+## Highlights
+
+- **Fast capture.** Hierarchical folders and notes, instant fuzzy jump with
+  `Ctrl+K`, full-text search with `Ctrl+Shift+F`, and auto-save.
+- **Built for security work.** Templates for CTF challenges, host recon, web
+  assessments, findings, and engagement logs. Notes carry a target, status,
+  difficulty, tags, and a captured flag.
+- **Useful snippets.** Around 50 built-in commands for recon, web, Active
+  Directory, credentials, shells, privesc, pivoting, and CTF tooling. Copy with
+  placeholders filled from the current note.
+- **Readable output.** Markdown editor with syntax highlighting and a split
+  preview with code highlighting. Export a note to Markdown or HTML, or export
+  the whole vault as a browsable HTML report.
+- **Small and portable.** Pure standard library. The entire vault is one file
+  that you can back up, sync, or move.
+
+## Install
+
+```bash
+python -m pip install .
+redscribe
+```
+
+Or run it from the source tree:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+python -m pip install -e ".[dev]"
+python -m redscribe --demo
+```
+
+Linux users need Tkinter: `sudo apt-get install python3-tk`.
+
+## Quick start
+
+1. Launch RedScribe. The first-run dashboard offers templates.
+2. Create a **CTF challenge** or **Host recon** note and fill in the target.
+3. Write notes in Markdown. Press `Ctrl+E` for the live preview.
+4. Press `Ctrl+K` to jump anywhere, or `Ctrl+Shift+S` for snippets.
+5. Export a single note or the whole vault from the **File** menu.
+
+The default vault lives in your OS data directory (`%APPDATA%\RedScribe` on
+Windows, `~/Library/Application Support/RedScribe` on macOS, and
+`~/.local/share/redscribe` on Linux). Override it with `--vault PATH`.
+
+## Shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl+N` | New note (last template) |
+| `Ctrl+Shift+N` | New folder |
+| `Ctrl+K` | Quick switch |
+| `Ctrl+Shift+F` | Full-text search |
+| `Ctrl+Shift+S` | Snippets |
+| `Ctrl+E` | Cycle editor / split / preview |
+| `Ctrl+S` | Save now |
+| `Ctrl+F` / `Ctrl+H` | Find / replace |
+| `F2` | Rename |
+| `F1` | All shortcuts |
+
+## Development
+
+```bash
+python -m ruff check .
+python -m ruff format --check .
+python -m mypy src
+python -m pytest -m "not gui"
+```
+
+The GUI smoke test runs with `python -m pytest -m gui` on a machine with a
+display.
+
+## Authorized use only
+
+RedScribe is for CTF competitions, labs, and engagements where you have explicit
+written permission. The snippets are reference material. You are responsible
+for how you use them.
+
+MIT licensed.
