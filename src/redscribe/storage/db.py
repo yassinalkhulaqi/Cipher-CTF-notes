@@ -28,9 +28,9 @@ from redscribe.flags import find_flags
 LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
-_SCHEMA = """
+_MIGRATION_1 = """
 CREATE TABLE IF NOT EXISTS nodes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     parent_id INTEGER REFERENCES nodes(id) ON DELETE CASCADE,
@@ -69,6 +69,24 @@ CREATE TABLE IF NOT EXISTS settings (
     value TEXT NOT NULL
 ) WITHOUT ROWID;
 """
+
+_MIGRATION_2 = """
+CREATE INDEX IF NOT EXISTS idx_nodes_kind
+    ON nodes(kind, deleted_at, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_nodes_target
+    ON nodes(target)
+    WHERE deleted_at IS NULL AND target <> '';
+CREATE INDEX IF NOT EXISTS idx_nodes_pinned
+    ON nodes(updated_at DESC)
+    WHERE deleted_at IS NULL AND pinned = 1;
+CREATE INDEX IF NOT EXISTS idx_snippets_title
+    ON snippets(title COLLATE NOCASE);
+"""
+
+_MIGRATIONS: dict[int, str] = {
+    1: _MIGRATION_1,
+    2: _MIGRATION_2,
+}
 
 _FTS_SCHEMA = """
 CREATE VIRTUAL TABLE IF NOT EXISTS nodes_fts USING fts5(
@@ -149,6 +167,11 @@ class Vault:
     def display_path(self) -> str:
         return str(self.path) if self.path is not None else ":memory:"
 
+    @property
+    def schema_version(self) -> int:
+        """Return the persisted schema revision."""
+        return self._read_user_version()
+
     def _configure(self) -> None:
         self._connection.execute("PRAGMA foreign_keys = ON")
         self._connection.execute("PRAGMA busy_timeout = 5000")
@@ -158,18 +181,31 @@ class Vault:
         except sqlite3.DatabaseError:
             LOGGER.debug("WAL mode unavailable for %s", self.display_path)
 
+    def _read_user_version(self) -> int:
+        row = self._connection.execute("PRAGMA user_version").fetchone()
+        return int(row[0]) if row is not None else 0
+
     def _init_schema(self) -> None:
-        version = int(self._connection.execute("PRAGMA user_version").fetchone()[0])
+        version = self._read_user_version()
         if version > SCHEMA_VERSION:
+            self._closed = True
             self._connection.close()
             raise RuntimeError(
                 f"Vault schema {version} is newer than this RedScribe build "
                 f"({SCHEMA_VERSION}). Upgrade RedScribe to open it."
             )
-        self._connection.executescript(_SCHEMA)
-        if version < SCHEMA_VERSION:
-            self._connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
-            self._connection.commit()
+        for target in range(version + 1, SCHEMA_VERSION + 1):
+            script = _MIGRATIONS.get(target)
+            if script is None:
+                raise RuntimeError(f"Missing SQLite migration {target}")
+            try:
+                self._connection.executescript(
+                    f"BEGIN IMMEDIATE;\n{script}\nPRAGMA user_version = {target};\nCOMMIT;"
+                )
+            except sqlite3.DatabaseError:
+                with contextlib.suppress(sqlite3.DatabaseError):
+                    self._connection.execute("ROLLBACK")
+                raise
 
     def _init_fts(self) -> None:
         exists = (
