@@ -301,6 +301,9 @@ def test_vault_html_export(tmp_path: Path, vault: Vault) -> None:
     assert f'id="note-{note.id}"' in content
     assert "Filter notes" in content
     assert "vaultSearch" in content
+    assert 'data-search="visible folder web app.test done done"' in content
+    assert "document.querySelectorAll('.note')" in content
+    assert "No matching notes." in content
 
     empty = Vault(tmp_path / "empty.db")
     try:

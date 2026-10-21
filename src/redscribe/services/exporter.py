@@ -199,7 +199,7 @@ def export_vault_html(vault: Vault, destination: str | Path) -> int:
             )
         else:
             path = vault.path_of(node.id, include_self=False)
-            search = " ".join([node.title, path, node.tags, node.target]).lower()
+            search = _search_blob(node, path)
             nav.append(
                 f'<a class="nav-note" href="#note-{node.id}" '
                 f'data-search="{html.escape(search, quote=True)}" '
@@ -207,6 +207,7 @@ def export_vault_html(vault: Vault, destination: str | Path) -> int:
             )
     if not nav:
         nav.append('<div class="nav-empty">No notes yet.</div>')
+    nav.append('<div id="vault-no-results" class="nav-empty" hidden>No matching notes.</div>')
 
     sections: list[str] = []
     for node, _depth in notes:
@@ -236,7 +237,8 @@ def export_vault_html(vault: Vault, destination: str | Path) -> int:
             else f'<h2 class="note-title">{html.escape(node.title)}</h2>'
         )
         sections.append(
-            f'<section class="note" id="note-{node.id}">'
+            f'<section class="note" id="note-{node.id}" '
+            f'data-search="{html.escape(_search_blob(node, path), quote=True)}">'
             f'<div class="note-kicker">{html.escape(path or "Vault root")}</div>'
             f"{title_html}"
             f'<div class="note-meta">{"".join(chips)}</div>'
@@ -285,9 +287,17 @@ const vaultSearch = document.getElementById('vault-search');
 if (vaultSearch) {{
   vaultSearch.addEventListener('input', () => {{
     const query = vaultSearch.value.trim().toLowerCase();
+    let visible = 0;
+    document.querySelectorAll('.note').forEach((note) => {{
+      const match = !query || note.dataset.search.includes(query);
+      note.style.display = match ? '' : 'none';
+      if (match) visible += 1;
+    }});
     document.querySelectorAll('.nav-note').forEach((link) => {{
       link.style.display = !query || link.dataset.search.includes(query) ? '' : 'none';
     }});
+    const empty = document.getElementById('vault-no-results');
+    if (empty) empty.hidden = !query || visible > 0;
   }});
 }}
 </script>
@@ -296,6 +306,20 @@ if (vaultSearch) {{
 """
     target.write_text(document, encoding="utf-8", newline="\n")
     return len(notes)
+
+
+def _search_blob(node: Node, path: str) -> str:
+    values = [
+        node.title,
+        path,
+        node.tags,
+        node.target,
+        node.status,
+        node.status_label,
+        node.difficulty,
+        node.difficulty_label if node.difficulty else "",
+    ]
+    return " ".join(value for value in values if value).lower()
 
 
 def _group_nodes(vault: Vault) -> dict[int | None, list[Node]]:
