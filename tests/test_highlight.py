@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from redscribe.highlight import CodeToken, normalize_language, tokenize_code
+from redscribe.content.highlight import CodeToken, normalize_language, tokenize_code
 
 
 def _joined(tokens: list[CodeToken]) -> str:

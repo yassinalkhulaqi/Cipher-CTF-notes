@@ -8,9 +8,9 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+from redscribe.content.markdown import DOCUMENT_CSS, render_html, render_markdown_body
 from redscribe.domain.models import Node
 from redscribe.domain.utils import safe_filename
-from redscribe.markdown import DOCUMENT_CSS, render_html, render_markdown_body
 from redscribe.storage.db import Vault
 
 _VAULT_CSS = """

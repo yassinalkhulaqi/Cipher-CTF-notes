@@ -7,9 +7,8 @@ import webbrowser
 from functools import partial
 from tkinter import ttk
 
-from redscribe.domain.utils import slugify
-from redscribe.highlight import tokenize_code
-from redscribe.markdown import (
+from redscribe.content.highlight import tokenize_code
+from redscribe.content.markdown import (
     CodeBlock,
     Heading,
     ListBlock,
@@ -22,6 +21,7 @@ from redscribe.markdown import (
     parse_markdown,
     safe_url,
 )
+from redscribe.domain.utils import slugify
 from redscribe.ui.theme import Theme
 
 

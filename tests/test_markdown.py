@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from redscribe.markdown import (
+from redscribe.content.markdown import (
     CodeBlock,
     Heading,
     ListBlock,
