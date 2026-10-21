@@ -365,7 +365,7 @@ def _merge_text(spans: list[Span]) -> list[Span]:
 def safe_url(url: str) -> str | None:
     """Allow only link schemes that are safe to open from notes and exports."""
     candidate = url.strip()
-    if not candidate:
+    if not candidate or any(character.isspace() or ord(character) < 32 for character in candidate):
         return None
     lowered = candidate.lower()
     if lowered.startswith(("http://", "https://", "mailto:")):

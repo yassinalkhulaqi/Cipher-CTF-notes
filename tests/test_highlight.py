@@ -74,8 +74,7 @@ def test_tokenize_python_triple_quoted_strings() -> None:
     tokens = tokenize_code(code, "py")
     assert _joined(tokens) == code
     assert any(
-        token.kind == "string" and token.text.startswith('"""First line.\n')
-        for token in tokens
+        token.kind == "string" and token.text.startswith('"""First line.\n') for token in tokens
     )
     assert any(token.kind == "keyword" and token.text == "def" for token in tokens)
 

@@ -130,6 +130,9 @@ def test_safe_url_allows_only_safe_schemes() -> None:
     assert safe_url("javascript:alert(1)") is None
     assert safe_url("data:text/html,<script>") is None
     assert safe_url("") is None
+    assert safe_url("https://example.test/a b") is None
+    assert safe_url("https://example.test/\njavascript:alert(1)") is None
+    assert safe_url("https://example.test/?q=one%20two") == "https://example.test/?q=one%20two"
 
 
 def test_render_markdown_body_escapes_html_and_filters_links() -> None:
