@@ -41,6 +41,9 @@ from redscribe.ui.quick_switch import QuickSwitch
 from redscribe.ui.search_dialog import SearchDialog
 from redscribe.ui.snippets_window import SnippetsWindow
 from redscribe.ui.theme import (
+    HEADER_HEIGHT,
+    SIDEBAR_WIDTH,
+    STATUSBAR_HEIGHT,
     build_theme,
     configure_styles,
     difficulty_color,
@@ -271,10 +274,13 @@ class MainWindow(tk.Frame):
 
     def _build_header(self) -> None:
         palette = self._theme.palette
-        header = tk.Frame(self, bg=palette.surface)
+        height = max(HEADER_HEIGHT, self._theme.base_size * 3 + 24)
+        header = tk.Frame(self, bg=palette.surface, height=height)
         header.grid(row=0, column=0, sticky="ew")
+        header.grid_propagate(False)
+        header.columnconfigure(0, weight=1)
         inner = tk.Frame(header, bg=palette.surface)
-        inner.pack(fill="x", padx=24, pady=11)
+        inner.pack(fill="both", expand=True, padx=24, pady=11)
         brand = tk.Frame(inner, bg=palette.surface)
         brand.pack(side="left")
         tk.Label(
@@ -522,11 +528,14 @@ class MainWindow(tk.Frame):
 
     def _build_statusbar(self) -> None:
         palette = self._theme.palette
-        status = tk.Frame(self, bg=palette.surface)
+        height = max(STATUSBAR_HEIGHT, self._theme.base_size * 2 + 6)
+        status = tk.Frame(self, bg=palette.surface, height=height)
         status.grid(row=2, column=0, sticky="ew")
+        status.grid_propagate(False)
+        status.columnconfigure(0, weight=1)
         divider(status, self._theme).pack(fill="x", side="top")
         inner = tk.Frame(status, bg=palette.surface)
-        inner.pack(fill="x", padx=16, pady=6)
+        inner.pack(fill="both", expand=True, padx=16, pady=4)
         self.status_vault_label = tk.Label(
             inner,
             text=truncate(self._vault.display_path, 52),
@@ -1725,9 +1734,9 @@ class MainWindow(tk.Frame):
                 return
             sidebar = self._setting_int(
                 "ui.sidebar_width",
-                286,
-                minimum=220,
-                maximum=max(220, total - 480),
+                SIDEBAR_WIDTH,
+                minimum=240,
+                maximum=max(240, total - 480),
             )
             self.panes.sashpos(0, sidebar)
             if (

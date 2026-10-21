@@ -1,6 +1,17 @@
 from __future__ import annotations
 
-from redscribe.ui.theme import DARK, LIGHT, Theme, difficulty_color, status_color
+from redscribe.ui.theme import (
+    DARK,
+    HEADER_HEIGHT,
+    LIGHT,
+    MONO_FONTS,
+    SIDEBAR_WIDTH,
+    STATUSBAR_HEIGHT,
+    UI_FONTS,
+    Theme,
+    difficulty_color,
+    status_color,
+)
 
 THEME = Theme(palette=DARK, ui_family="Inter", mono_family="Cascadia Code", base_size=11)
 
@@ -44,6 +55,17 @@ def test_difficulty_colors_include_purple_for_insane() -> None:
     assert difficulty_color(THEME, "medium") == DARK.amber
     assert difficulty_color(THEME, "hard") == DARK.red
     assert difficulty_color(THEME, "insane") == DARK.purple
+
+
+def test_font_stacks_prefer_the_design_families() -> None:
+    assert UI_FONTS[0] == "Inter"
+    assert MONO_FONTS[0] == "Cascadia Code"
+    assert "Segoe UI" in UI_FONTS
+    assert "JetBrains Mono" in MONO_FONTS
+
+
+def test_layout_constants_match_the_design_system() -> None:
+    assert (HEADER_HEIGHT, SIDEBAR_WIDTH, STATUSBAR_HEIGHT) == (64, 300, 28)
 
 
 def test_font_helpers_clamp_and_compose_styles() -> None:

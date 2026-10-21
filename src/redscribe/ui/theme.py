@@ -81,18 +81,23 @@ LIGHT = Palette(
 
 PALETTES: dict[str, Palette] = {"dark": DARK, "light": LIGHT}
 
-_UI_FONTS = (
-    "Segoe UI Variable Text",
+HEADER_HEIGHT = 64
+SIDEBAR_WIDTH = 300
+STATUSBAR_HEIGHT = 28
+
+UI_FONTS = (
+    "Inter",
     "Segoe UI",
     "SF Pro Text",
     "Helvetica Neue",
     "DejaVu Sans",
     "Arial",
 )
-_MONO_FONTS = (
-    "Cascadia Mono",
+MONO_FONTS = (
     "Cascadia Code",
+    "Cascadia Mono",
     "JetBrains Mono",
+    "Fira Code",
     "Consolas",
     "SF Mono",
     "Menlo",
@@ -137,8 +142,8 @@ def build_theme(root: tk.Misc, name: str, font_size: int = 11) -> Theme:
     palette = PALETTES.get(name, DARK)
     return Theme(
         palette=palette,
-        ui_family=_pick_family(root, _UI_FONTS, "Arial"),
-        mono_family=_pick_family(root, _MONO_FONTS, "Courier New"),
+        ui_family=_pick_family(root, UI_FONTS, "Arial"),
+        mono_family=_pick_family(root, MONO_FONTS, "Courier New"),
         base_size=max(9, min(18, int(font_size))),
     )
 
