@@ -11,8 +11,9 @@ accounts. No telemetry. No runtime dependencies beyond Python and Tkinter.
 
 ## Highlights
 
-- **Fast capture.** Hierarchical folders and notes, instant fuzzy jump with
-  `Ctrl+P`, full-text search with `Ctrl+Shift+F`, and auto-save.
+- **Fast capture.** Hierarchical folders and notes, drag-and-drop organizing,
+  instant fuzzy jump with `Ctrl+P`, full-text search with `Ctrl+Shift+F`, and
+  auto-save.
 - **Built for security work.** Templates for CTF challenges, host recon, web
   assessments, findings, and engagement logs. Notes carry a target, status,
   difficulty, tags, and a captured flag.
@@ -72,6 +73,7 @@ Windows, `~/Library/Application Support/RedScribe` on macOS, and
 | `Ctrl+F` / `Ctrl+H` | Find / replace |
 | `F2` | Note properties |
 | `Delete` | Move the selected tree item to trash |
+| `Ctrl+Up` / `Ctrl+Down` | Reorder the selected tree item |
 | `F1` | All shortcuts |
 
 When the editor has focus: `Ctrl+B` bold, `Ctrl+I` italic, `Ctrl+K`

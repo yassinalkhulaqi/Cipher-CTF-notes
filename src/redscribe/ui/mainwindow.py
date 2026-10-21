@@ -7,6 +7,7 @@ import re
 import tkinter as tk
 from collections.abc import Callable
 from contextlib import suppress
+from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -61,6 +62,20 @@ LOGGER = logging.getLogger(__name__)
 
 _VIEW_MODES = ("write", "split", "preview")
 _GEOMETRY_RE = re.compile(r"^\d+x\d+[+-]\d+[+-]\d+$")
+_TREE_DRAG_THRESHOLD = 6
+
+
+@dataclass
+class _TreeDrag:
+    source: Node
+    start_x: int
+    start_y: int
+    blocked: set[int]
+    active: bool = False
+    plan: tuple[int | None, int | None] | None = None
+    description: str = ""
+    hover_iid: str | None = None
+    hover_tags: tuple[str, ...] = field(default_factory=tuple)
 
 
 class MainWindow(tk.Frame):
@@ -104,6 +119,7 @@ class MainWindow(tk.Frame):
         self._status_job: str | None = None
         self._layout_job: str | None = None
         self._preview_stale = False
+        self._tree_drag: _TreeDrag | None = None
         self.view_buttons: dict[str, ttk.Button] = {}
 
         root.title("RedScribe")
@@ -404,13 +420,29 @@ class MainWindow(tk.Frame):
                 f"status_{status}",
                 foreground=status_color(self._theme, status),
             )
+        self.tree.tag_configure(
+            "drop_target",
+            background=palette.accent_soft,
+            foreground=palette.text,
+        )
         self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
         self.tree.bind("<<TreeviewOpen>>", self._on_tree_open, add="+")
         self.tree.bind("<<TreeviewClose>>", self._on_tree_close, add="+")
         self.tree.bind("<Double-1>", self._on_tree_double_click)
         self.tree.bind("<Button-3>", self._on_tree_context)
+        self.tree.bind("<ButtonPress-1>", self._on_tree_drag_start, add="+")
+        self.tree.bind("<B1-Motion>", self._on_tree_drag_motion, add="+")
+        self.tree.bind("<ButtonRelease-1>", self._on_tree_drag_end, add="+")
         self.tree.bind("<Delete>", lambda _event: self._delete_selected_tree())
         self.tree.bind("<F2>", lambda _event: self._rename_selected_tree())
+        self.tree.bind(
+            "<Control-Up>",
+            lambda _event: self._reorder_selected_tree(-1),
+        )
+        self.tree.bind(
+            "<Control-Down>",
+            lambda _event: self._reorder_selected_tree(1),
+        )
 
         footer = tk.Frame(self.sidebar, bg=palette.surface)
         footer.grid(row=3, column=0, sticky="ew")
@@ -852,6 +884,17 @@ class MainWindow(tk.Frame):
                 label="Pin or unpin",
                 command=lambda: self._toggle_pin_node(node.id),
             )
+        menu.add_command(
+            label="Move up",
+            accelerator="Ctrl+Up",
+            command=lambda: self._reorder_selected_tree(-1),
+        )
+        menu.add_command(
+            label="Move down",
+            accelerator="Ctrl+Down",
+            command=lambda: self._reorder_selected_tree(1),
+        )
+        menu.add_separator()
         menu.add_command(label="Rename...", command=lambda: self._rename_node(node))
         menu.add_command(label="Duplicate", command=lambda: self._duplicate_node(node))
         menu.add_command(label="Move to folder...", command=lambda: self._move_node(node))
@@ -861,6 +904,182 @@ class MainWindow(tk.Frame):
             menu.tk_popup(event.x_root, event.y_root)
         finally:
             menu.grab_release()
+
+    def _on_tree_drag_start(self, event: tk.Event) -> None:
+        self._reset_tree_drag()
+        if self.tree.identify_element(event.x, event.y) == "Treeitem.indicator":
+            return
+        iid = self.tree.identify_row(event.y)
+        if not iid:
+            return
+        node = self._vault.get_node(int(iid))
+        if node is None:
+            return
+        self._tree_drag = _TreeDrag(
+            source=node,
+            start_x=event.x,
+            start_y=event.y,
+            blocked=self._descendant_folder_ids(node),
+        )
+
+    def _on_tree_drag_motion(self, event: tk.Event) -> None:
+        drag = self._tree_drag
+        if drag is None:
+            return
+        if not drag.active:
+            if (
+                abs(event.x - drag.start_x) < _TREE_DRAG_THRESHOLD
+                and abs(event.y - drag.start_y) < _TREE_DRAG_THRESHOLD
+            ):
+                return
+            drag.active = True
+            self.tree.configure(cursor="fleur")
+        if not 0 <= event.y <= self.tree.winfo_height():
+            self._clear_drop_highlight(drag)
+            drag.plan = None
+            drag.description = ""
+            return
+        target_iid = self.tree.identify_row(event.y)
+        if not target_iid:
+            self._clear_drop_highlight(drag)
+            drag.plan = (None, None)
+            drag.description = "Move to the vault root"
+            self._set_status("Drop to move to the vault root")
+            return
+        target = self._vault.get_node(int(target_iid))
+        if target is None:
+            self._clear_drop_highlight(drag)
+            drag.plan = None
+            return
+        bbox = self.tree.bbox(target_iid)
+        ratio = ((event.y - bbox[1]) / bbox[3]) if bbox and bbox[3] else 0.5
+        plan, description = self._tree_drop_plan(drag.source, drag.blocked, target, ratio)
+        drag.plan = plan
+        drag.description = description
+        if plan is None:
+            self._clear_drop_highlight(drag)
+            if description:
+                self._set_status(description)
+            return
+        self._highlight_drop_target(drag, target_iid)
+        self._set_status(description)
+
+    def _tree_drop_plan(
+        self,
+        source: Node,
+        blocked: set[int],
+        target: Node,
+        ratio: float,
+    ) -> tuple[tuple[int | None, int | None] | None, str]:
+        if target.id == source.id:
+            return None, ""
+        if target.is_folder and 0.25 <= ratio <= 0.75:
+            if target.id in blocked:
+                return None, "A folder cannot move inside itself"
+            return (target.id, None), f'Move into "{target.title}"'
+        parent_id = target.parent_id
+        if parent_id is not None and parent_id in blocked:
+            return None, "A folder cannot move inside itself"
+        siblings = self._vault.children(parent_id)
+        identifiers = [child.id for child in siblings]
+        if target.id not in identifiers:
+            return None, ""
+        if ratio < 0.5:
+            return (parent_id, target.id), f'Place before "{target.title}"'
+        index = identifiers.index(target.id)
+        before_id = identifiers[index + 1] if index + 1 < len(identifiers) else None
+        return (parent_id, before_id), f'Place after "{target.title}"'
+
+    def _highlight_drop_target(self, drag: _TreeDrag, iid: str) -> None:
+        if drag.hover_iid == iid:
+            return
+        self._clear_drop_highlight(drag)
+        tags = tuple(self.tree.item(iid, "tags"))
+        drag.hover_iid = iid
+        drag.hover_tags = tags
+        self.tree.item(iid, tags=("drop_target", *tags))
+
+    def _clear_drop_highlight(self, drag: _TreeDrag) -> None:
+        if drag.hover_iid is not None and self.tree.exists(drag.hover_iid):
+            self.tree.item(drag.hover_iid, tags=drag.hover_tags)
+        drag.hover_iid = None
+        drag.hover_tags = ()
+
+    def _reset_tree_drag(self) -> None:
+        if self._tree_drag is not None:
+            self._clear_drop_highlight(self._tree_drag)
+        self._tree_drag = None
+        with suppress(tk.TclError):
+            self.tree.configure(cursor="")
+
+    def _on_tree_drag_end(self, _event: tk.Event | None = None) -> str | None:
+        drag = self._tree_drag
+        if drag is None or not drag.active:
+            self._reset_tree_drag()
+            return None
+        source_id = drag.source.id
+        plan = drag.plan
+        self._reset_tree_drag()
+        if plan is not None:
+            parent_id, before_id = plan
+            self._apply_tree_move(source_id, parent_id, before_id)
+        return "break"
+
+    def _reorder_selected_tree(self, offset: int) -> str:
+        node = self._selected_tree_node()
+        if node is None or not self._save_if_needed():
+            return "break"
+        siblings = self._vault.children(node.parent_id)
+        identifiers = [child.id for child in siblings]
+        if node.id not in identifiers:
+            return "break"
+        index = identifiers.index(node.id)
+        if not 0 <= index + offset < len(identifiers):
+            self._set_status("Item is already at the edge of its folder")
+            return "break"
+        try:
+            updated = self._vault.reorder_node(node.id, offset)
+        except ValueError as exc:
+            messagebox.showerror("Could not reorder item", str(exc), parent=self)
+            return "break"
+        if updated is not None:
+            if self._note is not None and self._note.id == updated.id:
+                self._note = updated
+            self._refresh_tree()
+            self._select_tree_item(updated.id)
+            self._update_header_path()
+            self._set_status(f'Moved "{updated.title}" {"up" if offset < 0 else "down"}')
+        return "break"
+
+    def _apply_tree_move(
+        self,
+        node_id: int,
+        parent_id: int | None,
+        before_id: int | None,
+    ) -> bool:
+        if not self._save_if_needed():
+            return False
+        try:
+            updated = self._vault.move_node(node_id, parent_id, before_id=before_id)
+        except ValueError as exc:
+            messagebox.showerror("Could not move item", str(exc), parent=self)
+            return False
+        if self._note is not None and self._note.id == updated.id:
+            self._note = updated
+        self._refresh_tree()
+        self._select_tree_item(updated.id)
+        self._selected_folder_id = updated.parent_id
+        self._update_header_path()
+        self._set_status(f'Moved "{updated.title}" to its new position')
+        return True
+
+    def _select_tree_item(self, node_id: int) -> None:
+        iid = str(node_id)
+        if not self.tree.exists(iid):
+            return
+        self.tree.selection_set(iid)
+        self.tree.focus(iid)
+        self.tree.see(iid)
 
     def _focus_tree(self, _event: tk.Event | None = None) -> str:
         items = self.tree.get_children()

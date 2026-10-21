@@ -113,3 +113,62 @@ def test_layout_restores_sidebar_and_split(
     app._apply_sashes()
     assert app.body_panes.sashpos(0) > 100
     assert not errors
+
+
+def test_tree_drop_planning_moves_and_reorders_nodes(
+    window: tuple[MainWindow, tk.Tk, Vault, list[tuple[object, ...]]],
+) -> None:
+    app, _root, vault, errors = window
+    folder = vault.create_node("Campaign", None, kind="folder")
+    first = vault.create_node("Alpha", None)
+    second = vault.create_node("Beta", None)
+    third = vault.create_node("Gamma", None)
+    app._refresh_tree()
+
+    plan, label = app._tree_drop_plan(second, set(), folder, 0.5)
+    assert plan == (folder.id, None)
+    assert "Campaign" in label
+    assert app._apply_tree_move(second.id, folder.id, None)
+    moved = vault.get_node(second.id)
+    assert moved is not None
+    assert moved.parent_id == folder.id
+    assert app.tree.selection() == (str(second.id),)
+
+    plan, _label = app._tree_drop_plan(first, set(), third, 0.75)
+    assert plan == (None, None)
+    plan, _label = app._tree_drop_plan(first, set(), third, 0.25)
+    assert plan == (None, third.id)
+    assert not errors
+
+
+def test_tree_drag_rejects_folder_cycles(
+    window: tuple[MainWindow, tk.Tk, Vault, list[tuple[object, ...]]],
+) -> None:
+    app, _root, vault, errors = window
+    outer = vault.create_node("Outer", None, kind="folder")
+    inner = vault.create_node("Inner", outer.id, kind="folder")
+    note = vault.create_node("Child note", inner.id)
+    blocked = app._descendant_folder_ids(outer)
+
+    plan, message = app._tree_drop_plan(outer, blocked, inner, 0.5)
+    assert plan is None
+    assert "inside itself" in message
+    plan, _message = app._tree_drop_plan(outer, blocked, note, 0.5)
+    assert plan is None
+    assert not errors
+
+
+def test_keyboard_reorders_tree_siblings(
+    window: tuple[MainWindow, tk.Tk, Vault, list[tuple[object, ...]]],
+) -> None:
+    app, _root, vault, errors = window
+    first = vault.create_node("Alpha", None)
+    second = vault.create_node("Beta", None)
+    app._refresh_tree()
+    app.tree.selection_set(str(first.id))
+    app.tree.focus(str(first.id))
+
+    assert app._reorder_selected_tree(1) == "break"
+    assert [node.id for node in vault.children(None)] == [second.id, first.id]
+    assert app.tree.selection() == (str(first.id),)
+    assert not errors
