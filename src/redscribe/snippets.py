@@ -5,8 +5,8 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 
-from redscribe.models import Snippet
-from redscribe.utils import slugify
+from redscribe.domain.models import Snippet
+from redscribe.domain.utils import slugify
 
 _PLACEHOLDER_RE = re.compile(r"\{\{([a-zA-Z0-9_]+)\}\}")
 

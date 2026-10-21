@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from redscribe.models import Template
-from redscribe.utils import slugify
+from redscribe.domain.models import Template
+from redscribe.domain.utils import slugify
 
 _CTF = r"""# {{title}}
 

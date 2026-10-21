@@ -7,6 +7,7 @@ import webbrowser
 from functools import partial
 from tkinter import ttk
 
+from redscribe.domain.utils import slugify
 from redscribe.highlight import tokenize_code
 from redscribe.markdown import (
     CodeBlock,
@@ -22,7 +23,6 @@ from redscribe.markdown import (
     safe_url,
 )
 from redscribe.ui.theme import Theme
-from redscribe.utils import slugify
 
 
 class MarkdownPreview(tk.Frame):

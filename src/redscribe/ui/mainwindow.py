@@ -13,6 +13,8 @@ from tkinter import filedialog, messagebox, ttk
 
 from redscribe.db import Vault
 from redscribe.demo import seed_demo
+from redscribe.domain.models import STATUSES, Node
+from redscribe.domain.utils import humanize_delta, pluralize, truncate, word_count
 from redscribe.exporter import (
     export_note_html,
     export_note_markdown,
@@ -20,7 +22,6 @@ from redscribe.exporter import (
     export_vault_markdown,
 )
 from redscribe.importer import import_directory, import_markdown_files
-from redscribe.models import STATUSES, Node
 from redscribe.templates import TEMPLATES, get_template, render_template
 from redscribe.ui.dashboard import Dashboard
 from redscribe.ui.dialogs import (
@@ -52,7 +53,6 @@ from redscribe.ui.widgets import (
     Tooltip,
     divider,
 )
-from redscribe.utils import humanize_delta, pluralize, truncate, word_count
 
 LOGGER = logging.getLogger(__name__)
 
