@@ -18,9 +18,18 @@ def utc_now() -> str:
 
 
 def parse_timestamp(value: str) -> datetime | None:
-    """Parse an ISO timestamp, treating naive values as UTC."""
+    """Parse an ISO timestamp, treating naive values as UTC.
+
+    Python 3.10's ``fromisoformat`` does not accept the ``Z`` suffix, so the
+    value is normalized before parsing.
+    """
+    candidate = value.strip()
+    if not candidate:
+        return None
+    if candidate.endswith(("Z", "z")):
+        candidate = f"{candidate[:-1]}+00:00"
     try:
-        parsed = datetime.fromisoformat(value)
+        parsed = datetime.fromisoformat(candidate)
     except (TypeError, ValueError):
         return None
     if parsed.tzinfo is None:
@@ -28,29 +37,34 @@ def parse_timestamp(value: str) -> datetime | None:
     return parsed
 
 
-def humanize_delta(value: str, *, now: datetime | None = None) -> str:
-    """Render a timestamp as a compact relative time such as ``3m ago``."""
+def humanize_delta(value: str, *, now: datetime | None = None, long: bool = False) -> str:
+    """Render a timestamp as a relative time such as ``3m ago``.
+
+    Set ``long`` for fully spelled units, for example ``2 hours ago``.
+    """
     parsed = parse_timestamp(value)
     if parsed is None:
         return ""
     current = now or datetime.now(timezone.utc)
     seconds = max(0, int((current - parsed).total_seconds()))
+    units: tuple[tuple[int, str, str], ...] = (
+        (31_536_000, "year", "y"),
+        (2_592_000, "month", "mo"),
+        (604_800, "week", "w"),
+        (86_400, "day", "d"),
+        (3_600, "hour", "h"),
+        (60, "minute", "m"),
+    )
     if seconds < 45:
         return "just now"
-    minutes = seconds // 60
-    if minutes < 60:
-        return f"{minutes}m ago"
-    hours = minutes // 60
-    if hours < 24:
-        return f"{hours}h ago"
-    days = hours // 24
-    if days < 7:
-        return f"{days}d ago"
-    if days < 30:
-        return f"{days // 7}w ago"
-    if days < 365:
-        return f"{days // 30}mo ago"
-    return f"{days // 365}y ago"
+    for unit_seconds, unit_name, short in units:
+        if seconds >= unit_seconds:
+            amount = seconds // unit_seconds
+            if long:
+                suffix = "" if amount == 1 else "s"
+                return f"{amount} {unit_name}{suffix} ago"
+            return f"{amount}{short} ago"
+    return "just now"
 
 
 def slugify(text: str, *, fallback: str = "note", max_length: int = 60) -> str:
