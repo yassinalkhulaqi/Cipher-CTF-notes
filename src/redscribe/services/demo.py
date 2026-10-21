@@ -261,7 +261,7 @@ def seed_demo(vault: Vault) -> int:
     if stats.notes or stats.folders:
         return 0
 
-    ctf = vault.create_node("CTF Challenges", kind="folder", pinned=True)
+    ctf = vault.create_node("CTF Challenges", kind="folder")
     engagements = vault.create_node("Engagements", kind="folder")
     cheatsheets = vault.create_node("Cheatsheets", kind="folder")
 

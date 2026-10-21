@@ -597,7 +597,8 @@ class Vault:
         )
         pinned = int(
             self._connection.execute(
-                "SELECT COUNT(*) FROM nodes WHERE deleted_at IS NULL AND pinned = 1"
+                "SELECT COUNT(*) FROM nodes WHERE kind = 'note' "
+                "AND deleted_at IS NULL AND pinned = 1"
             ).fetchone()[0]
         )
         return VaultStats(

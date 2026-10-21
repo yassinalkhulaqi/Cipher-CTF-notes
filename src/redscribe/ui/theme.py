@@ -468,6 +468,7 @@ def configure_styles(root: tk.Misc, theme: Theme) -> None:
         background=palette.bg,
         foreground=palette.text,
         indicatorcolor=palette.surface_alt,
+        indicatorforeground=palette.text,
         bordercolor=palette.border,
         focuscolor=palette.accent,
     )
@@ -475,12 +476,14 @@ def configure_styles(root: tk.Misc, theme: Theme) -> None:
         "TCheckbutton",
         background=[("active", palette.bg)],
         indicatorcolor=[("selected", palette.accent), ("active", palette.raised)],
+        indicatorforeground=[("selected", palette.bg)],
     )
     style.configure(
         "Surface.TCheckbutton",
         background=palette.surface,
         foreground=palette.muted,
         indicatorcolor=palette.surface_alt,
+        indicatorforeground=palette.text,
         bordercolor=palette.border,
         focuscolor=palette.accent,
         font=theme.font(-2),
@@ -490,12 +493,14 @@ def configure_styles(root: tk.Misc, theme: Theme) -> None:
         background=[("active", palette.surface)],
         foreground=[("active", palette.text)],
         indicatorcolor=[("selected", palette.accent), ("active", palette.raised)],
+        indicatorforeground=[("selected", palette.bg)],
     )
     style.configure(
         "TRadiobutton",
         background=palette.bg,
         foreground=palette.text,
         indicatorcolor=palette.surface_alt,
+        indicatorforeground=palette.text,
         bordercolor=palette.border,
         focuscolor=palette.accent,
     )
@@ -503,6 +508,7 @@ def configure_styles(root: tk.Misc, theme: Theme) -> None:
         "TRadiobutton",
         background=[("active", palette.bg)],
         indicatorcolor=[("selected", palette.accent)],
+        indicatorforeground=[("selected", palette.bg)],
     )
     style.configure("TScale", background=palette.bg, troughcolor=palette.surface_alt)
 

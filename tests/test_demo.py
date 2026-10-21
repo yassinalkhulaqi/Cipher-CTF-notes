@@ -12,7 +12,7 @@ def test_seed_demo_populates_an_empty_vault(vault: Vault) -> None:
     assert stats.flags == 2
     assert stats.targets == 3
     assert stats.tags == 15
-    assert stats.pinned == 3
+    assert stats.pinned == 2
     assert len(vault.list_custom_snippets()) == 1
     assert {hit.flag for hit in vault.collected_flags()} == {
         "HTB{th1s_1s_4_d3m0_fl4g}",
