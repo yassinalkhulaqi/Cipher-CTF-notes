@@ -10,6 +10,7 @@ from redscribe.domain.models import DIFFICULTIES, STATUSES, Node
 from redscribe.storage.db import Vault
 
 _FRONT_MATTER_KEY = re.compile(r"^(?P<key>[A-Za-z0-9_-]+)\s*:\s*(?P<value>.*)$")
+_FRONT_MATTER_LIST_ITEM = re.compile(r"^\s*-\s+(?P<value>.+?)\s*$")
 _HEADING = re.compile(r"^\s{0,3}#\s+(?P<title>.+?)\s*#*\s*$")
 _MARKDOWN_SUFFIXES = {".md", ".markdown", ".txt"}
 _SKIP_DIRECTORIES = {".git", ".obsidian", ".trash", "node_modules", "__pycache__"}
@@ -27,7 +28,7 @@ def read_text_file(path: Path) -> str:
 
 def parse_front_matter(text: str) -> tuple[dict[str, str], str]:
     """Parse a simple YAML front matter block and return metadata plus body."""
-    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n").lstrip("\ufeff")
     if not normalized.startswith("---\n"):
         return {}, normalized
     lines = normalized.split("\n")
@@ -39,16 +40,31 @@ def parse_front_matter(text: str) -> tuple[dict[str, str], str]:
     if end < 0:
         return {}, normalized
     metadata: dict[str, str] = {}
-    for line in lines[1:end]:
+    index = 1
+    while index < end:
+        line = lines[index]
         if not line.strip() or line.lstrip().startswith("#"):
+            index += 1
             continue
         match = _FRONT_MATTER_KEY.match(line)
         if not match:
+            index += 1
             continue
         key = match.group("key").strip().lower()
         value = _clean_value(match.group("value").strip())
+        index += 1
         if key == "tags":
-            value = normalize_tags(value)
+            if value:
+                value = normalize_tags(value)
+            else:
+                items: list[str] = []
+                while index < end:
+                    item = _FRONT_MATTER_LIST_ITEM.match(lines[index])
+                    if item is None:
+                        break
+                    items.append(_clean_value(item.group("value")))
+                    index += 1
+                value = normalize_tags(",".join(items))
         metadata[key] = value
     body = "\n".join(lines[end + 1 :]).lstrip("\n")
     return metadata, body
@@ -71,7 +87,15 @@ def normalize_tags(value: str) -> str:
     cleaned = value.strip()
     if cleaned.startswith("[") and cleaned.endswith("]"):
         cleaned = cleaned[1:-1]
-    return ",".join(part.strip() for part in cleaned.split(",") if part.strip())
+    tags: list[str] = []
+    seen: set[str] = set()
+    for part in cleaned.split(","):
+        tag = part.strip()
+        key = tag.casefold()
+        if tag and key not in seen:
+            seen.add(key)
+            tags.append(tag)
+    return ",".join(tags)
 
 
 def title_from_body(body: str, fallback: str) -> str:
@@ -131,12 +155,14 @@ def import_directory(
     folder = vault.create_node(source.name or "Imported folder", parent_id, kind="folder")
     count = 0
     for child in sorted(source.iterdir(), key=lambda item: (item.is_file(), item.name.casefold())):
+        if child.is_symlink():
+            continue
         if child.name.startswith(".") or child.name in _SKIP_DIRECTORIES:
             continue
         if child.is_dir():
             _subfolder, child_count = import_directory(vault, child, folder.id)
             count += child_count
-        elif child.suffix.lower() in _MARKDOWN_SUFFIXES:
+        elif child.is_file() and child.suffix.lower() in _MARKDOWN_SUFFIXES:
             import_markdown_file(vault, child, folder.id)
             count += 1
     if count == 0:

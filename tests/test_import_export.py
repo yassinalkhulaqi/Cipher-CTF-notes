@@ -60,9 +60,30 @@ def test_parse_front_matter_without_block() -> None:
     )
 
 
+def test_parse_front_matter_supports_yaml_tag_lists_and_bom() -> None:
+    metadata, body = parse_front_matter(
+        "\ufeff---\n"
+        "title: 'YAML tags'\n"
+        "tags:\n"
+        "  - web\n"
+        '  - "critical"\n'
+        "  - web\n"
+        "status: active\n"
+        "---\n"
+        "Body"
+    )
+    assert metadata == {
+        "title": "YAML tags",
+        "tags": "web,critical",
+        "status": "active",
+    }
+    assert body == "Body"
+
+
 def test_normalize_tags_and_title_from_body() -> None:
     assert normalize_tags(" web, ctf , ") == "web,ctf"
     assert normalize_tags("[web, ctf]") == "web,ctf"
+    assert normalize_tags("web, Web , web,ctf") == "web,ctf"
     assert normalize_tags("") == ""
     assert title_from_body("\n# Heading #\nBody", "fallback") == "Heading"
     assert title_from_body("Paragraph first\n# Later", "fallback") == "fallback"
@@ -166,6 +187,20 @@ def test_import_directory_mirrors_tree(tmp_path: Path, vault: Vault) -> None:
 
     with pytest.raises(NotADirectoryError):
         import_directory(vault, tmp_path / "missing")
+
+
+def test_import_directory_skips_symlink_loops(tmp_path: Path, vault: Vault) -> None:
+    root = tmp_path / "linked"
+    root.mkdir()
+    (root / "note.md").write_text("# Safe note", encoding="utf-8")
+    try:
+        (root / "loop").symlink_to(root, target_is_directory=True)
+    except OSError:
+        pytest.skip("symlinks are unavailable")
+    folder, count = import_directory(vault, root)
+    assert folder is not None
+    assert count == 1
+    assert {node.title for node in vault.live_nodes()} == {"linked", "Safe note"}
 
 
 def test_note_markdown_export(tmp_path: Path, vault: Vault) -> None:
