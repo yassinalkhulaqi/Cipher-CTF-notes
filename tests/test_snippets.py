@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from redscribe.snippets import (
+from redscribe.content.snippets import (
     BUILTIN_BY_KEY,
     BUILTIN_SNIPPETS,
     resolve_command,

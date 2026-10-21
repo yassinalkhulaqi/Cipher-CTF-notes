@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from redscribe.templates import TEMPLATE_MAP, TEMPLATES, get_template, render_template
+from redscribe.content.templates import TEMPLATE_MAP, TEMPLATES, get_template, render_template
 
 
 def test_every_template_key_is_unique_and_reachable() -> None:

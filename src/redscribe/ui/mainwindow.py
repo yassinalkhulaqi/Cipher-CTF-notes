@@ -11,6 +11,7 @@ from functools import partial
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
+from redscribe.content.templates import TEMPLATES, get_template, render_template
 from redscribe.demo import seed_demo
 from redscribe.domain.models import STATUSES, Node
 from redscribe.domain.utils import humanize_delta, pluralize, truncate, word_count
@@ -22,7 +23,6 @@ from redscribe.exporter import (
 )
 from redscribe.importer import import_directory, import_markdown_files
 from redscribe.storage.db import Vault
-from redscribe.templates import TEMPLATES, get_template, render_template
 from redscribe.ui.dashboard import Dashboard
 from redscribe.ui.dialogs import (
     AboutDialog,
