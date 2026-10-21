@@ -349,6 +349,16 @@ def test_tags_flags_and_stats(vault: Vault) -> None:
     assert stats.pinned == 1
 
 
+def test_stats_only_count_pinned_notes(vault: Vault) -> None:
+    vault.create_node("Pinned folder", kind="folder", pinned=True)
+    vault.create_node("Pinned note", pinned=True)
+    vault.create_node("Plain note")
+    stats = vault.stats()
+    assert stats.notes == 2
+    assert stats.folders == 1
+    assert stats.pinned == 1
+
+
 def test_settings_round_trip(vault: Vault) -> None:
     assert vault.get_setting("missing") is None
     assert vault.get_setting("missing", "fallback") == "fallback"
