@@ -30,6 +30,7 @@ class Dashboard(tk.Frame):
         on_tag: Callable[[str], None],
         on_view_flags: Callable[[], None],
         on_load_demo: Callable[[], None],
+        on_import: Callable[[], None],
     ) -> None:
         palette = theme.palette
         super().__init__(master, bg=palette.bg)
@@ -42,6 +43,7 @@ class Dashboard(tk.Frame):
         self._on_tag = on_tag
         self._on_view_flags = on_view_flags
         self._on_load_demo = on_load_demo
+        self._on_import = on_import
         self._stats = vault.stats()
         self.scroll = ScrollableFrame(self, theme)
         self.scroll.pack(fill="both", expand=True)
@@ -202,7 +204,7 @@ class Dashboard(tk.Frame):
             bar, text="Flag collection", style="Tool.TButton", command=self._on_view_flags
         ).pack(side="left", padx=(8, 0))
         ttk.Button(
-            bar, text="Load demo vault", style="Subtle.TButton", command=self._on_load_demo
+            bar, text="Import Markdown", style="Subtle.TButton", command=self._on_import
         ).pack(side="left", padx=(8, 0))
 
     def _build_columns(self, host: tk.Frame) -> None:

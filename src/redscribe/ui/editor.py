@@ -75,6 +75,7 @@ class MarkdownEditor(tk.Frame):
         self._loading = False
         self._find_ranges: list[tuple[str, str]] = []
         self._find_position = -1
+        self._scroll_callback: Callable[[str, str], None] | None = None
         self._mono_font = theme.font(-1, mono=True)
         self._font_object = tkfont.Font(root=self, font=self._mono_font)
 
@@ -289,6 +290,11 @@ class MarkdownEditor(tk.Frame):
     def _on_yscroll(self, first: str, last: str) -> None:
         self.scrollbar.set(first, last)
         self._redraw_gutter()
+        if self._scroll_callback is not None:
+            self._scroll_callback(first, last)
+
+    def set_scroll_callback(self, callback: Callable[[str, str], None] | None) -> None:
+        self._scroll_callback = callback
 
     def _on_key_release(self, event: tk.Event) -> None:
         self._update_current_line()

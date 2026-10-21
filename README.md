@@ -21,8 +21,8 @@ accounts. No telemetry. No runtime dependencies beyond Python and Tkinter.
   Directory, credentials, shells, privesc, pivoting, and CTF tooling. Copy with
   placeholders filled from the current note.
 - **Readable output.** Markdown editor with syntax highlighting and a split
-  preview with code highlighting. Export a note to Markdown or HTML, or export
-  the whole vault as a browsable HTML report.
+  preview with code highlighting and optional synchronized scrolling. Export a
+  note to Markdown or HTML, or export the whole vault as a browsable HTML report.
 - **Small and portable.** Pure standard library. The entire vault is one file
   that you can back up, sync, or move.
 

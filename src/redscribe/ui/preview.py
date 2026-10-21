@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import tkinter as tk
 import webbrowser
+from collections.abc import Callable
 from functools import partial
 from tkinter import ttk
 
@@ -37,6 +38,8 @@ class MarkdownPreview(tk.Frame):
         self._urls: dict[str, str] = {}
         self._anchors: dict[str, str] = {}
         self._link_index = 0
+        self._scroll_callback: Callable[[str, str], None] | None = None
+        self._suppress_scroll = False
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
 
@@ -62,7 +65,7 @@ class MarkdownPreview(tk.Frame):
             self, orient="vertical", command=self.text.yview, style="Vertical.TScrollbar"
         )
         self.scrollbar.grid(row=0, column=1, sticky="ns")
-        self.text.configure(yscrollcommand=self.scrollbar.set)
+        self.text.configure(yscrollcommand=self._on_yscroll)  # type: ignore[arg-type]
         self.text.bind("<Control-a>", self._select_all)
         self.text.bind("<Button-3>", self._show_context_menu)
         self.text.bind("<Motion>", self._on_motion, add="+")
@@ -141,26 +144,38 @@ class MarkdownPreview(tk.Frame):
             "table_rule", font=theme.font(-1, mono=True), foreground=palette.border
         )
 
+    def _on_yscroll(self, first: str, last: str) -> None:
+        self.scrollbar.set(first, last)
+        if not self._suppress_scroll and self._scroll_callback is not None:
+            self._scroll_callback(first, last)
+
+    def set_scroll_callback(self, callback: Callable[[str, str], None] | None) -> None:
+        self._scroll_callback = callback
+
     def set_markdown(self, content: str, *, preserve_scroll: bool = True) -> None:
         self._markdown = content
         try:
             fraction = self.text.yview()[0] if preserve_scroll else 0.0
         except tk.TclError:
             fraction = 0.0
-        self.text.configure(state="normal")
-        self.text.delete("1.0", "end")
-        for tag in self._link_tags:
-            self.text.tag_delete(tag)
-        self._link_tags = []
-        self._urls = {}
-        self._anchors = {}
-        self._link_index = 0
+        self._suppress_scroll = True
         try:
-            self._render(parse_markdown(content))
-        except Exception:
-            self.text.insert("1.0", content)
-        self.text.configure(state="disabled")
-        self.text.yview_moveto(fraction)
+            self.text.configure(state="normal")
+            self.text.delete("1.0", "end")
+            for tag in self._link_tags:
+                self.text.tag_delete(tag)
+            self._link_tags = []
+            self._urls = {}
+            self._anchors = {}
+            self._link_index = 0
+            try:
+                self._render(parse_markdown(content))
+            except Exception:
+                self.text.insert("1.0", content)
+            self.text.configure(state="disabled")
+            self.text.yview_moveto(fraction)
+        finally:
+            self._suppress_scroll = False
 
     def _render(
         self, blocks: list[Heading | Paragraph | ListBlock | CodeBlock | Quote | TableBlock | Rule]

@@ -46,8 +46,9 @@ newer schema is rejected instead of being modified.
    header, sidebar, content stack, status bar, menus, and shortcuts, then opens
    the last note or the dashboard.
 3. Editing updates the title/save state immediately, debounces preview rendering
-   (260 ms), and debounces auto-save (1200 ms). Navigation and destructive
-   operations force a save first.
+   (250 ms), and debounces auto-save (1200 ms). Navigation and destructive
+   operations force a save first. Split view can synchronize editor and preview
+   scroll positions; the preference is persisted with the vault.
 4. Theme or font changes save the open note, capture sash positions, rebuild
    the widget tree, and reopen the note in the new appearance.
 5. Closing saves pending edits, geometry, and sash positions, then destroys the

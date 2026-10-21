@@ -477,6 +477,21 @@ def configure_styles(root: tk.Misc, theme: Theme) -> None:
         indicatorcolor=[("selected", palette.accent), ("active", palette.raised)],
     )
     style.configure(
+        "Surface.TCheckbutton",
+        background=palette.surface,
+        foreground=palette.muted,
+        indicatorcolor=palette.surface_alt,
+        bordercolor=palette.border,
+        focuscolor=palette.accent,
+        font=theme.font(-2),
+    )
+    style.map(
+        "Surface.TCheckbutton",
+        background=[("active", palette.surface)],
+        foreground=[("active", palette.text)],
+        indicatorcolor=[("selected", palette.accent), ("active", palette.raised)],
+    )
+    style.configure(
         "TRadiobutton",
         background=palette.bg,
         foreground=palette.text,
