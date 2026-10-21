@@ -28,6 +28,7 @@ class Palette:
     amber: str
     blue: str
     red: str
+    purple: str
     code_bg: str
     selection: str
 
@@ -46,10 +47,11 @@ DARK = Palette(
     accent="#ff4d6d",
     accent_hover="#ff6b85",
     accent_soft="#3a1a24",
-    green="#4ade80",
-    amber="#fbbf24",
-    blue="#60a5fa",
-    red="#f87171",
+    green="#22c55e",
+    amber="#f59e0b",
+    blue="#3b82f6",
+    red="#ef4444",
+    purple="#a855f7",
     code_bg="#0d1017",
     selection="#3b2430",
 )
@@ -72,24 +74,30 @@ LIGHT = Palette(
     amber="#a16207",
     blue="#1d4ed8",
     red="#b91c1c",
+    purple="#7e22ce",
     code_bg="#f2f4f9",
     selection="#f6cbd5",
 )
 
 PALETTES: dict[str, Palette] = {"dark": DARK, "light": LIGHT}
 
-_UI_FONTS = (
-    "Segoe UI Variable Text",
+HEADER_HEIGHT = 64
+SIDEBAR_WIDTH = 300
+STATUSBAR_HEIGHT = 28
+
+UI_FONTS = (
+    "Inter",
     "Segoe UI",
     "SF Pro Text",
     "Helvetica Neue",
     "DejaVu Sans",
     "Arial",
 )
-_MONO_FONTS = (
-    "Cascadia Mono",
+MONO_FONTS = (
     "Cascadia Code",
+    "Cascadia Mono",
     "JetBrains Mono",
+    "Fira Code",
     "Consolas",
     "SF Mono",
     "Menlo",
@@ -134,8 +142,8 @@ def build_theme(root: tk.Misc, name: str, font_size: int = 11) -> Theme:
     palette = PALETTES.get(name, DARK)
     return Theme(
         palette=palette,
-        ui_family=_pick_family(root, _UI_FONTS, "Arial"),
-        mono_family=_pick_family(root, _MONO_FONTS, "Courier New"),
+        ui_family=_pick_family(root, UI_FONTS, "Arial"),
+        mono_family=_pick_family(root, MONO_FONTS, "Courier New"),
         base_size=max(9, min(18, int(font_size))),
     )
 
@@ -144,9 +152,9 @@ def status_color(theme: Theme, status: str) -> str:
     palette = theme.palette
     return {
         "todo": palette.muted,
-        "active": palette.accent,
+        "active": palette.blue,
         "done": palette.green,
-        "blocked": palette.amber,
+        "blocked": palette.red,
     }.get(status, palette.text)
 
 
@@ -157,7 +165,7 @@ def difficulty_color(theme: Theme, difficulty: str) -> str:
         "easy": palette.green,
         "medium": palette.amber,
         "hard": palette.red,
-        "insane": palette.accent,
+        "insane": palette.purple,
     }.get(difficulty, palette.text)
 
 

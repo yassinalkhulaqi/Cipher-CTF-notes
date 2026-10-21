@@ -531,17 +531,18 @@ def render_html(
 DOCUMENT_CSS = """
 :root {
   color-scheme: dark;
-  --bg: #0d0f14;
-  --surface: #141821;
-  --surface-2: #1b2030;
-  --border: #2a3042;
-  --text: #e7eaf3;
-  --muted: #8b93a9;
+  --bg: #0b0d12;
+  --surface: #10131a;
+  --surface-2: #161a24;
+  --border: #252c39;
+  --text: #e9edf5;
+  --muted: #9aa5b8;
   --accent: #ff4d6d;
-  --green: #4ade80;
-  --blue: #60a5fa;
-  --amber: #fbbf24;
-  --purple: #c084fc;
+  --green: #22c55e;
+  --blue: #3b82f6;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --purple: #a855f7;
   --code: #0b0e16;
 }
 * { box-sizing: border-box; }

@@ -53,9 +53,9 @@ _VAULT_CSS = """
   border: 1px solid var(--border); color: var(--muted); font-size: 11px;
 }
 .chip.flag { color: var(--amber); font-family: "Cascadia Mono", Consolas, monospace; }
-.chip.status-active { color: var(--accent); border-color: rgba(255,77,109,.4); }
-.chip.status-done { color: var(--green); border-color: rgba(74,222,128,.35); }
-.chip.status-blocked { color: var(--amber); }
+.chip.status-active { color: var(--blue); border-color: rgba(59,130,246,.4); }
+.chip.status-done { color: var(--green); border-color: rgba(34,197,94,.35); }
+.chip.status-blocked { color: var(--red); border-color: rgba(239,68,68,.35); }
 .note .markdown > h1:first-child { margin-top: 0; }
 .note-empty { color: var(--muted); font-style: italic; }
 .vault-footer { margin-top: 72px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
