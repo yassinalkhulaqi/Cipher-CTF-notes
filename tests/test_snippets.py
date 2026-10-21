@@ -41,6 +41,22 @@ def test_resolve_command_prefers_explicit_values() -> None:
     assert resolved == "ssh alice@192.0.2.5"
 
 
+def test_resolve_command_rederives_context_from_explicit_target() -> None:
+    resolved = resolve_command(
+        "{{target}} {{domain}} {{url}}",
+        target="ignored.test",
+        values={"target": "https://app.acme.test:8443/login"},
+    )
+    assert resolved == (
+        "https://app.acme.test:8443/login app.acme.test https://app.acme.test:8443/login"
+    )
+
+
+def test_resolve_command_supports_ipv6_targets() -> None:
+    resolved = resolve_command("curl {{url}}", target="[2001:db8::1]:8443")
+    assert resolved == "curl https://[2001:db8::1]:8443"
+
+
 def test_resolve_command_leaves_unknown_placeholders() -> None:
     assert resolve_command("echo {{missing}}") == "echo {{missing}}"
     assert resolve_command("echo {{missing}}", values={"missing": "  "}) == "echo {{missing}}"

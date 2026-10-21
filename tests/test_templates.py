@@ -50,5 +50,21 @@ def test_render_template_uses_placeholders_when_target_missing() -> None:
     assert re.search(r"\d{4}-\d{2}-\d{2}", content)
 
 
+def test_render_template_normalizes_host_port_targets() -> None:
+    content = render_template(get_template("web"), "ACME web", "app.acme.test:8443/app")
+    assert "Base URL: https://app.acme.test:8443/app" in content
+    assert "Host: app.acme.test" in content
+    assert "{{" not in content
+
+
+def test_render_template_never_leaves_known_placeholders() -> None:
+    content = render_template(get_template("ctf"), "", "")
+    assert content.startswith("# Untitled")
+    assert "{{" not in content
+    web = render_template(get_template("web"), "", "")
+    assert "<TARGET>" in web
+    assert "{{" not in web
+
+
 def test_blank_template_is_empty() -> None:
     assert render_template(get_template("blank"), "Untitled") == ""

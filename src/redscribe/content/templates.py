@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from redscribe.content.placeholders import interpolate, target_values
 from redscribe.domain.models import Template
 from redscribe.domain.utils import slugify
 
@@ -323,35 +324,15 @@ def get_template(key: str) -> Template:
 
 def render_template(template: Template, title: str, target: str = "") -> str:
     """Fill the placeholders in a template."""
-    today = datetime.now(timezone.utc).date().isoformat()
-    replacements = {
-        "{{title}}": title,
-        "{{date}}": today,
-        "{{target}}": target.strip() or "<TARGET>",
-        "{{domain}}": _domain_for(target),
-        "{{url}}": _url_for(target),
-        "{{slug}}": slugify(target or title),
+    cleaned_target = target.strip()
+    values = {
+        "title": title.strip() or "Untitled",
+        "date": datetime.now(timezone.utc).date().isoformat(),
     }
-    content = template.content
-    for key, value in replacements.items():
-        content = content.replace(key, value)
-    return content
-
-
-def _domain_for(target: str) -> str:
-    value = target.strip()
-    if not value:
-        return "<TARGET>"
-    for prefix in ("https://", "http://"):
-        if value.lower().startswith(prefix):
-            value = value[len(prefix) :]
-    return value.split("/", 1)[0].split(":", 1)[0]
-
-
-def _url_for(target: str) -> str:
-    value = target.strip()
-    if not value:
-        return "https://<TARGET>"
-    if value.lower().startswith(("http://", "https://")):
-        return value.rstrip("/")
-    return f"https://{value.rstrip('/')}"
+    if cleaned_target:
+        values.update(target_values(cleaned_target))
+        values.setdefault("domain", "<TARGET>")
+    else:
+        values.update(target="<TARGET>", domain="<TARGET>", url="https://<TARGET>")
+    values["slug"] = slugify(cleaned_target or title)
+    return interpolate(template.content, values)

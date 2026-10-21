@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
 
+from redscribe.content.placeholders import interpolate, placeholder_names, target_values
 from redscribe.domain.models import Snippet
 from redscribe.domain.utils import slugify
-
-_PLACEHOLDER_RE = re.compile(r"\{\{([a-zA-Z0-9_]+)\}\}")
 
 
 def _snippet(title: str, command: str, description: str, tags: str) -> Snippet:
@@ -480,39 +478,12 @@ def resolve_command(
 ) -> str:
     """Replace known placeholders with values from the current note."""
     resolved = dict(values or {})
-    cleaned = target.strip()
-    if cleaned:
-        resolved.setdefault("target", cleaned)
-        resolved.setdefault("domain", _domain_for(cleaned))
-        resolved.setdefault("url", _url_for(cleaned))
-
-    def replace(match: re.Match[str]) -> str:
-        key = match.group(1)
-        value = resolved.get(key, "").strip()
-        return value if value else match.group(0)
-
-    return _PLACEHOLDER_RE.sub(replace, command)
+    context_target = resolved.get("target") or target
+    for key, value in target_values(context_target).items():
+        resolved.setdefault(key, value)
+    return interpolate(command, resolved)
 
 
 def snippet_placeholders(command: str) -> list[str]:
     """Return the unique placeholders used by a command."""
-    seen: list[str] = []
-    for match in _PLACEHOLDER_RE.finditer(command):
-        name = match.group(1)
-        if name not in seen:
-            seen.append(name)
-    return seen
-
-
-def _domain_for(target: str) -> str:
-    value = target
-    for prefix in ("https://", "http://"):
-        if value.lower().startswith(prefix):
-            value = value[len(prefix) :]
-    return value.split("/", 1)[0].split(":", 1)[0]
-
-
-def _url_for(target: str) -> str:
-    if target.lower().startswith(("http://", "https://")):
-        return target.rstrip("/")
-    return f"https://{target.rstrip('/')}"
+    return placeholder_names(command)
