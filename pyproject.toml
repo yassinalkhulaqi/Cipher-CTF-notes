@@ -102,10 +102,3 @@ warn_unreachable = true
 show_error_codes = true
 pretty = true
 files = ["src"]
-
-[[tool.mypy.overrides]]
-module = ["redscribe.ui.*", "redscribe.app"]
-disallow_untyped_defs = false
-disallow_untyped_calls = false
-disallow_any_generics = false
-warn_return_any = false

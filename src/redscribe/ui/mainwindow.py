@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
+from typing import cast
 
 from redscribe.content.templates import TEMPLATES, get_template, render_template
 from redscribe.domain.models import STATUSES, Node
@@ -1595,7 +1596,7 @@ class MainWindow(tk.Frame):
 
     def _apply_view_mode(self) -> None:
         for widget in (self.editor, self.preview):
-            if str(widget) in self.body_panes.panes():
+            if str(widget) in self._pane_paths(self.body_panes):
                 self.body_panes.forget(widget)
         if self._view_mode == "write":
             self.body_panes.add(self.editor, weight=1)
@@ -2020,14 +2021,14 @@ class MainWindow(tk.Frame):
 
     def _capture_layout(self) -> None:
         try:
-            width = self.panes.sashpos(0)
+            width = self._sash_position(self.panes, 0)
         except tk.TclError:
             return
         if width > 100:
             self._vault.set_setting("ui.sidebar_width", str(width))
-        if len(self.body_panes.panes()) == 2:
+        if len(self._pane_paths(self.body_panes)) == 2:
             try:
-                split = self.body_panes.sashpos(0)
+                split = self._sash_position(self.body_panes, 0)
             except tk.TclError:
                 split = 0
             if split > 100:
@@ -2056,11 +2057,11 @@ class MainWindow(tk.Frame):
                 minimum=240,
                 maximum=max(240, total - 480),
             )
-            self.panes.sashpos(0, sidebar)
+            self._set_sash_position(self.panes, 0, sidebar)
             if (
                 self._note is not None
                 and self._view_mode == "split"
-                and len(self.body_panes.panes()) == 2
+                and len(self._pane_paths(self.body_panes)) == 2
                 and self.body_panes.winfo_ismapped()
             ):
                 body_total = self.body_panes.winfo_width()
@@ -2072,9 +2073,21 @@ class MainWindow(tk.Frame):
                     minimum=200,
                     maximum=max(200, body_total - 220),
                 )
-                self.body_panes.sashpos(0, split)
+                self._set_sash_position(self.body_panes, 0, split)
         except tk.TclError:
             pass
+
+    @staticmethod
+    def _pane_paths(panes: ttk.PanedWindow) -> tuple[str, ...]:
+        return cast(tuple[str, ...], tuple(panes.panes()))  # type: ignore[no-untyped-call]
+
+    @staticmethod
+    def _sash_position(panes: ttk.PanedWindow, index: int) -> int:
+        return int(panes.sashpos(index))  # type: ignore[no-untyped-call]
+
+    @staticmethod
+    def _set_sash_position(panes: ttk.PanedWindow, index: int, position: int) -> None:
+        panes.sashpos(index, position)  # type: ignore[no-untyped-call]
 
     def _cancel_jobs(self) -> None:
         for attribute in (
