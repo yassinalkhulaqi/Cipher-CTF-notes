@@ -6,7 +6,7 @@ import contextlib
 import tkinter as tk
 from tkinter import ttk
 
-from redscribe.db import Vault
+from redscribe.storage.db import Vault
 from redscribe.ui.theme import Theme
 from redscribe.ui.widgets import SearchBox, center_window
 

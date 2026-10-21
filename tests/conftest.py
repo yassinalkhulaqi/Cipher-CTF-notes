@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from redscribe.db import Vault
+from redscribe.storage.db import Vault
 
 
 @pytest.fixture

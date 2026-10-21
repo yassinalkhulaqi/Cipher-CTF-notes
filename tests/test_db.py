@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from redscribe.db import Vault
-from redscribe.models import Node, VaultStats
+from redscribe.domain.models import Node, VaultStats
+from redscribe.storage.db import Vault
 
 
 def test_new_vault_is_empty(vault: Vault) -> None:

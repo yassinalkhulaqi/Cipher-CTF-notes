@@ -12,7 +12,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from redscribe.db import Vault
+from redscribe.storage.db import Vault
 from redscribe.ui.mainwindow import MainWindow
 
 pytestmark = pytest.mark.gui

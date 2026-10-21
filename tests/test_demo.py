@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from redscribe.db import Vault
 from redscribe.demo import seed_demo
+from redscribe.storage.db import Vault
 
 
 def test_seed_demo_populates_an_empty_vault(vault: Vault) -> None:

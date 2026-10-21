@@ -7,9 +7,9 @@ from collections.abc import Callable
 from functools import partial
 from tkinter import ttk
 
-from redscribe.db import Vault
 from redscribe.domain.models import FlagHit, Node, TagCount
 from redscribe.domain.utils import humanize_delta, truncate
+from redscribe.storage.db import Vault
 from redscribe.ui.theme import Theme, difficulty_color, status_color
 from redscribe.ui.widgets import Card, ScrollableFrame, TagChip, bind_click, divider
 

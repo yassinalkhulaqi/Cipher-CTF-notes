@@ -8,7 +8,6 @@ from tkinter import messagebox, ttk
 from typing import Literal
 
 from redscribe import __version__
-from redscribe.db import Vault
 from redscribe.domain.models import (
     DIFFICULTIES,
     DIFFICULTY_LABELS,
@@ -20,6 +19,7 @@ from redscribe.domain.models import (
     Template,
 )
 from redscribe.domain.utils import humanize_delta
+from redscribe.storage.db import Vault
 from redscribe.ui.theme import Theme
 from redscribe.ui.widgets import SearchBox, center_window
 

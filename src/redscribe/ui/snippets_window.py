@@ -5,9 +5,9 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from redscribe.db import Vault
 from redscribe.domain.models import Snippet
 from redscribe.snippets import BUILTIN_SNIPPETS, resolve_command, snippet_placeholders
+from redscribe.storage.db import Vault
 from redscribe.ui.dialogs import BaseDialog, SnippetDialog
 from redscribe.ui.theme import Theme
 from redscribe.ui.widgets import SearchBox

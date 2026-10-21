@@ -8,10 +8,10 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-from redscribe.db import Vault
 from redscribe.domain.models import Node
 from redscribe.domain.utils import safe_filename
 from redscribe.markdown import DOCUMENT_CSS, render_html, render_markdown_body
+from redscribe.storage.db import Vault
 
 _VAULT_CSS = """
 .vault-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); min-height: 100vh; }
