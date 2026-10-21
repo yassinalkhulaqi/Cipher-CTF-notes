@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from redscribe.exporter import (
+from redscribe.services.exporter import (
     export_note_html,
     export_note_markdown,
     export_vault_html,
@@ -13,7 +13,7 @@ from redscribe.exporter import (
     note_to_markdown,
     safe_filename,
 )
-from redscribe.importer import (
+from redscribe.services.importer import (
     import_directory,
     import_markdown_file,
     import_markdown_files,

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from redscribe.demo import seed_demo
+from redscribe.services.demo import seed_demo
 from redscribe.storage.db import Vault
 
 
