@@ -12,8 +12,8 @@ accounts. No telemetry. No runtime dependencies beyond Python and Tkinter.
 ## Highlights
 
 - **Fast capture.** Hierarchical folders and notes, drag-and-drop organizing,
-  instant fuzzy jump with `Ctrl+P`, full-text search with `Ctrl+Shift+F`, and
-  auto-save.
+  instant fuzzy jump to notes or folders with `Ctrl+P`, full-text search with
+  `Ctrl+Shift+F`, and auto-save.
 - **Built for security work.** Templates for CTF challenges, host recon, web
   assessments, findings, and engagement logs. Notes carry a target, status,
   difficulty, tags, and a captured flag.
