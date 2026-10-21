@@ -8,8 +8,8 @@ from collections.abc import Callable
 from tkinter import ttk
 
 from redscribe.db import Vault
-from redscribe.fuzzy import rank_items
-from redscribe.models import Node
+from redscribe.domain.fuzzy import rank_items
+from redscribe.domain.models import Node
 from redscribe.ui.theme import Theme
 from redscribe.ui.widgets import SearchBox
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from redscribe.utils import (
+from redscribe.domain.utils import (
     collapse_whitespace,
     format_number,
     humanize_delta,
@@ -28,9 +28,28 @@ def test_parse_timestamp_accepts_naive_values() -> None:
     assert parsed.tzinfo == timezone.utc
 
 
+def test_parse_timestamp_accepts_z_suffix() -> None:
+    parsed = parse_timestamp("2026-10-21T12:30:00Z")
+    assert parsed is not None
+    assert parsed.tzinfo == timezone.utc
+    assert parsed.hour == 12
+
+
 def test_parse_timestamp_rejects_garbage() -> None:
     assert parse_timestamp("not-a-date") is None
     assert parse_timestamp("") is None
+    assert parse_timestamp("   ") is None
+
+
+def test_humanize_delta_long_form() -> None:
+    now = datetime(2026, 10, 21, 12, 0, tzinfo=timezone.utc)
+    assert humanize_delta((now - timedelta(hours=2)).isoformat(), now=now, long=True) == (
+        "2 hours ago"
+    )
+    assert humanize_delta((now - timedelta(days=1)).isoformat(), now=now, long=True) == (
+        "1 day ago"
+    )
+    assert humanize_delta((now - timedelta(seconds=50)).isoformat(), now=now) == "just now"
 
 
 def test_humanize_delta_scales() -> None:

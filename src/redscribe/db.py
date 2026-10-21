@@ -11,8 +11,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, TypeVar, cast
 
-from redscribe.flags import find_flags
-from redscribe.models import (
+from redscribe.domain.models import (
     DIFFICULTIES,
     KINDS,
     STATUSES,
@@ -23,7 +22,8 @@ from redscribe.models import (
     TagCount,
     VaultStats,
 )
-from redscribe.utils import collapse_whitespace, slugify, truncate, utc_now
+from redscribe.domain.utils import collapse_whitespace, slugify, truncate, utc_now
+from redscribe.flags import find_flags
 
 LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")

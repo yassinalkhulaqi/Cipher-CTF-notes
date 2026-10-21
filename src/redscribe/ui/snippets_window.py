@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 
 from redscribe.db import Vault
-from redscribe.models import Snippet
+from redscribe.domain.models import Snippet
 from redscribe.snippets import BUILTIN_SNIPPETS, resolve_command, snippet_placeholders
 from redscribe.ui.dialogs import BaseDialog, SnippetDialog
 from redscribe.ui.theme import Theme

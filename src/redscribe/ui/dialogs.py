@@ -9,7 +9,7 @@ from typing import Literal
 
 from redscribe import __version__
 from redscribe.db import Vault
-from redscribe.models import (
+from redscribe.domain.models import (
     DIFFICULTIES,
     DIFFICULTY_LABELS,
     STATUS_LABELS,
@@ -19,9 +19,9 @@ from redscribe.models import (
     Snippet,
     Template,
 )
+from redscribe.domain.utils import humanize_delta
 from redscribe.ui.theme import Theme
 from redscribe.ui.widgets import SearchBox, center_window
-from redscribe.utils import humanize_delta
 
 
 class BaseDialog(tk.Toplevel):
