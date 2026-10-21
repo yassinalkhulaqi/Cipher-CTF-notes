@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from redscribe.exporter import (
+from redscribe.services.exporter import (
     export_note_html,
     export_note_markdown,
     export_vault_html,
@@ -13,7 +13,7 @@ from redscribe.exporter import (
     note_to_markdown,
     safe_filename,
 )
-from redscribe.importer import (
+from redscribe.services.importer import (
     import_directory,
     import_markdown_file,
     import_markdown_files,
@@ -60,9 +60,30 @@ def test_parse_front_matter_without_block() -> None:
     )
 
 
+def test_parse_front_matter_supports_yaml_tag_lists_and_bom() -> None:
+    metadata, body = parse_front_matter(
+        "\ufeff---\n"
+        "title: 'YAML tags'\n"
+        "tags:\n"
+        "  - web\n"
+        '  - "critical"\n'
+        "  - web\n"
+        "status: active\n"
+        "---\n"
+        "Body"
+    )
+    assert metadata == {
+        "title": "YAML tags",
+        "tags": "web,critical",
+        "status": "active",
+    }
+    assert body == "Body"
+
+
 def test_normalize_tags_and_title_from_body() -> None:
     assert normalize_tags(" web, ctf , ") == "web,ctf"
     assert normalize_tags("[web, ctf]") == "web,ctf"
+    assert normalize_tags("web, Web , web,ctf") == "web,ctf"
     assert normalize_tags("") == ""
     assert title_from_body("\n# Heading #\nBody", "fallback") == "Heading"
     assert title_from_body("Paragraph first\n# Later", "fallback") == "fallback"
@@ -168,6 +189,20 @@ def test_import_directory_mirrors_tree(tmp_path: Path, vault: Vault) -> None:
         import_directory(vault, tmp_path / "missing")
 
 
+def test_import_directory_skips_symlink_loops(tmp_path: Path, vault: Vault) -> None:
+    root = tmp_path / "linked"
+    root.mkdir()
+    (root / "note.md").write_text("# Safe note", encoding="utf-8")
+    try:
+        (root / "loop").symlink_to(root, target_is_directory=True)
+    except OSError:
+        pytest.skip("symlinks are unavailable")
+    folder, count = import_directory(vault, root)
+    assert folder is not None
+    assert count == 1
+    assert {node.title for node in vault.live_nodes()} == {"linked", "Safe note"}
+
+
 def test_note_markdown_export(tmp_path: Path, vault: Vault) -> None:
     note = vault.create_node(
         "HTB Box",
@@ -266,6 +301,9 @@ def test_vault_html_export(tmp_path: Path, vault: Vault) -> None:
     assert f'id="note-{note.id}"' in content
     assert "Filter notes" in content
     assert "vaultSearch" in content
+    assert 'data-search="visible folder web app.test done done"' in content
+    assert "document.querySelectorAll('.note')" in content
+    assert "No matching notes." in content
 
     empty = Vault(tmp_path / "empty.db")
     try:
@@ -274,6 +312,28 @@ def test_vault_html_export(tmp_path: Path, vault: Vault) -> None:
         assert "No notes to report yet." in empty_content
     finally:
         empty.close()
+
+
+def test_markdown_export_round_trips_metadata(tmp_path: Path, vault: Vault) -> None:
+    original = vault.create_node(
+        "Round trip",
+        content="# Round trip\n\nEvidence",
+        tags="web,high",
+        target="app.acme.test",
+        status="active",
+        difficulty="hard",
+        flag="flag{roundtrip}",
+    )
+    exported = export_note_markdown(vault, original.id, tmp_path / "round-trip.md")
+    with Vault(tmp_path / "imported.db") as imported_vault:
+        imported = import_markdown_file(imported_vault, exported)
+        assert imported.title == original.title
+        assert imported.tags == original.tags
+        assert imported.target == original.target
+        assert imported.status == original.status
+        assert imported.difficulty == original.difficulty
+        assert imported.flag == original.flag
+        assert imported.content.strip() == original.content.strip()
 
 
 def test_safe_filename() -> None:

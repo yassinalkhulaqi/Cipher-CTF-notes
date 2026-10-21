@@ -90,7 +90,7 @@ ignore = ["A003", "RUF001", "RUF002", "RUF003", "SIM905"]
 "src/redscribe/content/highlight.py" = ["E501"]
 "src/redscribe/content/markdown.py" = ["E501"]
 "src/redscribe/content/snippets.py" = ["E501"]
-"src/redscribe/exporter.py" = ["E501"]
+"src/redscribe/services/exporter.py" = ["E501"]
 
 [tool.ruff.format]
 quote-style = "double"

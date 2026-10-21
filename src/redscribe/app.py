@@ -13,7 +13,7 @@ from pathlib import Path
 from types import TracebackType
 
 from redscribe import __version__
-from redscribe.demo import seed_demo
+from redscribe.services.demo import seed_demo
 from redscribe.storage.db import Vault
 
 LOGGER = logging.getLogger(__name__)
