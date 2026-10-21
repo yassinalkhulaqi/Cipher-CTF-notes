@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from functools import lru_cache
 
 
 @dataclass(frozen=True, slots=True)
@@ -177,6 +178,9 @@ _COMMENT_PATTERN: dict[str, str] = {
 }
 
 _STRING_PATTERN = r""""(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`"""
+_PYTHON_TRIPLE_DOUBLE = r'"""(?:\\.|(?!""").)*"""'
+_PYTHON_TRIPLE_SINGLE = r"'''(?:\\.|(?!''').)*'''"
+_PYTHON_TRIPLE_QUOTE = f"(?s:{_PYTHON_TRIPLE_DOUBLE}|{_PYTHON_TRIPLE_SINGLE})"
 _VARIABLE_PATTERN = r"\$\{[^}\n]+\}|\$[A-Za-z_][A-Za-z0-9_]*|\$[0-9@*#?$!-]"
 _NUMBER_PATTERN = r"\b(?:0x[0-9a-fA-F]+|\d+(?:\.\d+)?)\b"
 _WORD_PATTERN = r"[A-Za-z_][A-Za-z0-9_-]*"
@@ -196,49 +200,50 @@ def tokenize_code(code: str, language: str = "") -> list[CodeToken]:
     if lang not in _KEYWORDS:
         return [CodeToken("text", code)]
 
-    pieces: list[str] = [_STRING_PATTERN]
+    master = _master_pattern(lang)
+    tokens: list[CodeToken] = []
+    position = 0
+    for match in master.finditer(code):
+        if match.start() > position:
+            tokens.append(CodeToken("text", code[position : match.start()]))
+        value = match.group(0)
+        tokens.append(CodeToken(_classify(value, lang), value))
+        position = match.end()
+    if position < len(code):
+        tokens.append(CodeToken("text", code[position:]))
+    return _coalesce(tokens)
+
+
+@lru_cache(maxsize=32)
+def _master_pattern(lang: str) -> re.Pattern[str]:
+    pieces: list[str] = []
+    if lang == "python":
+        pieces.append(_PYTHON_TRIPLE_QUOTE)
+    pieces.append(_STRING_PATTERN)
     comment = _COMMENT_PATTERN.get(lang, "")
     if comment:
         pieces.append(comment)
     if lang in {"bash", "powershell", "php"}:
         pieces.append(_VARIABLE_PATTERN)
     pieces.extend((_NUMBER_PATTERN, _WORD_PATTERN))
-    master = re.compile("|".join(f"(?:{piece})" for piece in pieces))
-
-    tokens: list[CodeToken] = []
-    for line in code.splitlines(keepends=True):
-        _tokenize_line(line, lang, master, tokens)
-    return _coalesce(tokens)
+    return re.compile("|".join(f"(?:{piece})" for piece in pieces), re.DOTALL)
 
 
-def _tokenize_line(line: str, lang: str, master: re.Pattern[str], tokens: list[CodeToken]) -> None:
-    position = 0
-    keywords = _KEYWORDS[lang]
-    builtins = _BUILTINS[lang]
-    for match in master.finditer(line):
-        if match.start() > position:
-            tokens.append(CodeToken("text", line[position : match.start()]))
-        value = match.group(0)
-        if _is_string(value):
-            kind = "string"
-        elif _is_comment(value, lang):
-            kind = "comment"
-        elif value.startswith("$"):
-            kind = "variable"
-        elif value[0].isdigit():
-            kind = "number"
-        else:
-            lowered = value.lower()
-            if lowered in keywords:
-                kind = "keyword"
-            elif lowered in builtins or (lang == "powershell" and _CMDLET_PATTERN.match(value)):
-                kind = "builtin"
-            else:
-                kind = "text"
-        tokens.append(CodeToken(kind, value))
-        position = match.end()
-    if position < len(line):
-        tokens.append(CodeToken("text", line[position:]))
+def _classify(value: str, lang: str) -> str:
+    if _is_string(value):
+        return "string"
+    if _is_comment(value, lang):
+        return "comment"
+    if value.startswith("$"):
+        return "variable"
+    if value[0].isdigit():
+        return "number"
+    lowered = value.lower()
+    if lowered in _KEYWORDS[lang]:
+        return "keyword"
+    if lowered in _BUILTINS[lang] or (lang == "powershell" and _CMDLET_PATTERN.match(value)):
+        return "builtin"
+    return "text"
 
 
 def _is_string(value: str) -> bool:
