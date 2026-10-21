@@ -20,6 +20,17 @@
 | `Delete` | Move the selected tree item to trash (tree focus) |
 | `F1` | Keyboard shortcuts dialog |
 
+## Tree
+
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl+Up` / `Ctrl+Down` | Move the selected note or folder among its siblings |
+| `F2` | Rename the selected note or folder |
+| `Delete` | Move the selected note or folder to trash |
+| Drag and drop | Drop on a folder to move inside it, or between rows to reorder |
+
+Drag a row to the empty area below the tree to move it back to the vault root.
+
 ## Editor
 
 | Shortcut | Action |

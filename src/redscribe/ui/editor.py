@@ -19,6 +19,7 @@ _LIST_RE = re.compile(r"^([ \t]*)([-+*]|\d{1,9}[.)])([ \t]+)(.*)$")
 _TASK_RE = re.compile(r"^\[([ xX])\][ \t]+(.*)$")
 _HR_RE = re.compile(r"^ {0,3}(?:(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,})$")
 _LIST_CONTINUE_RE = re.compile(r"^([ \t]*)([-+*]|\d+[.)])[ \t]+(\[[ xX]\][ \t]+)?(.*)$")
+_QUOTE_CONTINUE_RE = re.compile(r"^([ \t]*)((?:>[ \t]?)+)(.*)$")
 _TABLE_SEPARATOR_RE = re.compile(r"^\s*\|?[\s:|-]+\|[\s:|-]*$")
 _INLINE_RE = re.compile(
     r"(?P<code>`[^`\n]+`)"
@@ -470,7 +471,19 @@ class MarkdownEditor(tk.Frame):
     def _on_return(self, _event: tk.Event | None = None) -> str | None:
         line = self.text.get("insert linestart", "insert lineend")
         cursor_column = int(self.text.index("insert").split(".")[1])
-        match = _LIST_CONTINUE_RE.match(line[:cursor_column])
+        before_cursor = line[:cursor_column]
+        quote = _QUOTE_CONTINUE_RE.match(before_cursor)
+        if quote is not None:
+            indent, marker, quoted_text = quote.groups()
+            if not quoted_text.strip():
+                self.text.delete("insert linestart", "insert lineend")
+                return "break"
+            separator = "" if marker.endswith((" ", "\t")) else " "
+            self.text.insert("insert", f"\n{indent}{marker}{separator}")
+            self.text.see("insert")
+            self._notify_change()
+            return "break"
+        match = _LIST_CONTINUE_RE.match(before_cursor)
         if match is None:
             return None
         indent, marker, task, rest = match.groups()
