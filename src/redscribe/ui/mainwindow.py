@@ -63,6 +63,8 @@ LOGGER = logging.getLogger(__name__)
 _VIEW_MODES = ("write", "split", "preview")
 _GEOMETRY_RE = re.compile(r"^\d+x\d+[+-]\d+[+-]\d+$")
 _TREE_DRAG_THRESHOLD = 6
+PREVIEW_DEBOUNCE_MS = 250
+AUTOSAVE_DEBOUNCE_MS = 1200
 
 
 @dataclass
@@ -112,6 +114,10 @@ class MainWindow(tk.Frame):
         if self._view_mode not in _VIEW_MODES:
             self._view_mode = "split"
         self._restore_last = str(vault.get_setting("ui.restore_last_note", "1") or "1") != "0"
+        self._sync_preview_scroll = (
+            str(vault.get_setting("ui.sync_preview_scroll", "1") or "1") != "0"
+        )
+        self._syncing_scroll = False
         self._syncing_tree = False
         self._autosave_job: str | None = None
         self._preview_job: str | None = None
@@ -234,6 +240,12 @@ class MainWindow(tk.Frame):
         view_menu.add_command(label="Preview mode", command=lambda: self._set_view_mode("preview"))
         view_menu.add_command(
             label="Cycle view mode", accelerator="Ctrl+E", command=self._cycle_view
+        )
+        self._sync_scroll_var = tk.BooleanVar(self, value=self._sync_preview_scroll)
+        view_menu.add_checkbutton(
+            label="Synchronize preview scrolling",
+            variable=self._sync_scroll_var,
+            command=self._toggle_sync_scroll,
         )
         view_menu.add_separator()
         view_menu.add_command(label="Use dark theme", command=self._use_dark_theme)
@@ -482,6 +494,7 @@ class MainWindow(tk.Frame):
             on_tag=self._filter_by_tag,
             on_view_flags=self._open_flags,
             on_load_demo=self._load_demo,
+            on_import=self._import_files,
         )
         self.dashboard.grid(row=0, column=0, sticky="nsew")
         self.note_frame = self._build_note_frame()
@@ -550,12 +563,27 @@ class MainWindow(tk.Frame):
             font=self._theme.font(-2),
         )
         self.word_label.pack(side="right", padx=24)
+        self.sync_scroll_check = ttk.Checkbutton(
+            toolbar,
+            text="Sync scroll",
+            variable=self._sync_scroll_var,
+            command=self._toggle_sync_scroll,
+            style="Surface.TCheckbutton",
+        )
+        self.sync_scroll_check.pack(side="right", padx=(0, 16))
+        Tooltip(
+            self.sync_scroll_check,
+            "Keep the preview aligned with the editor in split view",
+            self._theme,
+        )
         divider(toolbar, self._theme).pack(fill="x", side="bottom")
 
         self.body_panes = ttk.PanedWindow(frame, orient="horizontal")
         self.body_panes.grid(row=2, column=0, sticky="nsew")
         self.editor = MarkdownEditor(self.body_panes, self._theme, on_change=self._on_editor_change)
         self.preview = MarkdownPreview(self.body_panes, self._theme)
+        self.editor.set_scroll_callback(self._on_editor_scroll)
+        self.preview.set_scroll_callback(self._on_preview_scroll)
         return frame
 
     def _build_statusbar(self) -> None:
@@ -1428,7 +1456,7 @@ class MainWindow(tk.Frame):
     def _schedule_autosave(self) -> None:
         if self._autosave_job is not None:
             self.after_cancel(self._autosave_job)
-        self._autosave_job = self.after(1200, self._autosave)
+        self._autosave_job = self.after(AUTOSAVE_DEBOUNCE_MS, self._autosave)
 
     def _autosave(self) -> None:
         self._autosave_job = None
@@ -1526,7 +1554,7 @@ class MainWindow(tk.Frame):
     def _schedule_preview(self) -> None:
         if self._preview_job is not None:
             self.after_cancel(self._preview_job)
-        self._preview_job = self.after(260, self._render_preview)
+        self._preview_job = self.after(PREVIEW_DEBOUNCE_MS, self._render_preview)
 
     def _render_preview(self) -> None:
         self._preview_job = None
@@ -1534,6 +1562,36 @@ class MainWindow(tk.Frame):
             return
         self.preview.set_markdown(self.editor.get_text(), preserve_scroll=True)
         self._preview_stale = False
+
+    def _on_editor_scroll(self, first: str, _last: str) -> None:
+        if self._sync_scroll_ready():
+            self._move_scroll(self.preview.text, first)
+
+    def _on_preview_scroll(self, first: str, _last: str) -> None:
+        if self._sync_scroll_ready():
+            self._move_scroll(self.editor.text, first)
+
+    def _sync_scroll_ready(self) -> bool:
+        return self._sync_preview_scroll and not self._syncing_scroll and self._view_mode == "split"
+
+    def _move_scroll(self, widget: tk.Text, first: str) -> None:
+        self._syncing_scroll = True
+        try:
+            widget.yview_moveto(float(first))
+        except (ValueError, tk.TclError):
+            pass
+        finally:
+            self._syncing_scroll = False
+
+    def _toggle_sync_scroll(self) -> None:
+        self._sync_preview_scroll = bool(self._sync_scroll_var.get())
+        self._vault.set_setting(
+            "ui.sync_preview_scroll",
+            "1" if self._sync_preview_scroll else "0",
+        )
+        self._set_status(
+            "Preview scroll sync on" if self._sync_preview_scroll else "Preview scroll sync off"
+        )
 
     def _apply_view_mode(self) -> None:
         for widget in (self.editor, self.preview):

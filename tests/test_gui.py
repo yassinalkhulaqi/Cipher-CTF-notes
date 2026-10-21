@@ -13,7 +13,11 @@ from collections.abc import Iterator
 import pytest
 
 from redscribe.storage.db import Vault
-from redscribe.ui.mainwindow import MainWindow
+from redscribe.ui.mainwindow import (
+    AUTOSAVE_DEBOUNCE_MS,
+    PREVIEW_DEBOUNCE_MS,
+    MainWindow,
+)
 
 pytestmark = pytest.mark.gui
 
@@ -171,6 +175,87 @@ def test_keyboard_reorders_tree_siblings(
     assert app._reorder_selected_tree(1) == "break"
     assert [node.id for node in vault.children(None)] == [second.id, first.id]
     assert app.tree.selection() == (str(first.id),)
+    assert not errors
+
+
+def test_editor_and_preview_share_scroll_when_enabled(
+    window: tuple[MainWindow, tk.Tk, Vault, list[tuple[object, ...]]],
+) -> None:
+    app, root, vault, errors = window
+    root.deiconify()
+    body = "\n\n".join(f"Paragraph {index} with enough text to scroll." for index in range(80))
+    node = vault.create_node("Scroll note", None, content=body)
+    app._refresh_tree()
+    assert app.open_node(node.id)
+    app._set_view_mode("split")
+    app.editor.set_text(body)
+    app.preview.set_markdown(body, preserve_scroll=False)
+    root.update()
+
+    app.editor.text.yview_moveto(0.35)
+    root.update()
+    editor_fraction = app.editor.text.yview()[0]
+    app._on_editor_scroll(str(editor_fraction), "0.6")
+    root.update()
+    assert abs(app.preview.text.yview()[0] - editor_fraction) < 0.02
+
+    preview_fraction = app.preview.text.yview()[0]
+    app._sync_scroll_var.set(False)
+    app._toggle_sync_scroll()
+    app.editor.text.yview_moveto(0.8)
+    root.update()
+    app._on_editor_scroll(str(app.editor.text.yview()[0]), "0.9")
+    assert abs(app.preview.text.yview()[0] - preview_fraction) < 0.02
+    assert vault.get_setting("ui.sync_preview_scroll") == "0"
+    assert not errors
+
+
+def test_preview_refresh_does_not_move_the_editor(
+    window: tuple[MainWindow, tk.Tk, Vault, list[tuple[object, ...]]],
+) -> None:
+    app, root, vault, errors = window
+    root.deiconify()
+    body = "\n\n".join(f"Line {index}" for index in range(80))
+    node = vault.create_node("Stable scroll", None, content=body)
+    app._refresh_tree()
+    assert app.open_node(node.id)
+    app._set_view_mode("split")
+    app.editor.set_text(body)
+    app.preview.set_markdown(body)
+    root.update()
+    app.editor.text.yview_moveto(0.5)
+    root.update()
+    before = app.editor.text.yview()[0]
+
+    app.preview.set_markdown("# Replaced\n\n" + body)
+    root.update()
+    assert abs(app.editor.text.yview()[0] - before) < 0.02
+    assert not errors
+
+
+def test_preview_and_autosave_debounce_constants() -> None:
+    assert PREVIEW_DEBOUNCE_MS == 250
+    assert AUTOSAVE_DEBOUNCE_MS == 1200
+
+
+def test_dashboard_offers_import_for_a_populated_vault(
+    window: tuple[MainWindow, tk.Tk, Vault, list[tuple[object, ...]]],
+) -> None:
+    app, _root, vault, errors = window
+    vault.create_node("Existing note", None)
+    app.dashboard.refresh()
+
+    def button_labels(widget: tk.Misc) -> list[str]:
+        labels = []
+        for child in widget.winfo_children():
+            if isinstance(child, tk.Widget) and child.winfo_class() == "TButton":
+                labels.append(str(child.cget("text")))
+            labels.extend(button_labels(child))
+        return labels
+
+    labels = button_labels(app.dashboard)
+    assert "Import Markdown" in labels
+    assert "Load demo vault" not in labels
     assert not errors
 
 
