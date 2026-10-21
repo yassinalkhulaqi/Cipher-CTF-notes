@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from redscribe.highlight import CodeToken, normalize_language, tokenize_code
+from redscribe.content.highlight import CodeToken, normalize_language, tokenize_code
 
 
 def _joined(tokens: list[CodeToken]) -> str:
@@ -57,3 +57,31 @@ def test_tokenize_block_comment() -> None:
     tokens = tokenize_code(code, "c")
     assert _joined(tokens) == code
     assert any(token.kind == "comment" and "block" in token.text for token in tokens)
+
+
+def test_tokenize_multiline_block_comment() -> None:
+    code = "/* first line\nsecond line */\nint value = 1;\n"
+    tokens = tokenize_code(code, "c")
+    assert _joined(tokens) == code
+    assert any(
+        token.kind == "comment" and token.text == "/* first line\nsecond line */"
+        for token in tokens
+    )
+
+
+def test_tokenize_python_triple_quoted_strings() -> None:
+    code = 'def run():\n    """First line.\n    Second line."""\n    return 1\n'
+    tokens = tokenize_code(code, "py")
+    assert _joined(tokens) == code
+    assert any(
+        token.kind == "string" and token.text.startswith('"""First line.\n') for token in tokens
+    )
+    assert any(token.kind == "keyword" and token.text == "def" for token in tokens)
+
+
+def test_tokenize_preserves_unicode_and_line_endings() -> None:
+    code = "echo 'héllo'\r\n# naïve comment\r\n"
+    tokens = tokenize_code(code, "bash")
+    assert _joined(tokens) == code
+    assert any("héllo" in token.text for token in tokens)
+    assert any(token.kind == "comment" and "naïve" in token.text for token in tokens)
