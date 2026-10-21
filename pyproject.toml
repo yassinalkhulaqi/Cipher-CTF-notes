@@ -80,10 +80,14 @@ extend-exclude = ["build", "dist"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "DTZ", "T10", "T20", "SIM", "PT", "RUF"]
-ignore = ["A003", "RUF001", "RUF002", "RUF003"]
+ignore = ["A003", "RUF001", "RUF002", "RUF003", "SIM905"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["DTZ001", "DTZ005"]
+"tests/*" = ["DTZ001", "DTZ005", "PT011"]
+"src/redscribe/exporter.py" = ["E501"]
+"src/redscribe/highlight.py" = ["E501"]
+"src/redscribe/markdown.py" = ["E501"]
+"src/redscribe/snippets.py" = ["E501"]
 
 [tool.ruff.format]
 quote-style = "double"
