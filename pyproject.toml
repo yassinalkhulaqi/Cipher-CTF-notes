@@ -42,8 +42,8 @@ dev = [
 redscribe = "redscribe.app:main"
 
 [project.urls]
-Documentation = "https://github.com/yassinalkhulaqi/RedScribe#readme"
-Issues = "https://github.com/yassinalkhulaqi/RedScribe/issues"
+Documentation = "https://github.com/yassinalkhulaqi/Cipher-CTF-notes#readme"
+Issues = "https://github.com/yassinalkhulaqi/Cipher-CTF-notes/issues"
 
 [tool.setuptools.dynamic]
 version = { attr = "redscribe.__version__" }

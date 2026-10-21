@@ -6,8 +6,8 @@ surface, predictable behavior, and a UI that stays out of the way.
 ## Development setup
 
 ```bash
-git clone https://github.com/yassinalkhulaqi/RedScribe.git
-cd RedScribe
+git clone https://github.com/yassinalkhulaqi/Cipher-CTF-notes.git
+cd Cipher-CTF-notes
 python -m venv .venv
 ```
 
