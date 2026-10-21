@@ -314,6 +314,28 @@ def test_vault_html_export(tmp_path: Path, vault: Vault) -> None:
         empty.close()
 
 
+def test_markdown_export_round_trips_metadata(tmp_path: Path, vault: Vault) -> None:
+    original = vault.create_node(
+        "Round trip",
+        content="# Round trip\n\nEvidence",
+        tags="web,high",
+        target="app.acme.test",
+        status="active",
+        difficulty="hard",
+        flag="flag{roundtrip}",
+    )
+    exported = export_note_markdown(vault, original.id, tmp_path / "round-trip.md")
+    with Vault(tmp_path / "imported.db") as imported_vault:
+        imported = import_markdown_file(imported_vault, exported)
+        assert imported.title == original.title
+        assert imported.tags == original.tags
+        assert imported.target == original.target
+        assert imported.status == original.status
+        assert imported.difficulty == original.difficulty
+        assert imported.flag == original.flag
+        assert imported.content.strip() == original.content.strip()
+
+
 def test_safe_filename() -> None:
     assert safe_filename("Hello / World") == "Hello - World"
     assert safe_filename("", fallback="note-1", extension=".md") == "note-1.md"
