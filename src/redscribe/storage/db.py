@@ -88,6 +88,8 @@ _MIGRATIONS: dict[int, str] = {
     2: _MIGRATION_2,
 }
 
+_FTS_TRIGGERS = ("nodes_fts_ai", "nodes_fts_ad", "nodes_fts_au")
+
 _FTS_SCHEMA = """
 CREATE VIRTUAL TABLE IF NOT EXISTS nodes_fts USING fts5(
     title,
@@ -215,19 +217,26 @@ class Vault:
             is not None
         )
         try:
-            self._connection.executescript(_FTS_SCHEMA)
+            self._connection.executescript(f"BEGIN IMMEDIATE;\n{_FTS_SCHEMA}\nCOMMIT;")
             if not exists:
                 self._connection.execute("INSERT INTO nodes_fts(nodes_fts) VALUES('rebuild')")
                 self._connection.commit()
             self.fts_enabled = True
         except sqlite3.DatabaseError as exc:
             LOGGER.warning("FTS5 is unavailable; falling back to LIKE search: %s", exc)
+            with contextlib.suppress(sqlite3.DatabaseError):
+                self._connection.execute("ROLLBACK")
+            self._cleanup_fts()
             self.fts_enabled = False
-            try:
-                self._connection.execute("DROP TABLE IF EXISTS nodes_fts")
-                self._connection.commit()
-            except sqlite3.DatabaseError:
-                pass
+
+    def _cleanup_fts(self) -> None:
+        """Remove partial FTS objects so node writes cannot hit stale triggers."""
+        for trigger in _FTS_TRIGGERS:
+            with contextlib.suppress(sqlite3.DatabaseError):
+                self._connection.execute(f"DROP TRIGGER IF EXISTS {trigger}")
+        with contextlib.suppress(sqlite3.DatabaseError):
+            self._connection.execute("DROP TABLE IF EXISTS nodes_fts")
+            self._connection.commit()
 
     def close(self) -> None:
         if self._closed:
@@ -418,7 +427,7 @@ class Vault:
         cleaned = query.strip()
         if not cleaned:
             return []
-        if self.fts_enabled:
+        if self.fts_enabled and re.search(r"\w", cleaned, re.UNICODE):
             try:
                 return self._search_fts(cleaned, limit)
             except sqlite3.DatabaseError as exc:

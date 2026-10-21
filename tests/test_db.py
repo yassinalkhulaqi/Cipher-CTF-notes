@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from redscribe.domain.models import Node, VaultStats
+from redscribe.storage import db as storage_db
 from redscribe.storage.db import SCHEMA_VERSION, Vault
 
 
@@ -248,6 +249,31 @@ def test_search_like_fallback(vault: Vault) -> None:
     assert hits[0].path == "Folder"
     assert "tags: red" not in hits[0].snippet
     assert vault.search("   ") == []
+
+
+def test_symbol_only_query_uses_like_search(vault: Vault) -> None:
+    note = vault.create_node("Pipe", content="admin | flag{test}")
+    assert [hit.node_id for hit in vault.search("|")] == [note.id]
+    assert [hit.node_id for hit in vault.search("flag{test}")] == [note.id]
+
+
+def test_failed_fts_setup_removes_partial_objects(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        storage_db,
+        "_FTS_SCHEMA",
+        storage_db._FTS_SCHEMA + "\nCREATE TABLE deliberately_broken (",
+    )
+    with Vault(":memory:") as vault:
+        assert vault.fts_enabled is False
+        names = {
+            str(row["name"])
+            for row in vault.connection.execute(
+                "SELECT name FROM sqlite_master WHERE name LIKE 'nodes_fts%'"
+            )
+        }
+        assert names == set()
+        note = vault.create_node("Fallback", content="searchable")
+        assert [hit.node_id for hit in vault.search("searchable")] == [note.id]
 
 
 def test_search_invalid_fts_query_falls_back(monkeypatch: pytest.MonkeyPatch, vault: Vault) -> None:
