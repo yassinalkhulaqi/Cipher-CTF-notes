@@ -1850,9 +1850,50 @@ class MainWindow(tk.Frame):
             self,
             self._theme,
             vault=self._vault,
-            on_open=self._dashboard_open,
+            on_open=self._quick_switch_open,
         )
         switcher.show()
+
+    def _quick_switch_open(self, node_id: int) -> None:
+        node = self._vault.get_node(node_id)
+        if node is None:
+            return
+        if node.is_folder:
+            self._reveal_tree_folder(node)
+            return
+        self.open_node(node.id)
+
+    def _reveal_tree_folder(self, folder: Node) -> None:
+        if not folder.is_folder:
+            return
+        if self.tree_filter.get_value():
+            self.tree_filter.set_value("")
+            if self._tree_job is not None:
+                self.after_cancel(self._tree_job)
+                self._tree_job = None
+        ancestors: set[int] = set()
+        parent_id = folder.parent_id
+        while parent_id is not None and parent_id not in ancestors:
+            ancestors.add(parent_id)
+            parent = self._vault.get_node(parent_id)
+            parent_id = parent.parent_id if parent is not None else None
+        for node_id in ancestors | {folder.id}:
+            self._collapsed.discard(str(node_id))
+        self._refresh_tree()
+        for node_id in ancestors:
+            iid = str(node_id)
+            if self.tree.exists(iid):
+                self.tree.item(iid, open=True)
+        iid = str(folder.id)
+        if not self.tree.exists(iid):
+            self._set_status(f'Folder "{folder.title}" is not visible')
+            return
+        self.tree.item(iid, open=True)
+        self.tree.selection_set(iid)
+        self.tree.focus(iid)
+        self.tree.see(iid)
+        self._selected_folder_id = folder.id
+        self._set_status(f'Folder "{folder.title}" selected')
 
     def _open_search(self) -> None:
         dialog = SearchDialog(self, self._theme, vault=self._vault)

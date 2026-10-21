@@ -106,9 +106,22 @@ class SearchDialog(tk.Toplevel):
         self.hint.grid(row=4, column=0, sticky="ew", pady=(8, 0))
 
         self.search.entry.bind("<Down>", self._focus_results, add="+")
-        self.search.entry.bind("<Return>", lambda _event: self.open_selected(), add="+")
+        self.search.entry.bind("<Return>", lambda _event: self._open_from_entry(), add="+")
         self.search.entry.bind("<Escape>", lambda _event: self.close(), add="+")
         self.search.focus_entry()
+
+    def _flush_search(self) -> None:
+        if self._job is None:
+            return
+        with contextlib.suppress(tk.TclError):
+            self.after_cancel(self._job)
+        self._job = None
+        self._run_search()
+
+    def _open_from_entry(self) -> str:
+        self._flush_search()
+        self.open_selected()
+        return "break"
 
     def _schedule(self) -> None:
         if self._job is not None:
@@ -143,6 +156,7 @@ class SearchDialog(tk.Toplevel):
             self.hint.configure(text="No notes matched that search.")
 
     def _focus_results(self, _event: tk.Event | None = None) -> str:
+        self._flush_search()
         items = self.tree.get_children()
         if items:
             current = self.tree.selection()
@@ -159,6 +173,10 @@ class SearchDialog(tk.Toplevel):
         self.destroy()
 
     def close(self) -> None:
+        if self._job is not None:
+            with contextlib.suppress(tk.TclError):
+                self.after_cancel(self._job)
+            self._job = None
         self.destroy()
 
     def show(self) -> int | None:

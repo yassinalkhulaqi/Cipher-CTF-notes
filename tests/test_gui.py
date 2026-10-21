@@ -18,6 +18,8 @@ from redscribe.ui.mainwindow import (
     PREVIEW_DEBOUNCE_MS,
     MainWindow,
 )
+from redscribe.ui.quick_switch import QuickSwitch
+from redscribe.ui.search_dialog import SearchDialog
 
 pytestmark = pytest.mark.gui
 
@@ -236,6 +238,72 @@ def test_preview_refresh_does_not_move_the_editor(
 def test_preview_and_autosave_debounce_constants() -> None:
     assert PREVIEW_DEBOUNCE_MS == 250
     assert AUTOSAVE_DEBOUNCE_MS == 1200
+
+
+def test_quick_switch_lists_notes_and_folders(
+    window: tuple[MainWindow, tk.Tk, Vault, list[tuple[object, ...]]],
+) -> None:
+    app, _root, vault, errors = window
+    folder = vault.create_node("Infrastructure", None, kind="folder")
+    note = vault.create_node("Domain controller", folder.id)
+    opened: list[int] = []
+    switcher = QuickSwitch(app, app._theme, vault=vault, on_open=opened.append)
+    try:
+        assert switcher.search.get_value() == ""
+        assert str(folder.id) in switcher.tree.get_children()
+        assert str(note.id) in switcher.tree.get_children()
+        assert "folder" in switcher.tree.item(str(folder.id), "tags")
+        assert "1 note" in str(switcher.count.cget("text"))
+        assert "1 folder" in str(switcher.count.cget("text"))
+
+        switcher.tree.selection_set(str(folder.id))
+        switcher._open()
+        assert opened == [folder.id]
+    finally:
+        with contextlib.suppress(tk.TclError):
+            if switcher.winfo_exists():
+                switcher.destroy()
+    assert not errors
+
+
+def test_quick_switch_folder_reveals_it_in_the_tree(
+    window: tuple[MainWindow, tk.Tk, Vault, list[tuple[object, ...]]],
+) -> None:
+    app, _root, vault, errors = window
+    folder = vault.create_node("Infrastructure", None, kind="folder")
+    vault.create_node("Domain controller", folder.id)
+    app._refresh_tree()
+    app.tree_filter.set_value("no-such-item")
+    app._refresh_tree()
+
+    app._quick_switch_open(folder.id)
+    assert app.tree_filter.get_value() == ""
+    assert app.tree.selection() == (str(folder.id),)
+    assert bool(app.tree.item(str(folder.id), "open"))
+    assert app._note is None
+    assert not errors
+
+
+def test_search_flushes_pending_query_before_opening(
+    window: tuple[MainWindow, tk.Tk, Vault, list[tuple[object, ...]]],
+) -> None:
+    app, _root, vault, errors = window
+    vault.create_node("Alpha report", None, content="alpha findings")
+    beta = vault.create_node("Beta report", None, content="beta findings")
+    dialog = SearchDialog(app, app._theme, vault=vault)
+    try:
+        dialog.search.set_value("Alpha")
+        dialog._run_search()
+        assert dialog.tree.get_children()
+
+        dialog.search.set_value("Beta")
+        dialog._open_from_entry()
+        assert dialog.result == beta.id
+    finally:
+        with contextlib.suppress(tk.TclError):
+            if dialog.winfo_exists():
+                dialog.destroy()
+    assert not errors
 
 
 def test_dashboard_offers_import_for_a_populated_vault(

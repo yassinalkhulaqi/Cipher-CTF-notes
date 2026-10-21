@@ -6,7 +6,7 @@
 | --- | --- |
 | `Ctrl+N` | New note using the last template |
 | `Ctrl+Shift+N` | New folder |
-| `Ctrl+P` | Quick switch (fuzzy note search) |
+| `Ctrl+P` | Quick switch (fuzzy notes and folders) |
 | `Ctrl+Shift+F` | Full-text search |
 | `Ctrl+Shift+S` | Snippet library |
 | `Ctrl+Shift+D` | Dashboard |
@@ -54,4 +54,6 @@ Drag a row to the empty area below the tree to move it back to the vault root.
 | `Escape` | Close the find bar |
 
 The find bar is local to the current note. Use `Ctrl+Shift+F` to search the
-whole vault and `Ctrl+P` to jump by title, tag, or target.
+whole vault and `Ctrl+P` to jump to a note or folder by title, tag, or target.
+In vault search, Enter always opens the currently matched result even while the
+search debounce is still pending.

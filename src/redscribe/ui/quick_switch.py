@@ -1,4 +1,4 @@
-"""Fuzzy quick-switch palette for jumping between notes."""
+"""Fuzzy quick-switch palette for jumping between notes and folders."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from redscribe.ui.widgets import SearchBox
 
 
 class QuickSwitch(tk.Toplevel):
-    """A borderless command palette backed by fuzzy note ranking."""
+    """A borderless command palette backed by fuzzy note and folder ranking."""
 
     def __init__(
         self,
@@ -29,11 +29,13 @@ class QuickSwitch(tk.Toplevel):
         self._theme = theme
         self._vault = vault
         self._on_open = on_open
-        self._paths = {
-            node.id: vault.path_of(node.id, include_self=False) for node in vault.iter_notes()
-        }
+        nodes = sorted(
+            vault.live_nodes(),
+            key=lambda node: (node.updated_at, node.title.casefold()),
+            reverse=True,
+        )
         self._entries: list[tuple[Node, str]] = [
-            (node, self._paths.get(node.id, "")) for node in vault.iter_notes()
+            (node, vault.path_of(node.id, include_self=False)) for node in nodes
         ]
         self._ranked: list[tuple[Node, str]] = []
         self.withdraw()
@@ -59,7 +61,7 @@ class QuickSwitch(tk.Toplevel):
         self.search = SearchBox(
             header,
             theme,
-            "Jump to a note by title, target, tag, or path…",
+            "Jump to a note or folder by title, target, tag, or path…",
             background=palette.surface_alt,
             font_delta=1,
         )
@@ -99,6 +101,7 @@ class QuickSwitch(tk.Toplevel):
         scrollbar.grid(row=0, column=1, sticky="ns")
         self.tree.configure(yscrollcommand=scrollbar.set)
         self.tree.tag_configure("pinned", foreground=palette.accent)
+        self.tree.tag_configure("folder", foreground=palette.blue)
 
         footer = tk.Frame(shell, bg=palette.surface, height=34)
         footer.grid(row=3, column=0, sticky="ew", padx=16, pady=(8, 12))
@@ -133,20 +136,36 @@ class QuickSwitch(tk.Toplevel):
         for item in self.tree.get_children():
             self.tree.delete(item)
         for node, path in entries:
+            if node.is_folder:
+                icon = "▸"
+                tags: tuple[str, ...] = ("folder",)
+            elif node.pinned:
+                icon = "★"
+                tags = ("pinned",)
+            else:
+                icon = "◆"
+                tags = ()
             self.tree.insert(
                 "",
                 "end",
                 iid=str(node.id),
-                text=f"{'◆' if node.pinned else ' '}  {node.title}",
+                text=f"{icon}  {node.title}",
                 values=(path or "Vault root",),
-                tags=("pinned",) if node.pinned else (),
+                tags=tags,
             )
         if entries:
             first = str(entries[0][0].id)
             self.tree.selection_set(first)
             self.tree.focus(first)
             self.tree.see(first)
-        self.count.configure(text=f"{len(entries)} {'note' if len(entries) == 1 else 'notes'}")
+        notes = sum(1 for node, _path in entries if not node.is_folder)
+        folders = len(entries) - notes
+        summary = f"{notes} {'note' if notes == 1 else 'notes'}"
+        if folders:
+            summary += f" · {folders} {'folder' if folders == 1 else 'folders'}"
+        if not entries:
+            summary = "No notes or folders"
+        self.count.configure(text=summary)
 
     def _move(self, offset: int) -> str:
         items = self.tree.get_children()
