@@ -7,9 +7,9 @@ import tkinter as tk
 from collections.abc import Callable
 from tkinter import ttk
 
-from redscribe.db import Vault
 from redscribe.domain.fuzzy import rank_items
 from redscribe.domain.models import Node
+from redscribe.storage.db import Vault
 from redscribe.ui.theme import Theme
 from redscribe.ui.widgets import SearchBox
 

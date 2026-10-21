@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from redscribe.db import Vault
+from redscribe.storage.db import Vault
 
 _HTB = r"""# HTB — Corporate
 

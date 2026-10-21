@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 
-from redscribe.db import Vault
 from redscribe.exporter import (
     export_note_html,
     export_note_markdown,
@@ -23,6 +22,7 @@ from redscribe.importer import (
     read_text_file,
     title_from_body,
 )
+from redscribe.storage.db import Vault
 
 
 def test_parse_front_matter() -> None:

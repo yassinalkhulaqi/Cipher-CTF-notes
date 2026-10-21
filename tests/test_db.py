@@ -6,8 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from redscribe.db import Vault
-from redscribe.models import Node, VaultStats
+from redscribe.domain.models import Node, VaultStats
+from redscribe.storage import db as storage_db
+from redscribe.storage.db import SCHEMA_VERSION, Vault
 
 
 def test_new_vault_is_empty(vault: Vault) -> None:
@@ -250,6 +251,31 @@ def test_search_like_fallback(vault: Vault) -> None:
     assert vault.search("   ") == []
 
 
+def test_symbol_only_query_uses_like_search(vault: Vault) -> None:
+    note = vault.create_node("Pipe", content="admin | flag{test}")
+    assert [hit.node_id for hit in vault.search("|")] == [note.id]
+    assert [hit.node_id for hit in vault.search("flag{test}")] == [note.id]
+
+
+def test_failed_fts_setup_removes_partial_objects(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        storage_db,
+        "_FTS_SCHEMA",
+        storage_db._FTS_SCHEMA + "\nCREATE TABLE deliberately_broken (",
+    )
+    with Vault(":memory:") as vault:
+        assert vault.fts_enabled is False
+        names = {
+            str(row["name"])
+            for row in vault.connection.execute(
+                "SELECT name FROM sqlite_master WHERE name LIKE 'nodes_fts%'"
+            )
+        }
+        assert names == set()
+        note = vault.create_node("Fallback", content="searchable")
+        assert [hit.node_id for hit in vault.search("searchable")] == [note.id]
+
+
 def test_search_invalid_fts_query_falls_back(monkeypatch: pytest.MonkeyPatch, vault: Vault) -> None:
     note = vault.create_node("Note", content="alpha")
     calls = {"count": 0}
@@ -389,6 +415,7 @@ def test_schema_version_and_display_path(tmp_path: Path) -> None:
     path = tmp_path / "nested" / "vault.db"
     with Vault(path) as vault:
         assert vault.display_path == str(path)
+        assert vault.schema_version == SCHEMA_VERSION
         assert vault.get_setting("missing") is None
     assert path.exists()
 
@@ -399,6 +426,42 @@ def test_schema_version_and_display_path(tmp_path: Path) -> None:
         assert memory.get_node(1) is None
     finally:
         memory.close()
+
+
+def test_file_vault_uses_wal(tmp_path: Path) -> None:
+    with Vault(tmp_path / "vault.db") as vault:
+        row = vault.connection.execute("PRAGMA journal_mode").fetchone()
+        assert row is not None
+        assert str(row[0]).lower() == "wal"
+
+
+def test_legacy_schema_is_migrated_in_place(tmp_path: Path) -> None:
+    path = tmp_path / "legacy.db"
+    with Vault(path) as vault:
+        vault.connection.execute("DROP INDEX idx_nodes_kind")
+        vault.connection.execute("PRAGMA user_version = 1")
+        vault.connection.commit()
+
+    with Vault(path) as upgraded:
+        assert upgraded.schema_version == 2
+        indexes = {
+            str(row["name"])
+            for row in upgraded.connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'index'"
+            )
+        }
+        assert {"idx_nodes_kind", "idx_nodes_target", "idx_nodes_pinned"} <= indexes
+        assert upgraded.create_node("Migrated").title == "Migrated"
+
+
+def test_newer_schema_is_rejected(tmp_path: Path) -> None:
+    path = tmp_path / "future.db"
+    with Vault(path) as vault:
+        vault.connection.execute("PRAGMA user_version = 999")
+        vault.connection.commit()
+
+    with pytest.raises(RuntimeError, match="newer than this RedScribe build"):
+        Vault(path)
 
 
 def test_closed_vault_is_idempotent() -> None:

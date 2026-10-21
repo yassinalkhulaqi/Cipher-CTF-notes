@@ -6,8 +6,8 @@ import json
 import re
 from pathlib import Path
 
-from redscribe.db import Vault
 from redscribe.domain.models import DIFFICULTIES, STATUSES, Node
+from redscribe.storage.db import Vault
 
 _FRONT_MATTER_KEY = re.compile(r"^(?P<key>[A-Za-z0-9_-]+)\s*:\s*(?P<value>.*)$")
 _HEADING = re.compile(r"^\s{0,3}#\s+(?P<title>.+?)\s*#*\s*$")
