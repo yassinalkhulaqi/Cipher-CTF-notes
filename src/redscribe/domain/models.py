@@ -28,9 +28,9 @@ DIFFICULTY_LABELS: dict[str, str] = {
 KINDS: tuple[str, ...] = ("folder", "note")
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class Node:
-    """A folder or note in the vault tree."""
+    """An immutable folder or note snapshot loaded from the vault."""
 
     id: int
     parent_id: int | None
@@ -48,6 +48,14 @@ class Node:
     updated_at: str
     deleted_at: str | None = None
 
+    def __post_init__(self) -> None:
+        if self.kind not in KINDS:
+            raise ValueError(f"Unknown node kind: {self.kind}")
+        if self.status not in STATUSES:
+            raise ValueError(f"Unknown status: {self.status}")
+        if self.difficulty not in DIFFICULTIES:
+            raise ValueError(f"Unknown difficulty: {self.difficulty}")
+
     @property
     def is_folder(self) -> bool:
         return self.kind == "folder"
@@ -55,6 +63,10 @@ class Node:
     @property
     def is_note(self) -> bool:
         return self.kind == "note"
+
+    @property
+    def is_trashed(self) -> bool:
+        return self.deleted_at is not None
 
     @property
     def tag_list(self) -> list[str]:
@@ -65,11 +77,15 @@ class Node:
         return STATUS_LABELS.get(self.status, self.status.title())
 
     @property
+    def status_icon(self) -> str:
+        return STATUS_ICONS.get(self.status, "○")
+
+    @property
     def difficulty_label(self) -> str:
         return DIFFICULTY_LABELS.get(self.difficulty, self.difficulty.title())
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class SearchHit:
     node_id: int
     title: str
@@ -78,7 +94,7 @@ class SearchHit:
     rank: float = 0.0
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class FlagHit:
     flag: str
     node_id: int
@@ -87,7 +103,7 @@ class FlagHit:
     manual: bool = False
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class Snippet:
     title: str
     command: str
@@ -107,7 +123,7 @@ class Snippet:
         return tags[0] if tags else "misc"
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class VaultStats:
     notes: int = 0
     folders: int = 0
@@ -118,13 +134,13 @@ class VaultStats:
     trashed: int = 0
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class TagCount:
     tag: str
     count: int
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class Template:
     key: str
     name: str
