@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from redscribe.flags import find_flags, has_flag, merge_flags, primary_flag
+from redscribe.domain.flags import find_flags, has_flag, merge_flags, primary_flag
 
 
 def test_find_flags_extracts_common_formats() -> None:
