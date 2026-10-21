@@ -14,7 +14,7 @@ def test_builtin_snippets_have_unique_keys_and_commands() -> None:
     assert set(BUILTIN_BY_KEY) == set(keys)
     assert all(snippet.builtin for snippet in BUILTIN_SNIPPETS)
     assert all(snippet.command.strip() for snippet in BUILTIN_SNIPPETS)
-    assert len(BUILTIN_SNIPPETS) >= 60
+    assert len(BUILTIN_SNIPPETS) >= 70
 
 
 def test_snippet_placeholders_preserves_order_and_uniqueness() -> None:

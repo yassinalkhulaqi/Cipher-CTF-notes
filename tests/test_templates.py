@@ -25,6 +25,13 @@ def test_get_template_falls_back_to_blank() -> None:
     assert get_template("does-not-exist").key == "blank"
 
 
+def test_every_template_renders_without_known_placeholders() -> None:
+    for template in TEMPLATES:
+        content = render_template(template, "Example", "app.acme.test")
+        assert "{{" not in content
+        assert "}}" not in content
+
+
 def test_render_template_fills_context() -> None:
     content = render_template(get_template("host"), "ACME web", "app.acme.test")
     assert "# ACME web" in content

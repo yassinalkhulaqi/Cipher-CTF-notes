@@ -1,6 +1,14 @@
 from __future__ import annotations
 
-from redscribe.domain.flags import find_flags, has_flag, merge_flags, primary_flag
+import pytest
+
+from redscribe.domain.flags import (
+    FLAG_PREFIXES,
+    find_flags,
+    has_flag,
+    merge_flags,
+    primary_flag,
+)
 
 
 def test_find_flags_extracts_common_formats() -> None:
@@ -35,3 +43,14 @@ def test_primary_flag_and_merge_flags() -> None:
         "flag{one}",
         "ctf{two}",
     ]
+
+
+def test_supports_at_least_forty_event_prefixes() -> None:
+    assert len(FLAG_PREFIXES) >= 40
+    assert len(set(FLAG_PREFIXES)) == len(FLAG_PREFIXES)
+
+
+@pytest.mark.parametrize("prefix", FLAG_PREFIXES)
+def test_each_registered_prefix_is_detected(prefix: str) -> None:
+    value = f"{prefix}{{sample_value}}"
+    assert find_flags(f"prefix: {value}") == [value]
