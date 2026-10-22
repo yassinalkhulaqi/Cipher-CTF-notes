@@ -82,7 +82,7 @@ def _run(args: argparse.Namespace) -> int:
     root.option_add("*tearOff", False)
     vault = Vault(_vault_path(args.vault))
     try:
-        if args.demo and vault.stats().notes == 0:
+        if args.demo and vault.basic_stats().notes == 0:
             seed_demo(vault)
         window = MainWindow(
             root,

@@ -257,7 +257,7 @@ nmap -sn <TARGET>/24
 
 def seed_demo(vault: Vault) -> int:
     """Populate an empty vault with demo notes and return the note count."""
-    stats = vault.stats()
+    stats = vault.basic_stats()
     if stats.notes or stats.folders:
         return 0
 

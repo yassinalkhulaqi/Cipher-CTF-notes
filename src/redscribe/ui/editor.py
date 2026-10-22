@@ -33,6 +33,7 @@ _FLAG_RE = re.compile(
     r"\b(?:flag|HTB|CTF|picoCTF|THM|DUCTF|NCL|UofTCTF|ictf)\{[^}\n]{1,160}\}",
     re.IGNORECASE,
 )
+_DEFER_HIGHLIGHT_CHARS = 20_000
 
 _SYNTAX_TAGS = (
     "h1",
@@ -702,7 +703,10 @@ class MarkdownEditor(tk.Frame):
             self.text.mark_set("insert", "1.0")
             self.text.see("1.0")
             self._update_font_metrics()
-            self._highlight()
+            if len(content) >= _DEFER_HIGHLIGHT_CHARS:
+                self.schedule_highlight()
+            else:
+                self._highlight()
             self._update_current_line()
         finally:
             self._loading = False

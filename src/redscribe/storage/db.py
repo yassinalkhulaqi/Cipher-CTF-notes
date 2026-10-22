@@ -148,11 +148,19 @@ class Vault:
         )
         self._connection.row_factory = sqlite3.Row
         self._closed = False
+        self._stats_cache: tuple[int, VaultStats] | None = None
+        self._tag_cache: tuple[int, list[TagCount]] | None = None
+        self._flag_cache: dict[int, tuple[int, list[FlagHit]]] = {}
+        self._settings_changes = 0
         self._configure()
         self._init_schema()
         self.fts_enabled = False
         if enable_fts:
             self._init_fts()
+
+    @property
+    def content_revision(self) -> int:
+        return self._connection.total_changes - self._settings_changes
 
     def __enter__(self) -> Vault:
         return self
@@ -530,6 +538,10 @@ class Vault:
         return [self._row_to_node(row) for row in rows]
 
     def collected_flags(self, limit: int = 500) -> list[FlagHit]:
+        revision = self._connection.total_changes
+        cached = self._flag_cache.get(limit)
+        if cached is not None and cached[0] == revision:
+            return list(cached[1])
         rows = self._connection.execute(
             "SELECT * FROM nodes WHERE kind = 'note' AND deleted_at IS NULL "
             "ORDER BY pinned DESC, updated_at DESC LIMIT ?",
@@ -556,9 +568,13 @@ class Vault:
                         manual=flag == node.flag,
                     )
                 )
-        return hits
+        self._flag_cache[limit] = (revision, hits)
+        return list(hits)
 
     def tag_counts(self) -> list[TagCount]:
+        revision = self._connection.total_changes
+        if self._tag_cache is not None and self._tag_cache[0] == revision:
+            return list(self._tag_cache[1])
         rows = self._connection.execute(
             "SELECT tags FROM nodes WHERE kind = 'note' AND deleted_at IS NULL AND tags <> ''"
         ).fetchall()
@@ -577,9 +593,12 @@ class Vault:
                 counts[key] = counts.get(key, 0) + 1
                 display.setdefault(key, tag)
         ordered = sorted(counts.items(), key=lambda item: (-item[1], display[item[0]].casefold()))
-        return [TagCount(display[key], count) for key, count in ordered]
+        counts_list = [TagCount(display[key], count) for key, count in ordered]
+        self._tag_cache = (revision, counts_list)
+        return list(counts_list)
 
-    def stats(self) -> VaultStats:
+    def basic_stats(self) -> VaultStats:
+        """Return node counts without scanning note bodies for flags or tags."""
         rows = self._connection.execute(
             "SELECT kind, COUNT(*) AS count FROM nodes WHERE deleted_at IS NULL GROUP BY kind"
         ).fetchall()
@@ -604,12 +623,39 @@ class Vault:
         return VaultStats(
             notes=counts.get("note", 0),
             folders=counts.get("folder", 0),
-            flags=len(self.collected_flags()),
             targets=targets,
-            tags=len(self.tag_counts()),
             pinned=pinned,
             trashed=trashed,
         )
+
+    def _count_flags(self) -> int:
+        rows = self._connection.execute(
+            "SELECT flag, content FROM nodes WHERE kind = 'note' AND deleted_at IS NULL"
+        ).fetchall()
+        seen: set[str] = set()
+        for row in rows:
+            flag = str(row["flag"])
+            if flag:
+                seen.add(flag)
+            seen.update(find_flags(str(row["content"])))
+        return len(seen)
+
+    def stats(self) -> VaultStats:
+        revision = self._connection.total_changes
+        if self._stats_cache is not None and self._stats_cache[0] == revision:
+            return self._stats_cache[1]
+        base = self.basic_stats()
+        stats = VaultStats(
+            notes=base.notes,
+            folders=base.folders,
+            flags=self._count_flags(),
+            targets=base.targets,
+            tags=len(self.tag_counts()),
+            pinned=base.pinned,
+            trashed=base.trashed,
+        )
+        self._stats_cache = (revision, stats)
+        return stats
 
     def duplicate_node(self, node_id: int) -> Node:
         source = self.get_node(node_id)
@@ -861,12 +907,14 @@ class Vault:
         return str(row["value"]) if row is not None else default
 
     def set_setting(self, key: str, value: str) -> None:
+        before = self._connection.total_changes
         with self._connection:
             self._connection.execute(
                 "INSERT INTO settings(key, value) VALUES(?, ?) "
                 "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
                 (key, value),
             )
+        self._settings_changes += self._connection.total_changes - before
 
     def get_json_setting(self, key: str, default: T) -> T:
         raw = self.get_setting(key)

@@ -90,6 +90,26 @@ def test_open_note_switch_views_and_save(
     assert not errors
 
 
+def test_write_mode_skips_preview_when_opening_large_note(
+    window: tuple[MainWindow, tk.Tk, Vault, list[tuple[object, ...]]],
+) -> None:
+    app, _root, vault, errors = window
+    node = vault.create_node("Large note", None, content="x" * 40_000)
+    app._view_mode = "write"
+    rendered: list[str] = []
+    original = app.preview.set_markdown
+    app.preview.set_markdown = lambda content, **_kwargs: rendered.append(content)
+    try:
+        assert app.open_node(node.id)
+        assert app._preview_stale is True
+        assert rendered == []
+        app._set_view_mode("split")
+        assert len(rendered) == 1
+    finally:
+        app.preview.set_markdown = original
+    assert not errors
+
+
 def test_theme_toggle_rebuilds_and_persists(
     window: tuple[MainWindow, tk.Tk, Vault, list[tuple[object, ...]]],
 ) -> None:

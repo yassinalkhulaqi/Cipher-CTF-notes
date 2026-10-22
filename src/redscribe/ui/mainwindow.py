@@ -64,6 +64,8 @@ LOGGER = logging.getLogger(__name__)
 _VIEW_MODES = ("write", "split", "preview")
 _GEOMETRY_RE = re.compile(r"^\d+x\d+[+-]\d+[+-]\d+$")
 _TREE_DRAG_THRESHOLD = 6
+_LARGE_PREVIEW_CHARS = 40_000
+_LARGE_PREVIEW_DELAY_MS = 40
 PREVIEW_DEBOUNCE_MS = 250
 AUTOSAVE_DEBOUNCE_MS = 1200
 
@@ -686,7 +688,7 @@ class MainWindow(tk.Frame):
         self._show_dashboard(save=False)
 
     def _update_sidebar_stats(self) -> None:
-        stats = self._vault.stats()
+        stats = self._vault.basic_stats()
         self.tree_count_label.configure(text=f"{stats.notes}")
         self.vault_stats_label.configure(
             text=(
@@ -702,6 +704,9 @@ class MainWindow(tk.Frame):
         self._tree_job = self.after(110, self._refresh_tree)
 
     def _refresh_tree(self) -> None:
+        if self._tree_job is not None:
+            with suppress(tk.TclError):
+                self.after_cancel(self._tree_job)
         self._tree_job = None
         if not self.winfo_exists():
             return
@@ -1282,13 +1287,19 @@ class MainWindow(tk.Frame):
             self._note = node
             self.title_var.set(node.title)
             self.editor.set_text(node.content)
-            self.preview.set_markdown(node.content, preserve_scroll=False)
             self._dirty = False
             self._preview_stale = False
             self._render_note_meta()
             self.note_frame.grid()
             self.dashboard.grid_remove()
             self._apply_view_mode()
+            if self._view_mode == "write":
+                self._preview_stale = True
+            elif len(node.content) >= _LARGE_PREVIEW_CHARS:
+                self._preview_stale = True
+                self._schedule_preview_now()
+            else:
+                self.preview.set_markdown(node.content, preserve_scroll=False)
             self._sync_tree_selection()
             self._update_document_stats()
             self._set_save_state("saved")
@@ -1557,7 +1568,16 @@ class MainWindow(tk.Frame):
             self.after_cancel(self._preview_job)
         self._preview_job = self.after(PREVIEW_DEBOUNCE_MS, self._render_preview)
 
+    def _schedule_preview_now(self) -> None:
+        if self._preview_job is not None:
+            with suppress(tk.TclError):
+                self.after_cancel(self._preview_job)
+        self._preview_job = self.after(_LARGE_PREVIEW_DELAY_MS, self._render_preview)
+
     def _render_preview(self) -> None:
+        if self._preview_job is not None:
+            with suppress(tk.TclError):
+                self.after_cancel(self._preview_job)
         self._preview_job = None
         if self._note is None or self._view_mode == "write":
             return
@@ -2131,7 +2151,7 @@ class MainWindow(tk.Frame):
         AboutDialog(self, self._theme).show(450)
 
     def _load_demo(self) -> None:
-        if self._vault.stats().notes:
+        if self._vault.basic_stats().notes:
             messagebox.showinfo(
                 "Demo data",
                 "Demo notes can only be loaded into an empty vault.",

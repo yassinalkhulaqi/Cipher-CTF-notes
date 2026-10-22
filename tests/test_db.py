@@ -359,6 +359,54 @@ def test_stats_only_count_pinned_notes(vault: Vault) -> None:
     assert stats.pinned == 1
 
 
+def test_stats_caches_invalidate_after_changes(vault: Vault) -> None:
+    first = vault.create_node(
+        "First",
+        content="flag{alpha}",
+        tags="Web",
+        target="app.test",
+    )
+    initial = vault.stats()
+    assert initial.notes == 1
+    assert initial.flags == 1
+    assert initial.tags == 1
+    assert [hit.flag for hit in vault.collected_flags()] == ["flag{alpha}"]
+
+    vault.create_node(
+        "Second",
+        content="ctf{beta}",
+        tags="Linux",
+        target="app.test",
+    )
+    updated = vault.stats()
+    assert updated.notes == 2
+    assert updated.flags == 2
+    assert updated.tags == 2
+    assert {hit.flag for hit in vault.collected_flags()} == {"flag{alpha}", "ctf{beta}"}
+    assert {entry.tag for entry in vault.tag_counts()} == {"Web", "Linux"}
+
+    vault.update_node(first.id, content="clean", tags="")
+    assert vault.stats().flags == 1
+    assert [hit.flag for hit in vault.collected_flags()] == ["ctf{beta}"]
+
+
+def test_content_revision_ignores_setting_writes(vault: Vault) -> None:
+    revision = vault.content_revision
+    vault.set_setting("ui.last_note", "1")
+    assert vault.content_revision == revision
+    vault.create_node("Note")
+    assert vault.content_revision > revision
+
+
+def test_basic_stats_skips_content_scans(vault: Vault) -> None:
+    vault.create_node("Note", content="flag{alpha}", tags="Web", target="app.test")
+    stats = vault.basic_stats()
+    assert stats.notes == 1
+    assert stats.targets == 1
+    assert stats.flags == 0
+    assert stats.tags == 0
+
+
 def test_settings_round_trip(vault: Vault) -> None:
     assert vault.get_setting("missing") is None
     assert vault.get_setting("missing", "fallback") == "fallback"

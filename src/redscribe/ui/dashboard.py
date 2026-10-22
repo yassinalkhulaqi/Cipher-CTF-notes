@@ -7,7 +7,7 @@ from collections.abc import Callable
 from functools import partial
 from tkinter import ttk
 
-from redscribe.domain.models import FlagHit, Node, TagCount
+from redscribe.domain.models import FlagHit, Node, TagCount, VaultStats
 from redscribe.domain.utils import humanize_delta, truncate
 from redscribe.storage.db import Vault
 from redscribe.ui.theme import Theme, difficulty_color, status_color
@@ -44,10 +44,10 @@ class Dashboard(tk.Frame):
         self._on_view_flags = on_view_flags
         self._on_load_demo = on_load_demo
         self._on_import = on_import
-        self._stats = vault.stats()
+        self._stats = VaultStats()
+        self._built_revision: int | None = None
         self.scroll = ScrollableFrame(self, theme)
         self.scroll.pack(fill="both", expand=True)
-        self._build()
 
     def _build(self) -> None:
         for child in self.scroll.inner.winfo_children():
@@ -434,6 +434,10 @@ class Dashboard(tk.Frame):
         bind_all_children(widget)
 
     def refresh(self) -> None:
+        revision = self._vault.content_revision
+        if self._built_revision == revision:
+            return
         self._stats = self._vault.stats()
         self.scroll.scroll_to_top()
         self._build()
+        self._built_revision = revision
