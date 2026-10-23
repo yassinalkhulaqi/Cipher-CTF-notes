@@ -40,6 +40,7 @@ def test_parser_has_expected_defaults() -> None:
     args = _build_parser().parse_args([])
     assert args.vault is None
     assert args.demo is False
+    assert args.ui == "window"
     assert args.theme is None
     assert args.font_size is None
 
@@ -92,5 +93,5 @@ def test_run_returns_zero_when_mainloop_exits(
     monkeypatch.setattr(tk, "Tk", FakeRoot)
     monkeypatch.setattr("redscribe.ui.mainwindow.MainWindow", FakeWindow)
     monkeypatch.setattr(app, "Vault", FakeVault)
-    args = _build_parser().parse_args(["--vault", str(tmp_path / "vault.sqlite")])
+    args = _build_parser().parse_args(["--ui", "tk", "--vault", str(tmp_path / "vault.sqlite")])
     assert app._run(args) == 0

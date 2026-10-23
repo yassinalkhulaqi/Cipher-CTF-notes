@@ -177,6 +177,13 @@ def export_vault_html(vault: Vault, destination: str | Path) -> int:
     """Create a single-file, searchable HTML report of the entire vault."""
     target = _ensure_suffix(Path(destination), ".html")
     target.parent.mkdir(parents=True, exist_ok=True)
+    document = vault_report_text(vault)
+    target.write_text(document, encoding="utf-8", newline="\n")
+    return len(_report_notes(vault))
+
+
+def vault_report_text(vault: Vault) -> str:
+    """Render the whole vault as a standalone HTML report string."""
     groups = _group_nodes(vault)
     stats = vault.stats()
     ordered: list[tuple[Node, int]] = []
@@ -304,8 +311,11 @@ if (vaultSearch) {{
 </body>
 </html>
 """
-    target.write_text(document, encoding="utf-8", newline="\n")
-    return len(notes)
+    return document
+
+
+def _report_notes(vault: Vault) -> list[Node]:
+    return [node for nodes in _group_nodes(vault).values() for node in nodes if node.is_note]
 
 
 def _search_blob(node: Node, path: str) -> str:
