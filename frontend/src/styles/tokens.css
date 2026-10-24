@@ -1,0 +1,148 @@
+:root {
+  --font-ui: "Inter", "Segoe UI Variable Text", "Segoe UI", system-ui,
+    -apple-system, "Helvetica Neue", sans-serif;
+  --font-display: "Inter", "Segoe UI Variable Display", "Segoe UI", system-ui,
+    -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", "SFMono-Regular", "SF Mono",
+    Menlo, Consolas, monospace;
+  --font-editor: var(--font-mono);
+  --editor-size: 13px;
+
+  --radius-xs: 6px;
+  --radius-sm: 9px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-full: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --topbar-h: 58px;
+  --statusbar-h: 30px;
+  --sidebar-w: 288px;
+
+  --speed-fast: 120ms;
+  --speed: 180ms;
+  --speed-slow: 320ms;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --z-topbar: 20;
+  --z-sash: 30;
+  --z-menu: 60;
+  --z-overlay: 80;
+  --z-toast: 100;
+
+  color-scheme: dark;
+}
+
+:root,
+[data-theme="dark"] {
+  --bg: #0b0c10;
+  --bg-deep: #07080b;
+  --bg-elev: #111318;
+  --surface: #15181f;
+  --surface-2: #1b1f28;
+  --surface-3: #232936;
+  --surface-glass: rgba(19, 22, 29, 0.78);
+  --surface-glass-strong: rgba(16, 18, 24, 0.92);
+  --border: rgba(255, 255, 255, 0.075);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --border-accent: rgba(255, 95, 87, 0.38);
+  --text: #e9ecf3;
+  --text-soft: #b8c0cf;
+  --muted: #8590a3;
+  --faint: #596275;
+  --accent: #ff5f57;
+  --accent-2: #ff9f43;
+  --accent-ink: #1a0c08;
+  --accent-soft: rgba(255, 95, 87, 0.13);
+  --accent-soft-2: rgba(255, 159, 67, 0.12);
+  --blue: #6da8ff;
+  --blue-soft: rgba(109, 168, 255, 0.14);
+  --green: #4fd1a5;
+  --green-soft: rgba(79, 209, 165, 0.14);
+  --yellow: #f5c451;
+  --yellow-soft: rgba(245, 196, 81, 0.14);
+  --red: #ff6b6b;
+  --red-soft: rgba(255, 107, 107, 0.14);
+  --purple: #b18cff;
+  --purple-soft: rgba(177, 140, 255, 0.14);
+  --selection: rgba(255, 95, 87, 0.28);
+  --scroll-thumb: rgba(255, 255, 255, 0.12);
+  --scroll-thumb-hover: rgba(255, 255, 255, 0.22);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.34);
+  --shadow-lg: 0 26px 70px rgba(0, 0, 0, 0.52);
+  --glow: 0 0 0 1px rgba(255, 95, 87, 0.18), 0 12px 40px rgba(255, 95, 87, 0.12);
+  --inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --editor-bg: #101218;
+  --editor-gutter: #0d0f14;
+  --preview-bg: #12151b;
+  --mark-bg: rgba(255, 159, 67, 0.24);
+  --mark-text: #ffd7a8;
+  --code-bg: rgba(255, 255, 255, 0.055);
+  --code-border: rgba(255, 255, 255, 0.08);
+  --hero-glow-1: rgba(255, 95, 87, 0.22);
+  --hero-glow-2: rgba(109, 168, 255, 0.14);
+  --aurora-opacity: 0.6;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f1eb;
+  --bg-deep: #ece7de;
+  --bg-elev: #faf8f3;
+  --surface: #fffdf9;
+  --surface-2: #f6f2eb;
+  --surface-3: #eee8de;
+  --surface-glass: rgba(255, 253, 249, 0.82);
+  --surface-glass-strong: rgba(255, 253, 249, 0.95);
+  --border: rgba(35, 28, 18, 0.09);
+  --border-strong: rgba(35, 28, 18, 0.16);
+  --border-accent: rgba(197, 61, 51, 0.34);
+  --text: #211e19;
+  --text-soft: #4d473e;
+  --muted: #746c60;
+  --faint: #9c9385;
+  --accent: #c53d33;
+  --accent-2: #d77a24;
+  --accent-ink: #fff8ef;
+  --accent-soft: rgba(197, 61, 51, 0.1);
+  --accent-soft-2: rgba(215, 122, 36, 0.12);
+  --blue: #2f6fd0;
+  --blue-soft: rgba(47, 111, 208, 0.11);
+  --green: #15805f;
+  --green-soft: rgba(21, 128, 95, 0.11);
+  --yellow: #a46d00;
+  --yellow-soft: rgba(164, 109, 0, 0.12);
+  --red: #b83535;
+  --red-soft: rgba(184, 53, 53, 0.1);
+  --purple: #7350c9;
+  --purple-soft: rgba(115, 80, 201, 0.1);
+  --selection: rgba(197, 61, 51, 0.18);
+  --scroll-thumb: rgba(35, 28, 18, 0.16);
+  --scroll-thumb-hover: rgba(35, 28, 18, 0.28);
+  --shadow-sm: 0 1px 2px rgba(50, 40, 25, 0.08);
+  --shadow-md: 0 12px 34px rgba(50, 40, 25, 0.12);
+  --shadow-lg: 0 30px 80px rgba(50, 40, 25, 0.2);
+  --glow: 0 0 0 1px rgba(197, 61, 51, 0.15), 0 14px 40px rgba(197, 61, 51, 0.12);
+  --inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --editor-bg: #fffdf9;
+  --editor-gutter: #f7f2ea;
+  --preview-bg: #fffdf9;
+  --mark-bg: rgba(215, 122, 36, 0.2);
+  --mark-text: #6b3d05;
+  --code-bg: rgba(35, 28, 18, 0.055);
+  --code-border: rgba(35, 28, 18, 0.1);
+  --hero-glow-1: rgba(197, 61, 51, 0.12);
+  --hero-glow-2: rgba(47, 111, 208, 0.1);
+  --aurora-opacity: 0.45;
+}
