@@ -59,6 +59,8 @@ def run(
     theme: str | None = None,
     font_size: int | None = None,
     demo: bool = False,
+    port: int = 0,
+    open_browser: bool = True,
 ) -> int:
     """Start the local web server and open the frontend.
 
@@ -78,7 +80,7 @@ def run(
             future: Future[Any] = vault_executor.submit(api.handle, method, body)
             return future.result()
 
-        server = ApiServer(("127.0.0.1", 0), dispatch)
+        server = ApiServer(("127.0.0.1", port), dispatch)
         bound_port = server.bound_port
         url = f"http://127.0.0.1:{bound_port}/"
         LOGGER.info("RedScribe web UI serving at %s (vault: %s)", url, vault.display_path)
@@ -91,7 +93,8 @@ def run(
                 'Install the window extra with: python -m pip install ".[web]"'
             )
         LOGGER.info("RedScribe is running at %s — press Ctrl+C to stop.", url)
-        webbrowser.open(url)
+        if open_browser:
+            webbrowser.open(url)
         try:
             server.serve_forever()
         except KeyboardInterrupt:
