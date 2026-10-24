@@ -60,6 +60,21 @@ jobs:
       - name: Smoke test
         run: xvfb-run -a python -m pytest -m gui
 
+  frontend:
+    name: Frontend typecheck and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install
+        run: npm install --prefix frontend --no-audit --no-fund
+      - name: Typecheck
+        run: npm test --prefix frontend
+      - name: Build
+        run: npm run build --prefix frontend
+
   package:
     name: Build and install wheel
     runs-on: ubuntu-latest
