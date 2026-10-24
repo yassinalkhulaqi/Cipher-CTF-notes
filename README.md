@@ -4,8 +4,10 @@
 
 RedScribe is a desktop notes app with a CherryTree-style tree, a focused Markdown
 editor, live preview, full-text search, CTF flag tracking, target metadata, and a
-searchable library of offensive-security command snippets. One SQLite vault. No
-accounts. No telemetry. No runtime dependencies beyond Python and Tkinter.
+searchable library of offensive-security command snippets. The default frontend
+is **Aurora**, a bundled React interface served locally by Python and opened in a
+native webview or browser. One SQLite vault. No accounts. No telemetry. No
+network calls.
 
 ![RedScribe editor with the tree, Markdown source, and live preview](docs/demo.png)
 
@@ -23,17 +25,21 @@ accounts. No telemetry. No runtime dependencies beyond Python and Tkinter.
 - **Readable output.** Markdown editor with syntax highlighting and a split
   preview with code highlighting and optional synchronized scrolling. Export a
   note to Markdown or HTML, or export the whole vault as a browsable HTML report.
-- **Small and portable.** Pure standard library. The entire vault is one file
-  that you can back up, sync, or move.
+- **Aurora interface.** A responsive React workspace with a command palette,
+  focused editor, live preview, dashboard, snippet library, and light/dark themes.
+  Runs in a native webview or any modern browser.
+- **Small and portable.** The entire vault is one file that you can back up,
+  sync, or move. Frontend assets are bundled into the wheel.
 
 ## Install
 
 ```bash
-python -m pip install .
+python -m pip install ".[web]"   # native window (pywebview)
 redscribe
 ```
 
-Or run it from the source tree:
+Without the `web` extra RedScribe falls back to the default browser. Or run it
+from the source tree:
 
 ```bash
 python -m venv .venv
@@ -90,15 +96,30 @@ python -m mypy src
 python -m pytest -m "not gui"
 ```
 
+Frontend work lives in `frontend/` and uses Node 20+:
+
+```bash
+cd frontend
+npm install
+npm run dev       # watch and rebuild the Python static bundle
+npm test          # TypeScript typecheck
+npm run build     # production bundle
+```
+
 The GUI smoke test runs with `python -m pytest -m gui` on a machine with a
 display. Architecture notes live in
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md); the Aurora UI notes live in
+[docs/AURORA.md](docs/AURORA.md).
 
 Command-line options:
 
 ```bash
 redscribe --vault PATH     # use a specific SQLite vault
 redscribe --demo           # seed example notes into an empty vault
+redscribe --ui browser     # browser tab instead of a native window
+redscribe --ui tk          # classic Tkinter interface
+redscribe --port 8765      # fixed local web port (0 = choose one)
+redscribe --no-open        # start the web server without opening a browser
 redscribe --theme light    # override the stored theme
 redscribe --font-size 13   # override the stored UI font size
 redscribe --version
