@@ -66,6 +66,18 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Override the stored UI font size (9-18).",
     )
     parser.add_argument(
+        "--port",
+        type=int,
+        default=0,
+        metavar="PORT",
+        help="Port for the local web server (0 chooses a free port).",
+    )
+    parser.add_argument(
+        "--no-open",
+        action="store_true",
+        help="Start the web server without opening a browser window.",
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"RedScribe {__version__}",
@@ -133,6 +145,8 @@ def _run_web(args: argparse.Namespace) -> int:
         theme=args.theme,
         font_size=args.font_size,
         demo=args.demo,
+        port=args.port,
+        open_browser=not args.no_open,
     )
 
 
