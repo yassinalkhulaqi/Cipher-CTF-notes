@@ -23,30 +23,53 @@ LOGGER = logging.getLogger(__name__)
 
 MAX_BODY_BYTES = 8 * 1024 * 1024
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
-_STATIC_FILE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+_STATIC_PATH_RE = re.compile(r"^(?:[A-Za-z0-9][A-Za-z0-9._-]*/)*[A-Za-z0-9][A-Za-z0-9._-]*$")
 _CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
     ".css": "text/css; charset=utf-8",
     ".js": "text/javascript; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
+    ".webmanifest": "application/manifest+json; charset=utf-8",
     ".svg": "image/svg+xml",
     ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
     ".ico": "image/x-icon",
+    ".woff": "font/woff",
     ".woff2": "font/woff2",
+    ".map": "application/json; charset=utf-8",
+    ".txt": "text/plain; charset=utf-8",
 }
 
 Dispatch = Callable[[str, dict[str, Any]], Any]
 
 
+def _static_path(name: str) -> Path | None:
+    """Resolve a static asset path without allowing directory traversal."""
+    if _STATIC_PATH_RE.fullmatch(name) is None:
+        return None
+    root = _STATIC_DIR.resolve()
+    candidate = (root / name).resolve()
+    try:
+        candidate.relative_to(root)
+    except ValueError:
+        return None
+    return candidate
+
+
 def static_asset_exists(name: str) -> bool:
     """Return whether a whitelisted static asset is packaged."""
-    return _STATIC_FILE_RE.match(name) is not None and (_STATIC_DIR / name).is_file()
+    candidate = _static_path(name)
+    return candidate is not None and candidate.is_file()
 
 
 def static_asset_bytes(name: str) -> bytes | None:
     """Return the bytes of a whitelisted static asset, if present."""
-    if not static_asset_exists(name):
+    candidate = _static_path(name)
+    if candidate is None or not candidate.is_file():
         return None
-    return (_STATIC_DIR / name).read_bytes()
+    return candidate.read_bytes()
 
 
 DEFAULT_STATIC_DIR = _STATIC_DIR
@@ -81,8 +104,14 @@ class _RequestHandler(BaseHTTPRequestHandler):
         if path in ("/", "/index.html"):
             self._serve_static_file("index.html")
             return
+        if path.startswith("/assets/"):
+            self._serve_static_file(path.removeprefix("/"))
+            return
         if path.startswith("/static/"):
             self._serve_static_file(path.removesuffix("/").removeprefix("/static/"))
+            return
+        if path in ("/favicon.svg", "/manifest.webmanifest", "/robots.txt"):
+            self._serve_static_file(path.removeprefix("/"))
             return
         if path.startswith("/download/note/"):
             self._serve_node_download(path)
@@ -90,7 +119,13 @@ class _RequestHandler(BaseHTTPRequestHandler):
         if path.startswith("/download/vault/"):
             self._serve_vault_download(path)
             return
-        self._send_json({"ok": False, "error": "Not found"}, status=404)
+        if path.startswith("/api/"):
+            self._send_json({"ok": False, "error": "Not found"}, status=404)
+            return
+        if Path(path).suffix:
+            self._send_json({"ok": False, "error": "Not found"}, status=404)
+            return
+        self._serve_static_file("index.html")
 
     def do_POST(self) -> None:
         parsed = urlsplit(self.path)
@@ -158,8 +193,9 @@ class _RequestHandler(BaseHTTPRequestHandler):
         if content_type.startswith("text/html"):
             self.send_header(
                 "Content-Security-Policy",
-                "default-src 'self'; img-src 'self' data:; style-src 'self'; "
-                "script-src 'self'; connect-src 'self'",
+                "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+                "font-src 'self' data:; script-src 'self'; connect-src 'self'; "
+                "base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
             )
             self.send_header("Referrer-Policy", "no-referrer")
         self.end_headers()
