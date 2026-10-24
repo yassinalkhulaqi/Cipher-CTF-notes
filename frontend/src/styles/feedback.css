@@ -1,0 +1,239 @@
+/* ------------------------------------------------------------ Context menu */
+
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-menu);
+}
+
+.context-menu {
+  position: fixed;
+  z-index: calc(var(--z-menu) + 1);
+  min-width: 196px;
+  max-width: 260px;
+  padding: 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-glass-strong);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(22px) saturate(140%);
+  animation: menu-in var(--speed-fast) var(--ease);
+  transform-origin: top left;
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 7px;
+  text-align: left;
+  color: var(--text-soft);
+  font-size: 12px;
+  transition: background var(--speed-fast) var(--ease);
+}
+
+.menu-item:hover,
+.menu-item:focus-visible {
+  background: var(--surface-2);
+  color: var(--text);
+  outline: none;
+}
+
+.menu-item.danger {
+  color: var(--red);
+}
+
+.menu-item.danger:hover {
+  background: var(--red-soft);
+}
+
+.menu-item svg {
+  width: 14px;
+  height: 14px;
+  color: var(--faint);
+  flex: none;
+}
+
+.menu-item.danger svg {
+  color: var(--red);
+}
+
+.menu-item .menu-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-item .menu-key {
+  color: var(--faint);
+  font-size: 9.5px;
+  flex: none;
+}
+
+.menu-sep {
+  height: 1px;
+  margin: 5px 7px;
+  background: var(--border);
+}
+
+/* ------------------------------------------------------------------- Toasts */
+
+.toast-stack {
+  position: fixed;
+  right: 16px;
+  bottom: calc(var(--statusbar-h) + 14px);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-glass-strong);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(20px) saturate(140%);
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.45;
+  animation: toast-in var(--speed-slow) var(--ease);
+  pointer-events: auto;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.toast .toast-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--surface-2);
+  color: var(--muted);
+  flex: none;
+}
+
+.toast .toast-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+.toast.success .toast-icon {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.toast.error .toast-icon {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.toast .toast-message {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.toast .toast-close {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  color: var(--faint);
+  flex: none;
+}
+
+.toast .toast-close:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.toast .toast-close svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ----------------------------------------------------------------- Tooltip */
+
+[data-tip] {
+  position: relative;
+}
+
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  z-index: calc(var(--z-menu) + 2);
+  transform: translateX(-50%) translateY(-3px);
+  padding: 4px 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface-glass-strong);
+  color: var(--text-soft);
+  font-size: 10px;
+  font-weight: 450;
+  white-space: nowrap;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--speed-fast) var(--ease),
+    transform var(--speed-fast) var(--ease);
+}
+
+[data-tip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  transition-delay: 450ms;
+}
+
+[data-tip-side="right"]::after {
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translateY(-50%) translateX(-3px);
+}
+
+[data-tip-side="right"]:hover::after {
+  transform: translateY(-50%) translateX(0);
+}
+
+@media (max-width: 560px) {
+  .toast-stack {
+    right: 10px;
+    left: 10px;
+    width: auto;
+  }
+}
