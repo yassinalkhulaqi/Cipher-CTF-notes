@@ -3,7 +3,10 @@ import { useEffect, type RefObject } from "react";
 const FOCUSABLE =
   "a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex='-1'])";
 
-export function useFocusTrap(ref: RefObject<HTMLElement | null>, active: boolean): void {
+export function useFocusTrap(
+  ref: RefObject<HTMLElement | null>,
+  active: boolean,
+): void {
   useEffect(() => {
     if (!active) return;
     const root = ref.current;
@@ -18,9 +21,9 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>, active: boolean
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Tab") return;
-      const focusable = Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        (element) => element.offsetParent !== null,
-      );
+      const focusable = Array.from(
+        root.querySelectorAll<HTMLElement>(FOCUSABLE),
+      ).filter((element) => element.offsetParent !== null);
       if (focusable.length === 0) {
         event.preventDefault();
         return;

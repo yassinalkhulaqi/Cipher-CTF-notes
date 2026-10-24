@@ -7,7 +7,10 @@ interface PreviewState {
 }
 
 export function usePreview(content: string, enabled: boolean): PreviewState {
-  const [state, setState] = useState<PreviewState>({ html: "", pending: false });
+  const [state, setState] = useState<PreviewState>({
+    html: "",
+    pending: false,
+  });
 
   useEffect(() => {
     if (!enabled) return;
@@ -20,7 +23,8 @@ export function usePreview(content: string, enabled: boolean): PreviewState {
           if (!cancelled) setState({ html: result.html, pending: false });
         })
         .catch(() => {
-          if (!cancelled) setState((current) => ({ ...current, pending: false }));
+          if (!cancelled)
+            setState((current) => ({ ...current, pending: false }));
         });
     }, 320);
     return () => {

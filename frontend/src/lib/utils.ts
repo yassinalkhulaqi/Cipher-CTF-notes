@@ -21,7 +21,11 @@ export function debounce<Args extends unknown[]>(
   return wrapped;
 }
 
-export function plural(count: number, singular: string, pluralForm?: string): string {
+export function plural(
+  count: number,
+  singular: string,
+  pluralForm?: string,
+): string {
   return `${count.toLocaleString()} ${count === 1 ? singular : (pluralForm ?? `${singular}s`)}`;
 }
 
@@ -69,8 +73,9 @@ export function escapeHtml(value: string): string {
   return value.replace(
     /[&<>"']/g,
     (character) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ??
-      character,
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        character
+      ] ?? character,
   );
 }
 
@@ -78,7 +83,11 @@ export function uid(prefix = "id"): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export function downloadText(filename: string, content: string, mime: string): void {
+export function downloadText(
+  filename: string,
+  content: string,
+  mime: string,
+): void {
   const blob = new Blob([content], { type: `${mime};charset=utf-8` });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
@@ -105,7 +114,19 @@ export async function copyText(text: string): Promise<void> {
   area.remove();
 }
 
-export function highlightMarkers(snippet: string): { text: string; match: boolean } {
+export function baseName(value: string): string {
+  const parts = value.split(/[\\/]/).filter(Boolean);
+  return parts[parts.length - 1] ?? value;
+}
+
+export function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function highlightMarkers(snippet: string): {
+  text: string;
+  match: boolean;
+} {
   const open = snippet.indexOf("[");
   const close = open >= 0 ? snippet.indexOf("]", open + 1) : -1;
   if (open < 0 || close < 0) return { text: snippet, match: false };

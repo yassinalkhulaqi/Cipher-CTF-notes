@@ -80,7 +80,8 @@ export const useUiStore = create<UiState>()((set, get) => ({
     });
   },
 
-  closeAllModals: () => set({ modal: null, modalStack: [], confirmRequest: null }),
+  closeAllModals: () =>
+    set({ modal: null, modalStack: [], confirmRequest: null }),
 
   openNewNote: (parentId) => {
     set({ newNoteParent: parentId });
@@ -119,7 +120,9 @@ export const useUiStore = create<UiState>()((set, get) => ({
   },
 
   dismissToast: (id) => {
-    set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) }));
+    set((state) => ({
+      toasts: state.toasts.filter((toast) => toast.id !== id),
+    }));
   },
 
   setMobileSidebar: (open) => set({ mobileSidebarOpen: open }),

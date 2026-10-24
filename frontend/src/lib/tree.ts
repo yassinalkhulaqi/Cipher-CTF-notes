@@ -35,7 +35,9 @@ export function flattenVisible(
   return rows;
 }
 
-export function collectFolders(tree: TreeNode[]): { id: number; title: string; depth: number }[] {
+export function collectFolders(
+  tree: TreeNode[],
+): { id: number; title: string; depth: number }[] {
   const folders: { id: number; title: string; depth: number }[] = [];
   const walk = (nodes: TreeNode[], depth: number) => {
     for (const node of nodes) {
@@ -61,7 +63,10 @@ export function countNotes(tree: TreeNode[]): number {
   return count;
 }
 
-export function ancestorsOf(index: Map<number, TreeNode>, id: number): number[] {
+export function ancestorsOf(
+  index: Map<number, TreeNode>,
+  id: number,
+): number[] {
   const ancestors: number[] = [];
   let node = index.get(id);
   while (node && node.parent_id !== null) {
@@ -84,13 +89,7 @@ export function filterTree(tree: TreeNode[], query: string): TreeNode[] {
   if (!needle) return tree;
 
   const matches = (node: TreeNode): boolean => {
-    const haystack = [
-      node.title,
-      node.path,
-      node.target,
-      node.tags,
-      node.flag,
-    ]
+    const haystack = [node.title, node.path, node.target, node.tags, node.flag]
       .join(" ")
       .toLowerCase();
     return haystack.includes(needle);

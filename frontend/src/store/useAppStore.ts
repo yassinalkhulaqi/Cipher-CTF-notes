@@ -70,9 +70,16 @@ interface AppState {
     parent_id: number | null;
   }) => Promise<NodeSummary>;
   quickNote: () => Promise<NodeSummary>;
-  createFolder: (title: string, parentId: number | null) => Promise<NodeSummary>;
+  createFolder: (
+    title: string,
+    parentId: number | null,
+  ) => Promise<NodeSummary>;
   duplicateNode: (id: number) => Promise<void>;
-  moveNode: (id: number, parentId: number | null, beforeId?: number | null) => Promise<void>;
+  moveNode: (
+    id: number,
+    parentId: number | null,
+    beforeId?: number | null,
+  ) => Promise<void>;
   reorderSelected: (offset: number) => Promise<void>;
   trashNode: (id: number) => Promise<number>;
   restoreNode: (id: number) => Promise<void>;
@@ -140,7 +147,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
     try {
       const boot = await api.boot();
       const theme: Theme = boot.theme === "light" ? "light" : "dark";
-      const viewMode: ViewMode = ["editor", "split", "preview"].includes(boot.view_mode)
+      const viewMode: ViewMode = ["editor", "split", "preview"].includes(
+        boot.view_mode,
+      )
         ? boot.view_mode
         : "split";
       const fontSize = clamp(boot.font_size || 13, 9, 18);
@@ -152,7 +161,11 @@ export const useAppStore = create<AppState>()((set, get) => ({
         fontSize,
         viewMode,
         syncScroll: boot.sync_preview_scroll !== false,
-        sidebarWidth: clamp(boot.sidebar_width ?? DEFAULT_SIDEBAR_WIDTH, MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH),
+        sidebarWidth: clamp(
+          boot.sidebar_width ?? DEFAULT_SIDEBAR_WIDTH,
+          MIN_SIDEBAR_WIDTH,
+          MAX_SIDEBAR_WIDTH,
+        ),
         split: clamp(boot.split_sash ?? DEFAULT_SPLIT, MIN_SPLIT, MAX_SPLIT),
       });
 
@@ -160,7 +173,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
       const nodes = indexTree(tree);
       const expanded = new Set<number>();
       for (const node of tree) {
-        if (node.kind === "folder" && node.children.length > 0) expanded.add(node.id);
+        if (node.kind === "folder" && node.children.length > 0)
+          expanded.add(node.id);
       }
       set({ tree, nodes, expanded });
 
@@ -175,7 +189,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
     } catch (error) {
       set({
         loading: false,
-        bootError: error instanceof Error ? error.message : "Unable to open the vault",
+        bootError:
+          error instanceof Error ? error.message : "Unable to open the vault",
       });
     }
   },
@@ -211,7 +226,13 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
   closeNote: async () => {
     await get().saveNow();
-    set({ selectedId: null, note: null, draft: "", dirty: false, saveState: "idle" });
+    set({
+      selectedId: null,
+      note: null,
+      draft: "",
+      dirty: false,
+      saveState: "idle",
+    });
   },
 
   toggleFolder: (id) => {
@@ -273,7 +294,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
     const updated = await api.rename(note.id, clean);
     await get().refreshTree();
     set((state) => ({
-      note: state.note ? { ...state.note, title: updated.title, path: updated.path } : state.note,
+      note: state.note
+        ? { ...state.note, title: updated.title, path: updated.path }
+        : state.note,
     }));
   },
 
@@ -335,7 +358,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
       Promise.resolve(get()),
     ]);
     const keys = new Set(templates.map((template) => template.key));
-    const templateKey = keys.has(settings.last_template) ? settings.last_template : "ctf";
+    const templateKey = keys.has(settings.last_template)
+      ? settings.last_template
+      : "ctf";
     const parentId = parentForSelection(state.nodes, state.selectedId);
     return get().createNote({
       template_key: templateKey,

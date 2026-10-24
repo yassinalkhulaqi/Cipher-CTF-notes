@@ -13,7 +13,11 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
     title: "Navigate",
     items: [
-      { keys: ["Ctrl", "P"], label: "Quick switch", detail: "Fuzzy jump to any note" },
+      {
+        keys: ["Ctrl", "P"],
+        label: "Quick switch",
+        detail: "Fuzzy jump to any note",
+      },
       { keys: ["Ctrl", "Shift", "F"], label: "Full-text search" },
       { keys: ["Ctrl", "Shift", "D"], label: "Dashboard" },
       { keys: ["Ctrl", "Shift", "S"], label: "Snippet library" },
@@ -23,7 +27,11 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
     title: "Notes",
     items: [
-      { keys: ["Ctrl", "N"], label: "New note", detail: "Uses the last template" },
+      {
+        keys: ["Ctrl", "N"],
+        label: "New note",
+        detail: "Uses the last template",
+      },
       { keys: ["Ctrl", "Shift", "N"], label: "New folder" },
       { keys: ["Ctrl", "S"], label: "Save now" },
       { keys: ["Ctrl", "Shift", "P"], label: "Pin or unpin note" },
@@ -56,4 +64,6 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
   },
 ];
 
-export const COMMAND_SHORTCUTS: Shortcut[] = SHORTCUT_GROUPS.flatMap((group) => group.items);
+export const COMMAND_SHORTCUTS: Shortcut[] = SHORTCUT_GROUPS.flatMap(
+  (group) => group.items,
+);

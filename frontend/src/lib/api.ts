@@ -26,7 +26,10 @@ export class ApiError extends Error {
   }
 }
 
-async function call<T>(method: string, body: Record<string, unknown> = {}): Promise<T> {
+async function call<T>(
+  method: string,
+  body: Record<string, unknown> = {},
+): Promise<T> {
   let response: Response;
   try {
     response = await fetch(`/api/${method}`, {
@@ -65,7 +68,8 @@ export const api = {
   }) => call<NodeSummary>("create_note", body),
   createFolder: (body: { title: string; parent_id: number | null }) =>
     call<NodeSummary>("create_folder", body),
-  rename: (id: number, title: string) => call<NodeSummary>("rename", { id, title }),
+  rename: (id: number, title: string) =>
+    call<NodeSummary>("rename", { id, title }),
   updateNode: (body: {
     id: number;
     title?: string;
@@ -83,8 +87,16 @@ export const api = {
   duplicateNode: (id: number) => call<NodeSummary>("duplicate_node", { id }),
   reorderNode: (id: number, offset: number) =>
     call<NodeSummary | null>("reorder_node", { id, offset }),
-  moveNode: (id: number, parentId: number | null, beforeId: number | null = null) =>
-    call<NodeSummary>("move_node", { id, parent_id: parentId, before_id: beforeId }),
+  moveNode: (
+    id: number,
+    parentId: number | null,
+    beforeId: number | null = null,
+  ) =>
+    call<NodeSummary>("move_node", {
+      id,
+      parent_id: parentId,
+      before_id: beforeId,
+    }),
   trashNode: (id: number) => call<{ removed: number }>("trash_node", { id }),
   restoreNode: (id: number) => call<NodeSummary>("restore_node", { id }),
   trashedNodes: () => call<TrashedNode[]>("trashed_nodes"),
@@ -114,7 +126,8 @@ export const api = {
     description: string;
     tags: string;
   }) => call<Snippet>("update_snippet", body),
-  deleteSnippet: (id: number) => call<{ removed: number }>("delete_snippet", { id }),
+  deleteSnippet: (id: number) =>
+    call<{ removed: number }>("delete_snippet", { id }),
   renderPreview: (content: string) =>
     call<{ html: string }>("render_preview", { content }),
   getSettings: () => call<Settings>("get_settings"),
@@ -123,7 +136,8 @@ export const api = {
   loadDemo: () => call<{ ok: boolean }>("load_demo"),
   exportNoteMarkdown: (id: number) =>
     call<ExportPayload>("export_note_markdown", { id }),
-  exportNoteHtml: (id: number) => call<ExportPayload>("export_note_html", { id }),
+  exportNoteHtml: (id: number) =>
+    call<ExportPayload>("export_note_html", { id }),
   exportVaultHtml: () => call<ExportPayload>("export_vault_html"),
 };
 

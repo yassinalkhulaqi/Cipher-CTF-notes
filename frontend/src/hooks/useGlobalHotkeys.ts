@@ -5,7 +5,9 @@ import { useUiStore } from "../store/useUiStore";
 function isTyping(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   return Boolean(
-    target.closest("input, textarea, select, [contenteditable='true'], [role='textbox']"),
+    target.closest(
+      "input, textarea, select, [contenteditable='true'], [role='textbox']",
+    ),
   );
 }
 
@@ -79,7 +81,10 @@ export function useGlobalHotkeys(): void {
         void app.quickNote().then(
           (node) => ui.toast(`Created “${node.title}”`, "success"),
           (error: unknown) =>
-            ui.toast(error instanceof Error ? error.message : "Could not create note", "error"),
+            ui.toast(
+              error instanceof Error ? error.message : "Could not create note",
+              "error",
+            ),
         );
         return;
       }
@@ -119,7 +124,10 @@ export function useGlobalHotkeys(): void {
               await app.trashNode(node.id);
               ui.toast("Moved to trash");
             } catch (error) {
-              ui.toast(error instanceof Error ? error.message : "Could not move item", "error");
+              ui.toast(
+                error instanceof Error ? error.message : "Could not move item",
+                "error",
+              );
             }
           },
         });

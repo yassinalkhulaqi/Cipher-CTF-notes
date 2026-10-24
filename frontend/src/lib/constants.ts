@@ -1,7 +1,8 @@
 import type { Difficulty, Status, ViewMode } from "./types";
 
 export const PRODUCT = "RedScribe";
-export const TAGLINE = "Local-first notes for CTFs, pentests, and security research.";
+export const TAGLINE =
+  "Local-first notes for CTFs, pentests, and security research.";
 
 export const STATUSES: Status[] = ["todo", "active", "done", "blocked"];
 
