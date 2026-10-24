@@ -30,6 +30,7 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
+web = ["pywebview>=5.4,<8"]
 dev = [
   "build>=1.2.1",
   "mypy>=1.10.0",
@@ -52,7 +53,7 @@ version = { attr = "redscribe.__version__" }
 where = ["src"]
 
 [tool.setuptools.package-data]
-redscribe = ["py.typed"]
+redscribe = ["py.typed", "ui/web/static/*", "ui/web/static/assets/*"]
 
 [tool.pytest.ini_options]
 addopts = "-ra --strict-markers --strict-config"

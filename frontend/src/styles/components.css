@@ -1,0 +1,667 @@
+/* ---------------------------------------------------------------- Buttons */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 550;
+  white-space: nowrap;
+  transition:
+    background var(--speed-fast) var(--ease),
+    border-color var(--speed-fast) var(--ease),
+    color var(--speed-fast) var(--ease),
+    transform var(--speed-fast) var(--ease),
+    box-shadow var(--speed-fast) var(--ease);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.btn.primary {
+  background: linear-gradient(
+    145deg,
+    var(--accent),
+    color-mix(in srgb, var(--accent) 72%, var(--accent-2))
+  );
+  color: var(--accent-ink);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.18) inset,
+    0 6px 18px color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
+.btn.primary:hover {
+  filter: brightness(1.06);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2) inset,
+    0 8px 24px color-mix(in srgb, var(--accent) 34%, transparent);
+}
+
+.btn.ghost {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-soft);
+}
+
+.btn.ghost:hover {
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.btn.subtle {
+  background: transparent;
+  color: var(--muted);
+}
+
+.btn.subtle:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.btn.danger {
+  background: var(--red);
+  color: #fff;
+}
+
+.btn.danger:hover {
+  filter: brightness(1.08);
+}
+
+.btn.danger-ghost {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--red) 32%, transparent);
+  color: var(--red);
+}
+
+.btn.danger-ghost:hover {
+  background: var(--red-soft);
+}
+
+.btn.tiny {
+  height: 26px;
+  padding: 0 9px;
+  font-size: 11px;
+  border-radius: 7px;
+}
+
+.btn.sm {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 11.5px;
+}
+
+.btn.block {
+  width: 100%;
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  border: 1px solid transparent;
+  transition:
+    background var(--speed-fast) var(--ease),
+    color var(--speed-fast) var(--ease),
+    border-color var(--speed-fast) var(--ease),
+    transform var(--speed-fast) var(--ease);
+  flex: none;
+}
+
+.icon-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
+}
+
+.icon-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--border-accent);
+  color: var(--accent);
+}
+
+.icon-btn.sm {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+}
+
+.icon-btn.sm svg {
+  width: 14px;
+  height: 14px;
+}
+
+.icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.link-btn:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+/* ----------------------------------------------------------------- Chips */
+
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-height: 24px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 23px;
+  padding: 0 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-soft);
+  font-size: 10.5px;
+  font-weight: 550;
+  white-space: nowrap;
+  transition:
+    background var(--speed-fast) var(--ease),
+    border-color var(--speed-fast) var(--ease);
+}
+
+button.chip {
+  cursor: pointer;
+}
+
+button.chip:hover {
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+}
+
+.chip svg {
+  width: 11px;
+  height: 11px;
+}
+
+.chip .dot {
+  width: 6px;
+  height: 6px;
+  margin-right: 1px;
+}
+
+.chip.status-todo {
+  color: var(--muted);
+}
+
+.chip.status-active {
+  color: var(--blue);
+  background: var(--blue-soft);
+  border-color: color-mix(in srgb, var(--blue) 25%, transparent);
+}
+
+.chip.status-done {
+  color: var(--green);
+  background: var(--green-soft);
+  border-color: color-mix(in srgb, var(--green) 25%, transparent);
+}
+
+.chip.status-blocked {
+  color: var(--red);
+  background: var(--red-soft);
+  border-color: color-mix(in srgb, var(--red) 25%, transparent);
+}
+
+.chip.difficulty {
+  color: var(--yellow);
+  background: var(--yellow-soft);
+  border-color: color-mix(in srgb, var(--yellow) 26%, transparent);
+  text-transform: capitalize;
+}
+
+.chip.flag {
+  color: var(--green);
+  background: var(--green-soft);
+  border-color: color-mix(in srgb, var(--green) 26%, transparent);
+  font-family: var(--font-mono);
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip.target {
+  font-family: var(--font-mono);
+  color: var(--purple);
+  background: var(--purple-soft);
+  border-color: color-mix(in srgb, var(--purple) 24%, transparent);
+}
+
+.chip.tag {
+  color: var(--text-soft);
+}
+
+.chip.tag .remove {
+  display: inline-grid;
+  place-items: center;
+  width: 13px;
+  height: 13px;
+  margin-left: 1px;
+  border-radius: 50%;
+  color: var(--faint);
+}
+
+.chip.tag .remove:hover {
+  color: var(--red);
+  background: var(--red-soft);
+}
+
+.chip.tag .remove svg {
+  width: 9px;
+  height: 9px;
+}
+
+.chip.add {
+  border-style: dashed;
+  color: var(--muted);
+  background: transparent;
+}
+
+.chip.add:hover {
+  color: var(--accent);
+  border-color: var(--border-accent);
+  background: var(--accent-soft);
+}
+
+.dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--faint);
+  flex: none;
+}
+
+.dot.todo {
+  background: var(--faint);
+}
+
+.dot.active {
+  background: var(--blue);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--blue) 55%, transparent);
+}
+
+.dot.done {
+  background: var(--green);
+}
+
+.dot.blocked {
+  background: var(--red);
+}
+
+/* ------------------------------------------------------------------- Tree */
+
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding-right: 7px;
+  margin: 1px 0;
+  border-radius: 7px;
+  color: var(--text-soft);
+  font-size: 12px;
+  cursor: default;
+  user-select: none;
+  position: relative;
+  transition:
+    background var(--speed-fast) var(--ease),
+    color var(--speed-fast) var(--ease);
+}
+
+.tree-row:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.tree-row.selected {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.tree-row.selected::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.tree-row.drop-target {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--border-accent);
+}
+
+.tree-row.dragging {
+  opacity: 0.45;
+}
+
+.tree-row .chevron {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  color: var(--faint);
+  flex: none;
+}
+
+.tree-row .chevron:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.tree-row .chevron svg {
+  width: 12px;
+  height: 12px;
+  transition: transform var(--speed-fast) var(--ease);
+}
+
+.tree-row .chevron.open svg {
+  transform: rotate(90deg);
+}
+
+.tree-row .node-icon {
+  display: inline-flex;
+  color: var(--faint);
+  flex: none;
+}
+
+.tree-row .node-icon.folder {
+  color: var(--accent-2);
+}
+
+.tree-row.selected .node-icon {
+  color: var(--accent);
+}
+
+.tree-row .node-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tree-row .node-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-row .node-title.folder {
+  font-weight: 550;
+  color: var(--text);
+}
+
+.tree-row .row-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-full);
+  background: var(--surface-3);
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+.tree-row .row-flag {
+  color: var(--green);
+}
+
+.tree-row .row-flag svg,
+.tree-row .row-pin svg {
+  width: 11px;
+  height: 11px;
+}
+
+.tree-row .row-pin {
+  color: var(--accent);
+}
+
+.tree-empty {
+  padding: 26px 18px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.tree-empty svg {
+  width: 26px;
+  height: 26px;
+  margin-bottom: 8px;
+  color: var(--faint);
+}
+
+.tree-empty kbd {
+  margin: 0 2px;
+}
+
+.tree-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 10px;
+}
+
+.tree-skeleton span {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-3) 50%,
+    var(--surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+/* ----------------------------------------------------------------- Inputs */
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  height: 34px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 12.5px;
+  outline: 0;
+  transition:
+    border-color var(--speed-fast) var(--ease),
+    box-shadow var(--speed-fast) var(--ease),
+    background var(--speed-fast) var(--ease);
+}
+
+.textarea {
+  height: auto;
+  padding: 9px 11px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--faint);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: var(--border-accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  background: var(--surface);
+}
+
+.select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) 14px,
+    calc(100% - 11px) 14px;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 30px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field > label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 550;
+  color: var(--text-soft);
+}
+
+.field > label .opt {
+  font-weight: 400;
+  color: var(--faint);
+  font-size: 10.5px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
+.check input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  gap: 2px;
+}
+
+.segmented button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 11.5px;
+  transition:
+    background var(--speed-fast) var(--ease),
+    color var(--speed-fast) var(--ease);
+}
+
+.segmented button:hover {
+  color: var(--text);
+}
+
+.segmented button[aria-pressed="true"],
+.segmented button.on {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.segmented button svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* -------------------------------------------------------------- Empty state */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.empty svg {
+  width: 30px;
+  height: 30px;
+  color: var(--faint);
+  margin-bottom: 2px;
+}
+
+.empty strong {
+  color: var(--text-soft);
+  font-weight: 600;
+}

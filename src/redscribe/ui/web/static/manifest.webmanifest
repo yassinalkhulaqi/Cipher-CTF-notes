@@ -1,0 +1,17 @@
+{
+  "name": "RedScribe",
+  "short_name": "RedScribe",
+  "description": "Local-first notes for CTFs, pentests, and security research.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0e12",
+  "theme_color": "#0d0e12",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

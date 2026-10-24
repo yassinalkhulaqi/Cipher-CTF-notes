@@ -6,7 +6,6 @@ import argparse
 import logging
 import os
 import sys
-import tkinter.messagebox as messagebox
 import traceback
 from collections.abc import Sequence
 from pathlib import Path
@@ -47,6 +46,15 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Seed example notes when the vault is empty.",
     )
     parser.add_argument(
+        "--ui",
+        choices=("window", "browser", "tk"),
+        default="window",
+        help=(
+            "Frontend to launch: a native web window (default, needs the "
+            "'web' extra), the system browser, or the classic Tk interface."
+        ),
+    )
+    parser.add_argument(
         "--theme",
         choices=("dark", "light"),
         help="Override the stored color theme for this session.",
@@ -56,6 +64,18 @@ def _build_parser() -> argparse.ArgumentParser:
         type=int,
         metavar="SIZE",
         help="Override the stored UI font size (9-18).",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=0,
+        metavar="PORT",
+        help="Port for the local web server (0 chooses a free port).",
+    )
+    parser.add_argument(
+        "--no-open",
+        action="store_true",
+        help="Start the web server without opening a browser window.",
     )
     parser.add_argument(
         "--version",
@@ -72,8 +92,9 @@ def _vault_path(value: Path | None) -> Path:
     return path
 
 
-def _run(args: argparse.Namespace) -> int:
+def _run_tk(args: argparse.Namespace) -> int:
     import tkinter as tk
+    import tkinter.messagebox as messagebox
 
     from redscribe.ui.mainwindow import MainWindow
 
@@ -115,6 +136,38 @@ def _run(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_web(args: argparse.Namespace) -> int:
+    from redscribe.ui.web import run_web_ui
+
+    return run_web_ui(
+        _vault_path(args.vault),
+        mode=args.ui,
+        theme=args.theme,
+        font_size=args.font_size,
+        demo=args.demo,
+        port=args.port,
+        open_browser=not args.no_open,
+    )
+
+
+def _run(args: argparse.Namespace) -> int:
+    if args.ui == "tk":
+        return _run_tk(args)
+    return _run_web(args)
+
+
+def _report_startup_failure(details: str) -> None:
+    try:
+        import tkinter.messagebox as messagebox
+
+        messagebox.showerror(
+            "RedScribe could not start",
+            details,
+        )
+    except Exception:
+        sys.stderr.write(f"RedScribe could not start: {details}\n")
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Start the desktop application."""
     logging.basicConfig(level=logging.WARNING)
@@ -125,13 +178,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     except Exception as exc:
         LOGGER.exception("RedScribe failed to start")
         details = "".join(traceback.format_exception_only(type(exc), exc)).strip()
-        try:
-            messagebox.showerror(
-                "RedScribe could not start",
-                details,
-            )
-        except Exception:
-            sys.stderr.write(f"RedScribe could not start: {details}\n")
+        _report_startup_failure(details)
         return 1
 
 
