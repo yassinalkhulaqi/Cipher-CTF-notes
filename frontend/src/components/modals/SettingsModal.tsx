@@ -1,4 +1,12 @@
-import { BookOpen, Moon, Settings, Sparkles, Sun } from "lucide-react";
+import {
+  BookOpen,
+  Moon,
+  Settings,
+  ShieldCheck,
+  Sparkles,
+  Sun,
+  Trash2,
+} from "lucide-react";
 import { VIEW_MODES } from "../../lib/constants";
 import type { ViewMode } from "../../lib/types";
 import { useAppStore } from "../../store/useAppStore";
@@ -10,11 +18,15 @@ export function SettingsModal() {
   const fontSize = useAppStore((state) => state.fontSize);
   const viewMode = useAppStore((state) => state.viewMode);
   const syncScroll = useAppStore((state) => state.syncScroll);
+  const restoreLastNote = useAppStore((state) => state.restoreLastNote);
   const boot = useAppStore((state) => state.boot);
   const setTheme = useAppStore((state) => state.setTheme);
   const setFontSize = useAppStore((state) => state.setFontSize);
   const setViewMode = useAppStore((state) => state.setViewMode);
   const setSyncScroll = useAppStore((state) => state.setSyncScroll);
+  const setRestoreLastNote = useAppStore(
+    (state) => state.setRestoreLastNote,
+  );
   const loadDemo = useAppStore((state) => state.loadDemo);
 
   const openModal = useUiStore((state) => state.openModal);
@@ -24,16 +36,16 @@ export function SettingsModal() {
 
   const demo = () => {
     askConfirm({
-      title: "Load demo vault",
+      title: "Add sample workspace",
       message:
         "This adds a small set of sample CTF notes to the current vault. Existing notes are left untouched.",
-      confirmLabel: "Load demo",
+      confirmLabel: "Add samples",
       danger: false,
       action: async () => {
         try {
           await loadDemo();
           closeModal();
-          toast("Demo vault loaded", "success");
+          toast("Sample workspace added", "success");
         } catch (error) {
           toast(
             error instanceof Error
@@ -73,7 +85,7 @@ export function SettingsModal() {
         <section className="settings-section">
           <div className="settings-head">
             <h3>Appearance</h3>
-            <p>Choose how the Aurora interface looks.</p>
+            <p>Choose how RedScribe looks on this machine.</p>
           </div>
           <div className="theme-picker">
             <button
@@ -108,8 +120,8 @@ export function SettingsModal() {
               <input
                 id="settings-font"
                 type="range"
-                min={13}
-                max={20}
+                min={9}
+                max={18}
                 step={1}
                 value={fontSize}
                 onChange={(event) => setFontSize(Number(event.target.value))}
@@ -140,24 +152,37 @@ export function SettingsModal() {
             />
             Sync editor and preview scrolling
           </label>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={restoreLastNote}
+              onChange={(event) =>
+                setRestoreLastNote(event.target.checked)
+              }
+            />
+            Reopen the last note when starting
+          </label>
         </section>
 
         <section className="settings-section">
           <div className="settings-head">
             <h3>Vault</h3>
-            <p>The local folder that stores your notes and the SQLite index.</p>
+            <p>The local database that stores every note.</p>
           </div>
-          <div className="vault-path">{boot?.vault_path ?? "Loading…"}</div>
+          <div className="vault-path">
+            <ShieldCheck />
+            {boot?.vault_path ?? "Loading…"}
+          </div>
           <div className="settings-actions">
             <button type="button" className="btn ghost sm" onClick={demo}>
-              <Sparkles /> Load demo vault
+              <Sparkles /> Add sample workspace
             </button>
             <button
               type="button"
               className="btn ghost sm"
               onClick={() => openModal("trash")}
             >
-              Open trash
+              <Trash2 /> Open trash
             </button>
           </div>
         </section>

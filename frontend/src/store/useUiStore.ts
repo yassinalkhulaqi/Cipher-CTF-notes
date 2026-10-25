@@ -15,6 +15,8 @@ export type ModalName =
   | "confirm"
   | null;
 
+export type FindMode = "find" | "replace";
+
 export interface ToastItem {
   id: number;
   message: string;
@@ -33,16 +35,23 @@ interface UiState {
   modal: ModalName;
   modalStack: ModalName[];
   newNoteParent: number | null | undefined;
+  newNoteTemplate: string | null | undefined;
   newFolderParent: number | null | undefined;
   snippetEditorId: number | null;
   toasts: ToastItem[];
   confirmRequest: ConfirmRequest | null;
   mobileSidebarOpen: boolean;
+  findMode: FindMode | null;
+  cursorLine: number;
+  cursorColumn: number;
 
   openModal: (modal: Exclude<ModalName, null>) => void;
   closeModal: () => void;
   closeAllModals: () => void;
-  openNewNote: (parentId?: number | null) => void;
+  openNewNote: (
+    parentId?: number | null,
+    templateKey?: string | null,
+  ) => void;
   openNewFolder: (parentId?: number | null) => void;
   openSnippetForm: (id: number | null) => void;
   askConfirm: (request: ConfirmRequest) => void;
@@ -50,6 +59,9 @@ interface UiState {
   toast: (message: string, tone?: ToastItem["tone"]) => void;
   dismissToast: (id: number) => void;
   setMobileSidebar: (open: boolean) => void;
+  openFind: (mode?: FindMode) => void;
+  closeFind: () => void;
+  setCursorPosition: (line: number, column: number) => void;
 }
 
 let toastId = 0;
@@ -58,11 +70,15 @@ export const useUiStore = create<UiState>()((set, get) => ({
   modal: null,
   modalStack: [],
   newNoteParent: undefined,
+  newNoteTemplate: undefined,
   newFolderParent: undefined,
   snippetEditorId: null,
   toasts: [],
   confirmRequest: null,
   mobileSidebarOpen: false,
+  findMode: null,
+  cursorLine: 1,
+  cursorColumn: 1,
 
   openModal: (modal) => {
     const stack = get().modalStack.filter((item) => item !== modal);
@@ -83,8 +99,8 @@ export const useUiStore = create<UiState>()((set, get) => ({
   closeAllModals: () =>
     set({ modal: null, modalStack: [], confirmRequest: null }),
 
-  openNewNote: (parentId) => {
-    set({ newNoteParent: parentId });
+  openNewNote: (parentId, templateKey) => {
+    set({ newNoteParent: parentId, newNoteTemplate: templateKey });
     get().openModal("new-note");
   },
 
@@ -126,4 +142,11 @@ export const useUiStore = create<UiState>()((set, get) => ({
   },
 
   setMobileSidebar: (open) => set({ mobileSidebarOpen: open }),
+
+  openFind: (mode = "find") => set({ findMode: mode }),
+
+  closeFind: () => set({ findMode: null }),
+
+  setCursorPosition: (line, column) =>
+    set({ cursorLine: line, cursorColumn: column }),
 }));

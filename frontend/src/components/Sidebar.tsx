@@ -1,12 +1,17 @@
 import {
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type DragEvent,
   type KeyboardEvent,
   type MouseEvent,
+  type PointerEvent as ReactPointerEvent,
 } from "react";
 import {
   ChevronRight,
+  ChevronsDownUp,
+  ChevronsUpDown,
   Copy,
   FilePlus2,
   FileText,
@@ -22,6 +27,7 @@ import {
   X,
 } from "lucide-react";
 import { Menu, type MenuEntry } from "./Menu";
+import { StatusIcon } from "./StatusIcon";
 import {
   allIds,
   countNotes,
@@ -31,7 +37,7 @@ import {
   type FlatNode,
 } from "../lib/tree";
 import type { TreeNode } from "../lib/types";
-import { plural } from "../lib/utils";
+import { modLabel, plural } from "../lib/utils";
 import { useAppStore } from "../store/useAppStore";
 import { useUiStore } from "../store/useUiStore";
 
@@ -44,11 +50,17 @@ interface ContextState {
 interface TreeRowProps {
   row: FlatNode;
   selected: boolean;
+  focusable: boolean;
   expanded: boolean;
   dragging: boolean;
   dropTarget: boolean;
+  renaming: boolean;
   onToggle: (id: number) => void;
   onSelect: (id: number) => void;
+  onRename: (id: number, title: string) => Promise<void>;
+  onRenameDone: () => void;
+  onKeyNavigate: (event: KeyboardEvent<HTMLDivElement>, row: FlatNode) => void;
+  onStartRename: (node: TreeNode) => void;
   onContext: (event: MouseEvent<HTMLDivElement>, node: TreeNode) => void;
   onDragStart: (event: DragEvent<HTMLDivElement>, node: TreeNode) => void;
   onDragEnd: () => void;
@@ -59,11 +71,17 @@ interface TreeRowProps {
 function TreeRow({
   row,
   selected,
+  focusable,
   expanded,
   dragging,
   dropTarget,
+  renaming,
   onToggle,
   onSelect,
+  onRename,
+  onRenameDone,
+  onKeyNavigate,
+  onStartRename,
   onContext,
   onDragStart,
   onDragEnd,
@@ -73,6 +91,22 @@ function TreeRow({
   const { node, depth } = row;
   const folder = node.kind === "folder";
   const open = folder && expanded;
+  const rowRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [title, setTitle] = useState(node.title);
+
+  useEffect(() => {
+    setTitle(node.title);
+  }, [node.title]);
+
+  useEffect(() => {
+    if (!renaming) return;
+    const timer = window.setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }, 10);
+    return () => window.clearTimeout(timer);
+  }, [renaming]);
 
   const activate = () => {
     if (folder) onToggle(node.id);
@@ -80,33 +114,48 @@ function TreeRow({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (renaming) return;
+    if (event.key === "F2") {
+      event.preventDefault();
+      event.stopPropagation();
+      onStartRename(node);
+      return;
+    }
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       activate();
+      return;
     }
-    if (event.key === "ArrowRight" && folder && !open) {
-      event.preventDefault();
-      onToggle(node.id);
+    onKeyNavigate(event, row);
+  };
+
+  const commit = () => {
+    const next = title.trim();
+    if (!next || next === node.title) {
+      onRenameDone();
+      return;
     }
-    if (event.key === "ArrowLeft" && folder && open) {
-      event.preventDefault();
-      onToggle(node.id);
-    }
+    void onRename(node.id, next);
   };
 
   return (
     <div
+      ref={rowRef}
       className={`tree-row ${selected ? "selected" : ""} ${dragging ? "dragging" : ""} ${
         dropTarget ? "drop-target" : ""
       }`}
-      style={{ paddingLeft: `${6 + depth * 15}px` }}
+      style={{ paddingLeft: `${5 + depth * 13}px` }}
+      data-node-id={node.id}
       role="treeitem"
+      aria-level={depth + 1}
       aria-selected={selected}
       aria-expanded={folder ? open : undefined}
-      tabIndex={0}
-      title={node.path || node.title}
-      draggable
-      onClick={activate}
+      tabIndex={focusable ? 0 : -1}
+      title={renaming ? undefined : node.path || node.title}
+      draggable={!renaming}
+      onClick={() => {
+        if (!renaming) activate();
+      }}
       onKeyDown={onKeyDown}
       onContextMenu={(event) => onContext(event, node)}
       onDragStart={(event) => onDragStart(event, node)}
@@ -133,23 +182,50 @@ function TreeRow({
       <span className={`node-icon ${folder ? "folder" : ""}`}>
         {folder ? open ? <FolderOpen /> : <Folder /> : <FileText />}
       </span>
-      <span className={`node-title ${folder ? "folder" : ""}`}>
-        {node.title}
-      </span>
-      {node.pinned ? (
+      {renaming ? (
+        <input
+          ref={inputRef}
+          className="tree-inline-input"
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          onClick={(event) => event.stopPropagation()}
+          onBlur={commit}
+          onKeyDown={(event) => {
+            event.stopPropagation();
+            if (event.key === "Enter") {
+              event.preventDefault();
+              commit();
+            } else if (event.key === "Escape") {
+              event.preventDefault();
+              setTitle(node.title);
+              onRenameDone();
+            }
+          }}
+          aria-label={`Rename ${node.title}`}
+          spellCheck={false}
+        />
+      ) : (
+        <span className={`node-title ${folder ? "folder" : ""}`}>
+          {node.title}
+        </span>
+      )}
+      {!renaming && node.pinned ? (
         <span className="row-pin" title="Pinned">
           <Pin />
         </span>
       ) : null}
-      {node.flag ? (
+      {!renaming && node.flag ? (
         <span className="row-flag" title={node.flag}>
           <Flag />
         </span>
       ) : null}
-      {!folder && node.status !== "todo" ? (
-        <span className={`dot ${node.status}`} title={node.status} />
+      {!renaming && !folder ? (
+        <StatusIcon
+          status={node.status}
+          label={`Status: ${node.status}`}
+        />
       ) : null}
-      {folder && node.children.length > 0 ? (
+      {!renaming && folder && node.children.length > 0 ? (
         <span className="row-badge">{node.children.length}</span>
       ) : null}
     </div>
@@ -164,11 +240,14 @@ export function Sidebar() {
   const filter = useAppStore((state) => state.filter);
   const sidebarWidth = useAppStore((state) => state.sidebarWidth);
   const setFilter = useAppStore((state) => state.setFilter);
+  const setExpanded = useAppStore((state) => state.setExpanded);
+  const setSidebarWidth = useAppStore((state) => state.setSidebarWidth);
   const toggleFolder = useAppStore((state) => state.toggleFolder);
   const openNote = useAppStore((state) => state.openNote);
   const moveNode = useAppStore((state) => state.moveNode);
   const duplicateNode = useAppStore((state) => state.duplicateNode);
   const togglePin = useAppStore((state) => state.togglePin);
+  const renameNode = useAppStore((state) => state.renameNode);
   const trashNode = useAppStore((state) => state.trashNode);
   const loadDemo = useAppStore((state) => state.loadDemo);
 
@@ -183,6 +262,10 @@ export function Sidebar() {
   const [context, setContext] = useState<ContextState | null>(null);
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dropTarget, setDropTarget] = useState<number | "root" | null>(null);
+  const [renamingId, setRenamingId] = useState<number | null>(null);
+  const [draggingSash, setDraggingSash] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const treeRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => filterTree(tree, filter), [tree, filter]);
   const forceOpen = filter.trim().length > 0;
@@ -198,10 +281,29 @@ export function Sidebar() {
     () =>
       Array.from(nodes.values())
         .filter((node) => node.kind === "note" && node.pinned)
+        .sort((a, b) => a.title.localeCompare(b.title))
         .slice(0, 6),
     [nodes],
   );
   const noteTotal = useMemo(() => countNotes(tree), [tree]);
+  const folderIds = useMemo(
+    () =>
+      Array.from(nodes.values())
+        .filter((node) => node.kind === "folder")
+        .map((node) => node.id),
+    [nodes],
+  );
+  const anyExpanded = folderIds.some((id) => expanded.has(id));
+
+  useEffect(() => {
+    const focusFilter = () => {
+      searchRef.current?.focus();
+      searchRef.current?.select();
+    };
+    window.addEventListener("redscribe:focus-filter", focusFilter);
+    return () =>
+      window.removeEventListener("redscribe:focus-filter", focusFilter);
+  }, []);
 
   const closeMobile = () => setMobileSidebar(false);
 
@@ -213,6 +315,79 @@ export function Sidebar() {
         "error",
       ),
     );
+  };
+
+  const focusRow = (id: number) => {
+    window.requestAnimationFrame(() => {
+      const element = treeRef.current?.querySelector<HTMLElement>(
+        `[data-node-id="${id}"]`,
+      );
+      element?.focus();
+    });
+  };
+
+  const startRename = (node: TreeNode) => {
+    setContext(null);
+    setRenamingId(node.id);
+  };
+
+  const commitRename = async (id: number, title: string) => {
+    setRenamingId(null);
+    try {
+      await renameNode(id, title);
+      toast("Renamed", "success");
+      focusRow(id);
+    } catch (error) {
+      toast(
+        error instanceof Error ? error.message : "Could not rename item",
+        "error",
+      );
+    }
+  };
+
+  const handleKeyNavigate = (
+    event: KeyboardEvent<HTMLDivElement>,
+    row: FlatNode,
+  ) => {
+    const index = rows.findIndex((item) => item.node.id === row.node.id);
+    if (index < 0) return;
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      const next = rows[Math.min(rows.length - 1, index + 1)];
+      if (next) focusRow(next.node.id);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      const previous = rows[Math.max(0, index - 1)];
+      if (previous) focusRow(previous.node.id);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      const first = rows[0];
+      if (first) focusRow(first.node.id);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      const last = rows[rows.length - 1];
+      if (last) focusRow(last.node.id);
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      if (row.node.kind === "folder" && !expanded.has(row.node.id)) {
+        toggleFolder(row.node.id);
+      } else {
+        const next = rows[index + 1];
+        if (next && next.depth > row.depth) focusRow(next.node.id);
+      }
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      if (row.node.kind === "folder" && expanded.has(row.node.id)) {
+        toggleFolder(row.node.id);
+      } else if (row.node.parent_id !== null) {
+        focusRow(row.node.parent_id);
+      }
+    }
+  };
+
+  const collapseAll = () => {
+    if (anyExpanded) setExpanded([]);
+    else setExpanded(folderIds);
   };
 
   const confirmTrash = (node: TreeNode) => {
@@ -240,59 +415,51 @@ export function Sidebar() {
   };
 
   const contextItems = (node: TreeNode): MenuEntry[] => {
-    const items: MenuEntry[] = [];
+    const items: MenuEntry[] = [
+      {
+        label: "Rename",
+        icon: Pencil,
+        shortcut: "F2",
+        onSelect: () => startRename(node),
+      },
+      {
+        label: "Duplicate",
+        icon: Copy,
+        onSelect: () => {
+          void duplicateNode(node.id).then(
+            () => toast("Duplicated", "success"),
+            (error: unknown) =>
+              toast(
+                error instanceof Error ? error.message : "Could not duplicate",
+                "error",
+              ),
+          );
+        },
+      },
+    ];
     if (node.kind === "folder") {
-      items.push({
-        label: "New note inside",
-        icon: FilePlus2,
-        onSelect: () => openNewNote(node.id),
-      });
-      items.push({
-        label: "New folder inside",
-        icon: FolderPlus,
-        onSelect: () => openNewFolder(node.id),
-      });
+      items.unshift(
+        {
+          label: "New note inside",
+          icon: FilePlus2,
+          onSelect: () => openNewNote(node.id),
+        },
+        {
+          label: "New folder inside",
+          icon: FolderPlus,
+          onSelect: () => openNewFolder(node.id),
+        },
+      );
     } else {
-      items.push({
+      items.unshift({
         label: "New note",
         icon: FilePlus2,
         onSelect: () => openNewNote(node.parent_id),
       });
       items.push({
-        label: "Rename title",
-        icon: Pencil,
-        shortcut: "F2",
-        onSelect: () => {
-          void openNote(node.id).then(() => {
-            window.setTimeout(() => {
-              const input =
-                document.querySelector<HTMLInputElement>(".title-input");
-              input?.focus();
-              input?.select();
-            }, 40);
-          });
-        },
-      });
-    }
-    items.push({
-      label: "Duplicate",
-      icon: Copy,
-      onSelect: () => {
-        void duplicateNode(node.id).then(
-          () => toast("Duplicated", "success"),
-          (error: unknown) =>
-            toast(
-              error instanceof Error ? error.message : "Could not duplicate",
-              "error",
-            ),
-        );
-      },
-    });
-    if (node.kind === "note") {
-      items.push({
         label: node.pinned ? "Unpin note" : "Pin note",
         icon: Pin,
-        shortcut: "Ctrl Shift P",
+        shortcut: `${modLabel()} Shift P`,
         onSelect: () => {
           void togglePin(node.id).then(
             () =>
@@ -385,15 +552,15 @@ export function Sidebar() {
 
   const handleDemo = () => {
     askConfirm({
-      title: "Load the demo vault",
+      title: "Add the sample workspace",
       message:
-        "This adds a small set of sample challenges and folders to your vault.",
-      confirmLabel: "Load demo",
+        "Adds a small set of demonstration challenges, folders, and flags to this vault. Existing notes are left untouched.",
+      confirmLabel: "Add samples",
       danger: false,
       action: async () => {
         try {
           await loadDemo();
-          toast("Demo vault loaded", "success");
+          toast("Sample workspace added", "success");
         } catch (error) {
           toast(
             error instanceof Error ? error.message : "Could not load the demo",
@@ -402,6 +569,46 @@ export function Sidebar() {
         }
       },
     });
+  };
+
+  const startResize = (event: ReactPointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = sidebarWidth;
+    setDraggingSash(true);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    const onMove = (moveEvent: PointerEvent) => {
+      setSidebarWidth(startWidth + moveEvent.clientX - startX, false);
+    };
+    const onUp = () => {
+      setDraggingSash(false);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      setSidebarWidth(useAppStore.getState().sidebarWidth, true);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+  };
+
+  const resizeKey = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      setSidebarWidth(sidebarWidth - 16, true);
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      setSidebarWidth(sidebarWidth + 16, true);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      setSidebarWidth(220, true);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      setSidebarWidth(480, true);
+    }
   };
 
   return (
@@ -413,7 +620,7 @@ export function Sidebar() {
     >
       <div
         className={`sidebar-head ${dropTarget === "root" ? "drop-target" : ""}`}
-        title="Drag here to move an item to the vault root"
+        title="Drop here to move an item to the vault root"
         onDragOver={(event) => {
           if (draggingId === null) return;
           event.preventDefault();
@@ -426,23 +633,46 @@ export function Sidebar() {
           <span className="eyebrow">Vault</span>
           <span className="sidebar-count">{plural(noteTotal, "note")}</span>
         </div>
-        <button
-          className="icon-btn sm"
-          type="button"
-          onClick={() => openModal("trash")}
-          title="Open trash"
-          aria-label="Open trash"
-        >
-          <Trash2 />
-        </button>
+        <div className="sidebar-tools">
+          <button
+            type="button"
+            className="icon-btn sm"
+            onClick={collapseAll}
+            title={anyExpanded ? "Collapse all folders" : "Expand all folders"}
+            aria-label={
+              anyExpanded ? "Collapse all folders" : "Expand all folders"
+            }
+          >
+            {anyExpanded ? <ChevronsDownUp /> : <ChevronsUpDown />}
+          </button>
+          <button
+            type="button"
+            className="icon-btn sm"
+            onClick={() => openNewFolder()}
+            title={`New folder (${modLabel()}+Shift+N)`}
+            aria-label="New folder"
+          >
+            <FolderPlus />
+          </button>
+          <button
+            type="button"
+            className="icon-btn sm"
+            onClick={() => openModal("trash")}
+            title="Open trash"
+            aria-label="Open trash"
+          >
+            <Trash2 />
+          </button>
+        </div>
       </div>
 
       <div className="sidebar-search">
         <Search />
         <input
+          ref={searchRef}
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
-          placeholder="Filter this vault…"
+          placeholder="Filter notes, tags, targets…"
           spellCheck={false}
           autoComplete="off"
           aria-label="Filter vault"
@@ -451,7 +681,10 @@ export function Sidebar() {
           <button
             type="button"
             className="icon-btn sm"
-            onClick={() => setFilter("")}
+            onClick={() => {
+              setFilter("");
+              searchRef.current?.focus();
+            }}
             aria-label="Clear filter"
           >
             <X />
@@ -459,7 +692,7 @@ export function Sidebar() {
         ) : null}
       </div>
 
-      <div className="tree" role="tree" aria-label="Vault tree">
+      <div ref={treeRef} className="tree" role="tree" aria-label="Vault tree">
         {!forceOpen && pinned.length > 0 ? (
           <div className="tree-pinned">
             <div className="list-label">Pinned</div>
@@ -468,7 +701,7 @@ export function Sidebar() {
                 key={node.id}
                 type="button"
                 className={`tree-row ${selectedId === node.id ? "selected" : ""}`}
-                style={{ paddingLeft: "6px" }}
+                style={{ paddingLeft: "5px" }}
                 onClick={() => handleSelect(node.id)}
                 title={node.path || node.title}
               >
@@ -477,6 +710,7 @@ export function Sidebar() {
                   <FileText />
                 </span>
                 <span className="node-title">{node.title}</span>
+                <StatusIcon status={node.status} />
                 <span className="row-pin">
                   <Pin />
                 </span>
@@ -486,16 +720,25 @@ export function Sidebar() {
           </div>
         ) : null}
 
-        {rows.map((row) => (
+        {rows.map((row, index) => (
           <TreeRow
             key={row.node.id}
             row={row}
             selected={selectedId === row.node.id}
+            focusable={
+              selectedId === row.node.id ||
+              (selectedId === null && index === 0)
+            }
             expanded={expanded.has(row.node.id)}
             dragging={draggingId === row.node.id}
             dropTarget={dropTarget === row.node.id}
+            renaming={renamingId === row.node.id}
             onToggle={toggleFolder}
             onSelect={handleSelect}
+            onRename={commitRename}
+            onRenameDone={() => setRenamingId(null)}
+            onKeyNavigate={handleKeyNavigate}
+            onStartRename={startRename}
             onContext={(event, node) => {
               event.preventDefault();
               if (node.kind === "note" && selectedId !== node.id) {
@@ -533,7 +776,7 @@ export function Sidebar() {
               <div>
                 Your vault is empty.
                 <br />
-                Start with a note or explore the demo.
+                Start with a note or add the samples.
               </div>
               <button
                 type="button"
@@ -543,7 +786,7 @@ export function Sidebar() {
                 <FilePlus2 /> New note
               </button>
               <button type="button" className="link-btn" onClick={handleDemo}>
-                Load demo vault
+                Add sample workspace
               </button>
             </div>
           )
@@ -568,6 +811,19 @@ export function Sidebar() {
           Folder
         </button>
       </div>
+
+      <div
+        className={`sidebar-resizer ${draggingSash ? "dragging" : ""}`}
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize sidebar"
+        aria-valuemin={220}
+        aria-valuemax={480}
+        aria-valuenow={Math.round(sidebarWidth)}
+        tabIndex={0}
+        onPointerDown={startResize}
+        onKeyDown={resizeKey}
+      />
 
       {context ? (
         <Menu

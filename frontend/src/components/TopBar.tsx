@@ -2,6 +2,7 @@ import {
   CircleHelp,
   Code2,
   Command,
+  HardDrive,
   LayoutDashboard,
   Menu,
   Moon,
@@ -23,6 +24,7 @@ export function TopBar() {
   const hasNote = useAppStore((state) => state.note !== null);
   const openModal = useUiStore((state) => state.openModal);
   const openNewNote = useUiStore((state) => state.openNewNote);
+  const toast = useUiStore((state) => state.toast);
   const setMobileSidebar = useUiStore((state) => state.setMobileSidebar);
   const mobileSidebarOpen = useUiStore((state) => state.mobileSidebarOpen);
   const toggleMobileSidebar = () => setMobileSidebar(!mobileSidebarOpen);
@@ -31,7 +33,14 @@ export function TopBar() {
 
   const goHome = () => {
     setMobileSidebar(false);
-    if (hasNote) void closeNote();
+    if (hasNote) {
+      void closeNote().catch((error: unknown) =>
+        toast(
+          error instanceof Error ? error.message : "Could not close the note",
+          "error",
+        ),
+      );
+    }
   };
 
   return (
@@ -49,7 +58,7 @@ export function TopBar() {
           className="brand"
           type="button"
           onClick={goHome}
-          title="Go to the welcome screen"
+          title="Open the research desk"
         >
           <BrandMark />
           <span className="brand-name">
@@ -57,8 +66,9 @@ export function TopBar() {
           </span>
         </button>
         {boot ? (
-          <span className="vault-pill" title={boot.vault_path}>
+          <span className="vault-pill" title={`${boot.vault_path}\nLocal SQLite vault`}>
             <span className="dot" />
+            <HardDrive />
             {vaultName}
           </span>
         ) : null}
@@ -72,7 +82,7 @@ export function TopBar() {
           title={`Quick switch (${modLabel()}+P)`}
         >
           <Command />
-          <span>Search notes or run a command…</span>
+          <span>Jump to a note or run a command…</span>
           <kbd>{modLabel()} P</kbd>
         </button>
       </div>
@@ -100,13 +110,14 @@ export function TopBar() {
           className="icon-btn desktop-only"
           type="button"
           onClick={() => openModal("dashboard")}
-          title={`Dashboard (${modLabel()}+Shift+D)`}
-          aria-label="Dashboard"
+          title={`Vault insights (${modLabel()}+Shift+D)`}
+          aria-label="Vault insights"
         >
           <LayoutDashboard />
         </button>
+        <span className="topbar-divider desktop-only" />
         <button
-          className="btn primary"
+          className="btn primary topbar-new"
           type="button"
           onClick={() => openNewNote()}
           title={`New note (${modLabel()}+N for quick note)`}
@@ -135,7 +146,7 @@ export function TopBar() {
           <Settings />
         </button>
         <button
-          className="icon-btn"
+          className="icon-btn desktop-only"
           type="button"
           onClick={() => openModal("help")}
           title="Keyboard shortcuts (F1)"

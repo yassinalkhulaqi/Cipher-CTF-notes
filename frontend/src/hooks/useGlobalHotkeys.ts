@@ -23,6 +23,9 @@ export function useGlobalHotkeys(): void {
         if (ui.modal) {
           event.preventDefault();
           ui.closeModal();
+        } else if (ui.findMode) {
+          event.preventDefault();
+          ui.closeFind();
         }
         return;
       }
@@ -93,9 +96,34 @@ export function useGlobalHotkeys(): void {
         app.cycleView();
         return;
       }
+      if (mod && key === "f") {
+        event.preventDefault();
+        ui.openFind("find");
+        return;
+      }
+      if (mod && key === "h") {
+        event.preventDefault();
+        ui.openFind("replace");
+        return;
+      }
       if (mod && key === "s") {
         event.preventDefault();
-        void app.saveNow().then(() => ui.toast("Saved", "success"));
+        if (!app.note) {
+          ui.toast("Open a note to save", "default");
+          return;
+        }
+        if (!app.dirty) {
+          ui.toast("No unsaved changes", "default");
+          return;
+        }
+        void app.saveNow().then(
+          () => ui.toast("Note saved", "success"),
+          (error: unknown) =>
+            ui.toast(
+              error instanceof Error ? error.message : "Could not save note",
+              "error",
+            ),
+        );
         return;
       }
       if (mod && key === ",") {

@@ -35,7 +35,11 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ["Ctrl", "Shift", "N"], label: "New folder" },
       { keys: ["Ctrl", "S"], label: "Save now" },
       { keys: ["Ctrl", "Shift", "P"], label: "Pin or unpin note" },
-      { keys: ["F2"], label: "Note properties" },
+      {
+        keys: ["F2"],
+        label: "Note properties",
+        detail: "In the vault tree, F2 renames the focused item",
+      },
       { keys: ["Delete"], label: "Move selection to trash" },
       { keys: ["Ctrl", "↑"], label: "Move note up" },
       { keys: ["Ctrl", "↓"], label: "Move note down" },
@@ -53,6 +57,16 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
     title: "Editor",
     items: [
+      {
+        keys: ["Ctrl", "F"],
+        label: "Find in note",
+        detail: "Search the open note",
+      },
+      {
+        keys: ["Ctrl", "H"],
+        label: "Find and replace",
+        detail: "Replace text in the open note",
+      },
       { keys: ["Ctrl", "B"], label: "Bold" },
       { keys: ["Ctrl", "I"], label: "Italic" },
       { keys: ["Ctrl", "K"], label: "Inline code" },

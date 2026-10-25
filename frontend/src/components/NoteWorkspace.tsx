@@ -5,39 +5,93 @@ import {
   useState,
   type KeyboardEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from "react";
 import {
+  AlertTriangle,
+  Bold,
   ChevronDown,
   Code2,
   Columns2,
   Copy,
   Eye,
+  FileCode2,
   FileDown,
   Flag,
   Focus,
+  Heading1,
+  Heading2,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
   MoreHorizontal,
   PenLine,
   Pin,
   PinOff,
   Plus,
+  Quote,
+  Search,
   SlidersHorizontal,
+  SquareCode,
+  Strikethrough,
   Tag,
   Target,
   Trash2,
+  type LucideIcon,
 } from "lucide-react";
-import { downloadNote, downloadVault } from "../lib/api";
-import { STATUS_LABEL } from "../lib/constants";
+import { api } from "../lib/api";
 import { usePreview } from "../hooks/usePreview";
 import { useMediaQuery } from "../hooks/useMediaQuery";
+import {
+  MarkdownEditor,
+  type MarkdownEditorHandle,
+} from "./editor/MarkdownEditor";
+import { MarkdownPreview } from "./editor/MarkdownPreview";
 import { Menu, type MenuEntry } from "./Menu";
+import { StatusIcon } from "./StatusIcon";
 import { useAppStore } from "../store/useAppStore";
 import { useUiStore } from "../store/useUiStore";
-import { copyText, plural, wordCount } from "../lib/utils";
+import {
+  copyText,
+  downloadText,
+  modLabel,
+  plural,
+  wordCount,
+} from "../lib/utils";
+import { STATUS_LABEL } from "../lib/constants";
+
+function ToolButton({
+  icon: Icon,
+  label,
+  shortcut,
+  onClick,
+}: {
+  icon: LucideIcon;
+  label: string;
+  shortcut?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="tool-btn"
+      onClick={onClick}
+      title={`${label}${shortcut ? ` (${shortcut})` : ""}`}
+      aria-label={label}
+    >
+      <Icon />
+    </button>
+  );
+}
 
 export function NoteWorkspace() {
   const note = useAppStore((state) => state.note);
   const nodes = useAppStore((state) => state.nodes);
+  const boot = useAppStore((state) => state.boot);
   const draft = useAppStore((state) => state.draft);
+  const saveState = useAppStore((state) => state.saveState);
+  const saveNow = useAppStore((state) => state.saveNow);
   const setDraft = useAppStore((state) => state.setDraft);
   const viewMode = useAppStore((state) => state.viewMode);
   const setViewMode = useAppStore((state) => state.setViewMode);
@@ -55,14 +109,14 @@ export function NoteWorkspace() {
   const setFilter = useAppStore((state) => state.setFilter);
 
   const openModal = useUiStore((state) => state.openModal);
+  const openFind = useUiStore((state) => state.openFind);
   const askConfirm = useUiStore((state) => state.askConfirm);
   const toast = useUiStore((state) => state.toast);
   const setMobileSidebar = useUiStore((state) => state.setMobileSidebar);
 
-  const editorRef = useRef<HTMLTextAreaElement>(null);
-  const previewScrollRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<MarkdownEditorHandle>(null);
+  const previewScrollRef = useRef<HTMLDivElement | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLInputElement>(null);
   const cancelRename = useRef(false);
   const [title, setTitle] = useState(note?.title ?? "");
   const [exportMenu, setExportMenu] = useState<{ x: number; y: number } | null>(
@@ -104,11 +158,23 @@ export function NoteWorkspace() {
     if (!note) return;
     const timer = window.setTimeout(() => {
       editorRef.current?.focus();
+      editorRef.current?.scrollToTop();
       previewScrollRef.current?.scrollTo({ top: 0 });
-      if (editorRef.current) editorRef.current.scrollTop = 0;
     }, 50);
     return () => window.clearTimeout(timer);
   }, [note?.id]);
+
+  useEffect(() => {
+    const insert = (event: Event) => {
+      const detail = (event as CustomEvent<{ text?: string }>).detail;
+      if (!detail?.text) return;
+      editorRef.current?.insertText(detail.text);
+      toast("Snippet inserted at the cursor", "success");
+    };
+    window.addEventListener("redscribe:insert-snippet", insert);
+    return () =>
+      window.removeEventListener("redscribe:insert-snippet", insert);
+  }, [toast]);
 
   if (!note) return null;
 
@@ -151,132 +217,14 @@ export function NoteWorkspace() {
     void commitTitle();
   };
 
-  const applyEditorText = (replacement: string, start: number, end: number) => {
-    const editor = editorRef.current;
-    if (!editor) return;
-    editor.setRangeText(replacement, start, end, "end");
-    setDraft(editor.value);
-  };
-
-  const wrapSelection = (
-    prefix: string,
-    suffix: string,
-    placeholder: string,
-  ) => {
-    const editor = editorRef.current;
-    if (!editor) return;
-    const start = editor.selectionStart;
-    const end = editor.selectionEnd;
-    const selected = editor.value.slice(start, end);
-    let nextStart = start;
-    let nextEnd = end;
-    if (selected.startsWith(prefix) && selected.endsWith(suffix)) {
-      const inner = selected.slice(
-        prefix.length,
-        selected.length - suffix.length,
-      );
-      applyEditorText(inner, start, end);
-      nextStart = start;
-      nextEnd = start + inner.length;
-    } else {
-      const inner = selected || placeholder;
-      applyEditorText(prefix + inner + suffix, start, end);
-      nextStart = start + prefix.length;
-      nextEnd = start + prefix.length + inner.length;
-    }
-    window.requestAnimationFrame(() => {
-      editor.focus();
-      editor.setSelectionRange(nextStart, nextEnd);
-    });
-  };
-
-  const indentSelection = (outdent: boolean) => {
-    const editor = editorRef.current;
-    if (!editor) return;
-    const start = editor.selectionStart;
-    const end = editor.selectionEnd;
-    const lineStart = editor.value.lastIndexOf("\n", start - 1) + 1;
-    let lineEnd = editor.value.indexOf("\n", end);
-    if (lineEnd < 0) lineEnd = editor.value.length;
-    const lines = editor.value.slice(lineStart, lineEnd).split("\n");
-    const shifted = lines.map((line) =>
-      outdent ? line.replace(/^(\t| {1,4})/, "") : `    ${line}`,
-    );
-    const replacement = shifted.join("\n");
-    applyEditorText(replacement, lineStart, lineEnd);
-    window.requestAnimationFrame(() => {
-      editor.focus();
-      editor.setSelectionRange(lineStart, lineStart + replacement.length);
-    });
-  };
-
-  const continueList = (): boolean => {
-    const editor = editorRef.current;
-    if (!editor) return false;
-    const start = editor.selectionStart;
-    const lineStart = editor.value.lastIndexOf("\n", start - 1) + 1;
-    let lineEnd = editor.value.indexOf("\n", start);
-    if (lineEnd < 0) lineEnd = editor.value.length;
-    const line = editor.value.slice(lineStart, lineEnd);
-    const match = /^(\s*)([-+*] \[[ xX]\] |[-+*] |\d{1,9}[.)] )(.*)$/.exec(
-      line,
-    );
-    if (!match) return false;
-    const marker = match[2] ?? "";
-    const body = match[3] ?? "";
-    if (!body.trim()) return false;
-    let nextMarker = marker;
-    const numbered = /^(\d{1,9})([.)] )$/.exec(marker);
-    if (numbered) nextMarker = `${Number(numbered[1]) + 1}${numbered[2]}`;
-    applyEditorText(`\n${match[1] ?? ""}${nextMarker}`, start, start);
-    window.requestAnimationFrame(() => editor.focus());
-    return true;
-  };
-
-  const handleEditorKey = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    const control = event.ctrlKey || event.metaKey;
-    if (event.key === "Tab") {
-      event.preventDefault();
-      indentSelection(event.shiftKey);
-      return;
-    }
-    if (
-      event.key === "Enter" &&
-      !control &&
-      !event.shiftKey &&
-      continueList()
-    ) {
-      event.preventDefault();
-      return;
-    }
-    if (!control) return;
-    const key = event.key.toLowerCase();
-    if (key === "b") {
-      event.preventDefault();
-      wrapSelection("**", "**", "bold text");
-    } else if (key === "i") {
-      event.preventDefault();
-      wrapSelection("*", "*", "italic");
-    } else if (key === "k") {
-      event.preventDefault();
-      wrapSelection("`", "`", "code");
-    } else if (event.shiftKey && key === "x") {
-      event.preventDefault();
-      wrapSelection("~~", "~~", "struck out");
-    }
-  };
-
-  const handleEditorScroll = () => {
+  const syncPreview = (scrollTop: number, scrollable: number) => {
     if (!syncScroll || effectiveView !== "split") return;
-    const editor = editorRef.current;
     const previewPane = previewScrollRef.current;
-    if (!editor || !previewPane) return;
-    const editorScrollable = editor.scrollHeight - editor.clientHeight;
+    if (!previewPane || scrollable <= 0) return;
     const previewScrollable =
       previewPane.scrollHeight - previewPane.clientHeight;
-    if (editorScrollable <= 0 || previewScrollable <= 0) return;
-    previewPane.scrollTop =
-      (editor.scrollTop / editorScrollable) * previewScrollable;
+    if (previewScrollable <= 0) return;
+    previewPane.scrollTop = (scrollTop / scrollable) * previewScrollable;
   };
 
   const startSplitDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -284,11 +232,14 @@ export function NoteWorkspace() {
     const body = bodyRef.current;
     if (!body) return;
     const rect = body.getBoundingClientRect();
+    const handle = event.currentTarget;
+    handle.classList.add("dragging");
     const onMove = (moveEvent: PointerEvent) => {
       const percent = ((moveEvent.clientX - rect.left) / rect.width) * 100;
       setSplit(percent, false);
     };
     const onUp = () => {
+      handle.classList.remove("dragging");
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
@@ -299,30 +250,68 @@ export function NoteWorkspace() {
     window.addEventListener("pointercancel", onUp);
   };
 
+  const splitKey = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      setSplit(split - 2, true);
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      setSplit(split + 2, true);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      setSplit(25, true);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      setSplit(80, true);
+    }
+  };
+
+  const exportNote = async (format: "md" | "html") => {
+    try {
+      const payload =
+        format === "md"
+          ? await api.exportNoteMarkdown(note.id)
+          : await api.exportNoteHtml(note.id);
+      downloadText(payload.filename, payload.content, payload.mime);
+      toast(`${format === "md" ? "Markdown" : "HTML"} export ready`, "success");
+    } catch (error) {
+      toast(
+        error instanceof Error ? error.message : "Could not export note",
+        "error",
+      );
+    }
+  };
+
   const exportItems: MenuEntry[] = [
     {
-      label: "Export as Markdown",
+      label: "Export note as Markdown",
       icon: FileDown,
-      onSelect: () => {
-        downloadNote(note.id, "md");
-        toast("Export started");
-      },
+      onSelect: () => void exportNote("md"),
     },
     {
-      label: "Export as HTML",
+      label: "Export note as HTML",
       icon: Code2,
-      onSelect: () => {
-        downloadNote(note.id, "html");
-        toast("Export started");
-      },
+      onSelect: () => void exportNote("html"),
     },
     "separator",
     {
-      label: "Export whole vault",
+      label: "Export whole vault as HTML",
       icon: FileDown,
       onSelect: () => {
-        downloadVault();
-        toast("Vault export started");
+        void api
+          .exportVaultHtml()
+          .then((payload) => {
+            downloadText(payload.filename, payload.content, payload.mime);
+            toast("Vault export ready", "success");
+          })
+          .catch((error: unknown) =>
+            toast(
+              error instanceof Error
+                ? error.message
+                : "Could not export the vault",
+              "error",
+            ),
+          );
       },
     },
   ];
@@ -346,8 +335,8 @@ export function NoteWorkspace() {
       label: "Copy vault path",
       icon: Copy,
       onSelect: () => {
-        void copyText(note.path || note.title).then(
-          () => toast("Path copied", "success"),
+        void copyText(boot?.vault_path ?? note.path).then(
+          () => toast("Vault path copied", "success"),
           () => toast("Could not copy path", "error"),
         );
       },
@@ -387,12 +376,44 @@ export function NoteWorkspace() {
     );
   };
 
+  const close = () => {
+    void closeNote().catch((error: unknown) =>
+      toast(
+        error instanceof Error ? error.message : "Could not save the note",
+        "error",
+      ),
+    );
+  };
+
+  const goTo = (id: number) => {
+    void openNote(id).catch((error: unknown) =>
+      toast(
+        error instanceof Error ? error.message : "Could not open note",
+        "error",
+      ),
+    );
+  };
+
+  const formatButton = (
+    icon: LucideIcon,
+    label: string,
+    shortcut: string | undefined,
+    action: () => void,
+  ): ReactNode => (
+    <ToolButton
+      icon={icon}
+      label={label}
+      shortcut={shortcut}
+      onClick={action}
+    />
+  );
+
   return (
     <section className="note">
       <header className="note-head">
         <div className="note-topline">
           <div className="breadcrumbs" aria-label="Breadcrumb">
-            <button type="button" onClick={() => void closeNote()}>
+            <button type="button" onClick={close}>
               Vault
             </button>
             {crumbs.map((crumb) => (
@@ -400,7 +421,7 @@ export function NoteWorkspace() {
                 <span className="sep">/</span>
                 <button
                   type="button"
-                  onClick={() => void openNote(crumb.id)}
+                  onClick={() => goTo(crumb.id)}
                   title={crumb.title}
                 >
                   {crumb.title}
@@ -431,7 +452,7 @@ export function NoteWorkspace() {
                     ),
                 );
               }}
-              title={note.pinned ? "Unpin note" : "Pin note"}
+              title={`${note.pinned ? "Unpin note" : "Pin note"} (${modLabel()}+Shift+P)`}
               aria-label={note.pinned ? "Unpin note" : "Pin note"}
             >
               {note.pinned ? <PinOff /> : <Pin />}
@@ -450,7 +471,7 @@ export function NoteWorkspace() {
               type="button"
               onClick={(event) => {
                 const rect = event.currentTarget.getBoundingClientRect();
-                setExportMenu({ x: rect.right - 230, y: rect.bottom + 6 });
+                setExportMenu({ x: rect.right - 232, y: rect.bottom + 5 });
               }}
               title="Export"
               aria-label="Export"
@@ -462,7 +483,7 @@ export function NoteWorkspace() {
               className={`icon-btn ${focusMode ? "active" : ""}`}
               type="button"
               onClick={toggleFocusMode}
-              title="Toggle focus mode"
+              title={`Toggle focus mode (${modLabel()}+Shift+L)`}
               aria-label="Toggle focus mode"
             >
               <Focus />
@@ -473,7 +494,7 @@ export function NoteWorkspace() {
               type="button"
               onClick={(event) => {
                 const rect = event.currentTarget.getBoundingClientRect();
-                setMoreMenu({ x: rect.right - 210, y: rect.bottom + 6 });
+                setMoreMenu({ x: rect.right - 208, y: rect.bottom + 5 });
               }}
               title="More actions"
               aria-label="More actions"
@@ -482,7 +503,7 @@ export function NoteWorkspace() {
             </button>
             <div
               className="view-switch"
-              role="tablist"
+              role="group"
               aria-label="Editor view"
             >
               <button
@@ -518,7 +539,6 @@ export function NoteWorkspace() {
 
         <div className="title-row">
           <input
-            ref={titleRef}
             className="title-input"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
@@ -538,7 +558,7 @@ export function NoteWorkspace() {
             onClick={() => openModal("properties")}
             title="Edit note status"
           >
-            <span className={`dot ${note.status}`} />
+            <StatusIcon status={note.status} />
             {STATUS_LABEL[note.status]}
           </button>
           {note.difficulty ? (
@@ -546,6 +566,7 @@ export function NoteWorkspace() {
               type="button"
               className="chip difficulty"
               onClick={() => openModal("properties")}
+              title="Edit difficulty"
             >
               {note.difficulty}
             </button>
@@ -604,26 +625,111 @@ export function NoteWorkspace() {
         </div>
       </header>
 
+      {saveState === "error" ? (
+        <div className="save-error-banner" role="alert">
+          <AlertTriangle />
+          <span className="grow">
+            This note could not be saved. Your draft is still open.
+          </span>
+          <button
+            type="button"
+            className="btn tiny danger-ghost"
+            onClick={() => {
+              void saveNow().then(
+                () => toast("Note saved", "success"),
+                () => toast("Save failed again", "error"),
+              );
+            }}
+          >
+            Retry save
+          </button>
+        </div>
+      ) : null}
+
       <div ref={bodyRef} className="note-body" data-view={effectiveView}>
         <section
           className="pane editor-pane"
           style={{ flexBasis: `${split}%` }}
         >
-          <div className="pane-head">
-            <span>Markdown</span>
+          <div className="pane-head editor-pane-head">
+            <span className="pane-label">
+              <FileCode2 />
+              Markdown
+            </span>
+            <div
+              className="format-toolbar"
+              role="toolbar"
+              aria-label="Formatting"
+            >
+              {formatButton(Bold, "Bold", `${modLabel()}+B`, () =>
+                editorRef.current?.wrapSelection("**", "**", "bold text"),
+              )}
+              {formatButton(Italic, "Italic", `${modLabel()}+I`, () =>
+                editorRef.current?.wrapSelection("*", "*", "italic"),
+              )}
+              {formatButton(
+                Strikethrough,
+                "Strikethrough",
+                `${modLabel()}+Shift+X`,
+                () =>
+                  editorRef.current?.wrapSelection("~~", "~~", "struck out"),
+              )}
+              {formatButton(Code2, "Inline code", `${modLabel()}+K`, () =>
+                editorRef.current?.wrapSelection("`", "`", "code"),
+              )}
+              <span className="tool-sep" />
+              {formatButton(Heading1, "Heading 1", undefined, () =>
+                editorRef.current?.toggleLinePrefix("# "),
+              )}
+              {formatButton(Heading2, "Heading 2", undefined, () =>
+                editorRef.current?.toggleLinePrefix("## "),
+              )}
+              {formatButton(List, "Bulleted list", undefined, () =>
+                editorRef.current?.toggleLinePrefix("- "),
+              )}
+              {formatButton(ListOrdered, "Numbered list", undefined, () =>
+                editorRef.current?.toggleLinePrefix("1. "),
+              )}
+              {formatButton(Quote, "Blockquote", undefined, () =>
+                editorRef.current?.toggleLinePrefix("> "),
+              )}
+              {formatButton(Link2, "Link", undefined, () =>
+                editorRef.current?.wrapSelection("[", "](https://)", "label"),
+              )}
+              {formatButton(SquareCode, "Code block", undefined, () =>
+                editorRef.current?.insertBlock(
+                  "```bash\n\n```\n",
+                ),
+              )}
+              <span className="tool-sep" />
+              {formatButton(Search, "Find in note", `${modLabel()}+F`, () =>
+                openFind("find"),
+              )}
+            </div>
             <span className="pane-meta">{plural(words, "word")}</span>
+            <button
+              type="button"
+              className="icon-btn sm pane-copy"
+              onClick={() => {
+                void copyText(draft).then(
+                  () => toast("Note Markdown copied", "success"),
+                  () => toast("Could not copy note", "error"),
+                );
+              }}
+              title="Copy note Markdown"
+              aria-label="Copy note Markdown"
+            >
+              <Copy />
+            </button>
           </div>
-          <textarea
+          <MarkdownEditor
             ref={editorRef}
-            className="editor-area"
+            noteId={note.id}
             value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={handleEditorKey}
-            onScroll={handleEditorScroll}
-            spellCheck={false}
-            autoComplete="off"
+            onChange={setDraft}
+            onScroll={syncPreview}
             placeholder="# Start writing…"
-            aria-label="Note content"
+            ariaLabel="Note content"
           />
         </section>
 
@@ -632,12 +738,20 @@ export function NoteWorkspace() {
           role="separator"
           aria-orientation="vertical"
           aria-label="Resize editor and preview"
+          aria-valuemin={25}
+          aria-valuemax={80}
+          aria-valuenow={Math.round(split)}
+          tabIndex={0}
           onPointerDown={startSplitDrag}
+          onKeyDown={splitKey}
         />
 
         <section className="pane preview-pane">
           <div className="pane-head">
-            <span>Preview</span>
+            <span className="pane-label">
+              <Eye />
+              Preview
+            </span>
             <span className="pane-meta">
               {preview.pending ? (
                 <span className="preview-pending">
@@ -645,27 +759,15 @@ export function NoteWorkspace() {
                   Rendering
                 </span>
               ) : (
-                "Live markdown"
+                "Rendered locally"
               )}
             </span>
           </div>
-          <div ref={previewScrollRef} className="preview-scroll">
-            <div className="preview-inner">
-              {preview.html ? (
-                <div
-                  className="markdown"
-                  dangerouslySetInnerHTML={{ __html: preview.html }}
-                />
-              ) : (
-                <div className="markdown">
-                  <p className="preview-empty">
-                    Nothing to preview yet. Start typing in the editor to see
-                    the rendered note.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+          <MarkdownPreview
+            html={preview.html}
+            scrollRef={previewScrollRef}
+            emptyText="Nothing to preview yet. Start typing in the editor to see the rendered note."
+          />
         </section>
       </div>
 

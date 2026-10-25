@@ -42,7 +42,12 @@ The browser-only workflow is useful for UI work: start the server with
 ## Design notes
 
 The Aurora direction uses graphite and warm paper themes, a crimson accent,
-glass panels, compact tree rows, a monospace editor, and restrained motion.
+compact responsive chrome, restrained surfaces, a monospace source editor, and
+minimal motion. The dashboard reads directly from the vault API: recent work,
+captured flags, active and pinned notes, targets, tags, and starter templates.
+The editor renders a syntax-highlighted overlay behind a transparent textarea
+with a plain mode for composition, large notes, and accessibility.
+
 Tokens live in `frontend/src/styles/tokens.css`; layout, workspace, modal, and
 feedback styles are split into focused stylesheets imported by
 `frontend/src/styles/index.css`.
