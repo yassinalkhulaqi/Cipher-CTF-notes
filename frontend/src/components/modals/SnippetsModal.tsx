@@ -48,8 +48,6 @@ function renderCommand(command: string): ReactNode {
 
 export function SnippetsModal() {
   const note = useAppStore((state) => state.note);
-  const draft = useAppStore((state) => state.draft);
-  const setDraft = useAppStore((state) => state.setDraft);
   const openSnippetForm = useUiStore((state) => state.openSnippetForm);
   const askConfirm = useUiStore((state) => state.askConfirm);
   const closeModal = useUiStore((state) => state.closeModal);
@@ -160,12 +158,12 @@ export function SnippetsModal() {
         current.command,
         note.target ?? "",
       );
-      const prefix = draft.trimEnd();
-      setDraft(
-        prefix ? `${prefix}\n\n${resolved.command}\n` : `${resolved.command}\n`,
-      );
       closeModal();
-      toast("Inserted into note", "success");
+      window.dispatchEvent(
+        new CustomEvent("redscribe:insert-snippet", {
+          detail: { text: resolved.command },
+        }),
+      );
     } catch (error) {
       toast(
         error instanceof Error ? error.message : "Could not insert the snippet",

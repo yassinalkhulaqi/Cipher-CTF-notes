@@ -34,6 +34,7 @@ export function NewNoteModal() {
   const boot = useAppStore((state) => state.boot);
   const createNote = useAppStore((state) => state.createNote);
   const newNoteParent = useUiStore((state) => state.newNoteParent);
+  const newNoteTemplate = useUiStore((state) => state.newNoteTemplate);
   const closeModal = useUiStore((state) => state.closeModal);
   const toast = useUiStore((state) => state.toast);
 
@@ -43,7 +44,9 @@ export function NewNoteModal() {
       : newNoteParent;
 
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [selected, setSelected] = useState(boot?.last_template || "ctf");
+  const [selected, setSelected] = useState(
+    newNoteTemplate || boot?.last_template || "ctf",
+  );
   const [title, setTitle] = useState("");
   const [target, setTarget] = useState("");
   const [parent, setParent] = useState<number | null>(defaultParent);
@@ -73,7 +76,7 @@ export function NewNoteModal() {
     return () => {
       cancelled = true;
     };
-  }, [selected, toast]);
+  }, [toast]);
 
   const folders = useMemo(() => collectFolders(tree), [tree]);
   const current = templates.find((template) => template.key === selected);

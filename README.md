@@ -25,9 +25,10 @@ network calls.
 - **Readable output.** Markdown editor with syntax highlighting and a split
   preview with code highlighting and optional synchronized scrolling. Export a
   note to Markdown or HTML, or export the whole vault as a browsable HTML report.
-- **Aurora interface.** A responsive React workspace with a command palette,
-  focused editor, live preview, dashboard, snippet library, and light/dark themes.
-  Runs in a native webview or any modern browser.
+- **Aurora interface.** A responsive React workspace with a real-data research
+  dashboard, command palette, focused editor, find and replace, live preview,
+  snippet library, and warm light or graphite dark themes. Runs in a native
+  webview or any modern browser.
 - **Small and portable.** The entire vault is one file that you can back up,
   sync, or move. Frontend assets are bundled into the wheel.
 
@@ -54,7 +55,8 @@ Linux users need Tkinter: `sudo apt-get install python3-tk`.
 
 1. Launch RedScribe. The first-run dashboard can load the demo vault.
 2. Create a **CTF challenge** or **Host recon** note and fill in the target.
-3. Write notes in Markdown. Press `Ctrl+E` to cycle editor, split, and preview.
+3. Write notes in Markdown. Press `Ctrl+E` to cycle editor, split, and preview,
+   or `Ctrl+F` / `Ctrl+H` to find and replace inside the note.
 4. Press `Ctrl+P` to jump anywhere, or `Ctrl+Shift+S` for snippets.
 5. Export a single note or the whole vault from the **File** menu.
 

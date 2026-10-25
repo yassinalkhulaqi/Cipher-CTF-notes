@@ -585,46 +585,6 @@
   overflow: auto;
 }
 
-.flag-row {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  padding: 8px 9px;
-  border-radius: 7px;
-  text-align: left;
-  transition: background var(--speed-fast) var(--ease);
-}
-
-.flag-row:hover {
-  background: var(--surface-2);
-}
-
-.flag-row .fr-flag {
-  flex: 1;
-  min-width: 0;
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--green);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.flag-row .fr-title {
-  color: var(--faint);
-  font-size: 10px;
-  max-width: 130px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.flag-row .icon-btn {
-  width: 24px;
-  height: 24px;
-}
-
 .tag-cloud {
   display: flex;
   flex-wrap: wrap;
@@ -1160,7 +1120,7 @@
   text-align: center;
 }
 
-.flag-list {
+.dashboard-modal .flag-list {
   display: flex;
   flex-direction: column;
   gap: 2px;

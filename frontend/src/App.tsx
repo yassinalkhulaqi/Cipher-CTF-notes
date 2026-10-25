@@ -6,7 +6,7 @@ import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 import { ToastStack } from "./components/ToastStack";
 import { TopBar } from "./components/TopBar";
-import { Welcome } from "./components/Welcome";
+import { Dashboard } from "./components/Dashboard";
 import { ModalHost } from "./components/modals/ModalHost";
 import { useAutosaveLifecycle } from "./hooks/useAutosaveLifecycle";
 import { useGlobalHotkeys } from "./hooks/useGlobalHotkeys";
@@ -94,7 +94,7 @@ export function App() {
           aria-label="Close the sidebar"
         />
         <main className="workspace">
-          {note ? <NoteWorkspace /> : <Welcome />}
+          {note ? <NoteWorkspace /> : <Dashboard />}
         </main>
       </div>
       <StatusBar />

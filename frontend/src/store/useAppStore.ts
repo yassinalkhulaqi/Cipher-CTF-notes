@@ -41,6 +41,7 @@ interface AppState {
   fontSize: number;
   viewMode: ViewMode;
   syncScroll: boolean;
+  restoreLastNote: boolean;
   sidebarWidth: number;
   split: number;
   filter: string;
@@ -54,6 +55,7 @@ interface AppState {
   setExpanded: (ids: Iterable<number>) => void;
   setDraft: (content: string) => void;
   saveNow: () => Promise<void>;
+  renameNode: (id: number, title: string) => Promise<NodeSummary>;
   renameCurrent: (title: string) => Promise<void>;
   updateCurrent: (fields: {
     status: string;
@@ -90,6 +92,7 @@ interface AppState {
   setViewMode: (mode: ViewMode) => void;
   cycleView: () => void;
   setSyncScroll: (value: boolean) => void;
+  setRestoreLastNote: (value: boolean) => void;
   setSidebarWidth: (width: number, persist?: boolean) => void;
   setSplit: (percent: number, persist?: boolean) => void;
   setFilter: (value: string) => void;
@@ -137,6 +140,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   fontSize: 13,
   viewMode: "split",
   syncScroll: true,
+  restoreLastNote: true,
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   split: DEFAULT_SPLIT,
   filter: "",
@@ -161,6 +165,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
         fontSize,
         viewMode,
         syncScroll: boot.sync_preview_scroll !== false,
+        restoreLastNote: boot.restore_last_note !== false,
         sidebarWidth: clamp(
           boot.sidebar_width ?? DEFAULT_SIDEBAR_WIDTH,
           MIN_SIDEBAR_WIDTH,
@@ -182,7 +187,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
         try {
           await get().openNote(boot.last_note, { focus: false });
         } catch {
-          /* The last note may have been deleted; show the welcome screen. */
+          /* The last note may have been deleted; show the dashboard. */
         }
       }
       set({ loading: false });
@@ -203,7 +208,13 @@ export const useAppStore = create<AppState>()((set, get) => ({
   openNote: async (id, options) => {
     const current = get().note;
     if (current?.id === id && !options?.focus) return;
-    await get().saveNow();
+    try {
+      await get().saveNow();
+    } catch {
+      throw new Error(
+        "Could not save the current note. It is still open; retry saving before switching.",
+      );
+    }
     const node = await api.node(id);
     if (node.kind === "folder") {
       const expanded = new Set(get().expanded);
@@ -225,7 +236,13 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
 
   closeNote: async () => {
-    await get().saveNow();
+    try {
+      await get().saveNow();
+    } catch {
+      throw new Error(
+        "Could not save the current note. It is still open; retry saving before closing.",
+      );
+    }
     set({
       selectedId: null,
       note: null,
@@ -250,7 +267,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
     set({ draft: content, dirty: true, saveState: "dirty" });
     clearSaveTimer();
     saveTimer = setTimeout(() => {
-      void get().saveNow();
+      void get().saveNow().catch(() => undefined);
     }, 850);
   },
 
@@ -282,22 +299,29 @@ export const useAppStore = create<AppState>()((set, get) => ({
       } else {
         set({ saveState: "dirty" });
       }
-    } catch {
+    } catch (error) {
       set({ saveState: "error" });
+      throw error;
     }
+  },
+
+  renameNode: async (id, title) => {
+    const clean = title.trim() || "Untitled";
+    const updated = await api.rename(id, clean);
+    await get().refreshTree();
+    set((state) => ({
+      note:
+        state.note && state.note.id === id
+          ? { ...state.note, title: updated.title, path: updated.path }
+          : state.note,
+    }));
+    return updated;
   },
 
   renameCurrent: async (title) => {
     const note = get().note;
     if (!note) return;
-    const clean = title.trim() || "Untitled";
-    const updated = await api.rename(note.id, clean);
-    await get().refreshTree();
-    set((state) => ({
-      note: state.note
-        ? { ...state.note, title: updated.title, path: updated.path }
-        : state.note,
-    }));
+    await get().renameNode(note.id, title);
   },
 
   updateCurrent: async (fields) => {
@@ -341,7 +365,13 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
 
   createNote: async (input) => {
-    await get().saveNow();
+    try {
+      await get().saveNow();
+    } catch {
+      throw new Error(
+        "Could not save the current note. It is still open; retry saving before creating another.",
+      );
+    }
     const node = await api.createNote(input);
     const expanded = new Set(get().expanded);
     if (node.parent_id !== null) expanded.add(node.parent_id);
@@ -404,7 +434,15 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
 
   trashNode: async (id) => {
-    if (get().note?.id === id) await get().saveNow();
+    if (get().note?.id === id) {
+      try {
+        await get().saveNow();
+      } catch {
+        throw new Error(
+          "Could not save the current note. Retry saving before moving it to the trash.",
+        );
+      }
+    }
     const result = await api.trashNode(id);
     if (get().note?.id === id) {
       clearSaveTimer();
@@ -466,6 +504,11 @@ export const useAppStore = create<AppState>()((set, get) => ({
   setSyncScroll: (value) => {
     set({ syncScroll: value });
     persist({ sync_preview_scroll: value ? "1" : "0" });
+  },
+
+  setRestoreLastNote: (value) => {
+    set({ restoreLastNote: value });
+    persist({ restore_last_note: value ? "1" : "0" });
   },
 
   setSidebarWidth: (width, persistWidth = false) => {

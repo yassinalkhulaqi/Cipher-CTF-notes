@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { createPortal } from "react-dom";
 import type { LucideIcon } from "lucide-react";
 
@@ -42,8 +48,41 @@ export function Menu({ x, y, items, onClose, label = "Actions" }: MenuProps) {
       }
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    const timer = window.setTimeout(() => {
+      menuRef.current
+        ?.querySelector<HTMLButtonElement>(".menu-item:not(:disabled)")
+        ?.focus();
+    }, 10);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, [onClose]);
+
+  const onMenuKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLButtonElement>(
+        ".menu-item:not(:disabled)",
+      ) ?? [],
+    );
+    if (!items.length) return;
+    const index = items.indexOf(document.activeElement as HTMLButtonElement);
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      items[(index + 1) % items.length]?.focus();
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      items[(index - 1 + items.length) % items.length]?.focus();
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      items[0]?.focus();
+    } else if (event.key === "End") {
+      event.preventDefault();
+      items[items.length - 1]?.focus();
+    } else if (event.key === "Tab") {
+      onClose();
+    }
+  };
 
   return createPortal(
     <>
@@ -59,6 +98,7 @@ export function Menu({ x, y, items, onClose, label = "Actions" }: MenuProps) {
         aria-label={label}
         style={{ left: position.left, top: position.top }}
         onMouseDown={(event) => event.stopPropagation()}
+        onKeyDown={onMenuKeyDown}
       >
         {items.map((item, index) => {
           if (item === "separator") {

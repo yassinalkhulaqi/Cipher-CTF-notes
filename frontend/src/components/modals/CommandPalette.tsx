@@ -7,11 +7,14 @@ import {
   Flag,
   FolderPlus,
   Focus,
+  Keyboard,
   LayoutDashboard,
   Moon,
   Pin,
+  Save,
   Search,
   Settings,
+  SlidersHorizontal,
   Sun,
   type LucideIcon,
 } from "lucide-react";
@@ -39,8 +42,11 @@ export function CommandPalette() {
   const setTheme = useAppStore((state) => state.setTheme);
   const toggleFocusMode = useAppStore((state) => state.toggleFocusMode);
   const openNote = useAppStore((state) => state.openNote);
+  const note = useAppStore((state) => state.note);
+  const saveNow = useAppStore((state) => state.saveNow);
 
   const openModal = useUiStore((state) => state.openModal);
+  const openFind = useUiStore((state) => state.openFind);
   const openNewNote = useUiStore((state) => state.openNewNote);
   const openNewFolder = useUiStore((state) => state.openNewFolder);
   const closeModal = useUiStore((state) => state.closeModal);
@@ -90,6 +96,42 @@ export function CommandPalette() {
         run: () => openModal("dashboard"),
       },
       {
+        label: "Find in note",
+        detail: "Search the open note or replace text",
+        icon: Search,
+        shortcut: `${modLabel()} F`,
+        run: () =>
+          note ? openFind("find") : toast("Open a note first", "default"),
+      },
+      {
+        label: "Save note now",
+        detail: "Flush pending changes to the vault",
+        icon: Save,
+        shortcut: `${modLabel()} S`,
+        run: () => {
+          if (!note) {
+            toast("Open a note first", "default");
+            return;
+          }
+          void saveNow().then(
+            () => toast("Note saved", "success"),
+            (error: unknown) =>
+              toast(
+                error instanceof Error ? error.message : "Could not save note",
+                "error",
+              ),
+          );
+        },
+      },
+      {
+        label: "Note properties",
+        detail: "Status, difficulty, target, tags, and flag",
+        icon: SlidersHorizontal,
+        shortcut: "F2",
+        run: () =>
+          note ? openModal("properties") : toast("Open a note first", "default"),
+      },
+      {
         label: "Settings",
         detail: "Theme, font size, and scroll sync",
         icon: Settings,
@@ -110,8 +152,26 @@ export function CommandPalette() {
         shortcut: `${modLabel()} Shift L`,
         run: toggleFocusMode,
       },
+      {
+        label: "Keyboard shortcuts",
+        detail: "Every command without the mouse",
+        icon: Keyboard,
+        shortcut: "F1",
+        run: () => openModal("help"),
+      },
     ],
-    [theme, openNewNote, openNewFolder, openModal, setTheme, toggleFocusMode],
+    [
+      theme,
+      note,
+      openNewNote,
+      openNewFolder,
+      openModal,
+      openFind,
+      saveNow,
+      setTheme,
+      toggleFocusMode,
+      toast,
+    ],
   );
 
   useEffect(() => {

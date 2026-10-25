@@ -4,13 +4,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  height: 32px;
-  padding: 0 12px;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 550;
+  font-size: 11.5px;
+  font-weight: 560;
   white-space: nowrap;
   transition:
     background var(--speed-fast) var(--ease),
@@ -25,28 +25,22 @@
 }
 
 .btn svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   flex: none;
 }
 
 .btn.primary {
-  background: linear-gradient(
-    145deg,
-    var(--accent),
-    color-mix(in srgb, var(--accent) 72%, var(--accent-2))
-  );
+  background: var(--accent);
   color: var(--accent-ink);
+  border-color: color-mix(in srgb, var(--accent) 60%, #000);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.18) inset,
-    0 6px 18px color-mix(in srgb, var(--accent) 26%, transparent);
+    0 1px 0 rgba(255, 255, 255, 0.16) inset,
+    0 3px 10px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .btn.primary:hover {
-  filter: brightness(1.06);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.2) inset,
-    0 8px 24px color-mix(in srgb, var(--accent) 34%, transparent);
+  background: var(--accent-hover);
 }
 
 .btn.ghost {
@@ -82,7 +76,7 @@
 
 .btn.danger-ghost {
   background: transparent;
-  border-color: color-mix(in srgb, var(--red) 32%, transparent);
+  border-color: color-mix(in srgb, var(--red) 30%, transparent);
   color: var(--red);
 }
 
@@ -91,16 +85,16 @@
 }
 
 .btn.tiny {
-  height: 26px;
-  padding: 0 9px;
-  font-size: 11px;
-  border-radius: 7px;
+  height: 24px;
+  padding: 0 8px;
+  font-size: 10.5px;
+  border-radius: 5px;
 }
 
 .btn.sm {
-  height: 28px;
-  padding: 0 10px;
-  font-size: 11.5px;
+  height: 26px;
+  padding: 0 9px;
+  font-size: 11px;
 }
 
 .btn.block {
@@ -110,8 +104,8 @@
 .icon-btn {
   display: inline-grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: var(--radius-sm);
   color: var(--muted);
   border: 1px solid transparent;
@@ -140,29 +134,29 @@
 }
 
 .icon-btn.sm {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
+  width: 25px;
+  height: 25px;
+  border-radius: 5px;
 }
 
 .icon-btn.sm svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 }
 
 .icon-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 }
 
 .link-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 6px;
-  border-radius: 6px;
+  gap: 5px;
+  padding: 3px 5px;
+  border-radius: 4px;
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: 11px;
 }
 
 .link-btn:hover {
@@ -175,22 +169,22 @@
 .chips {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   flex-wrap: wrap;
-  min-height: 24px;
+  min-height: 22px;
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  height: 23px;
-  padding: 0 8px;
+  height: 21px;
+  padding: 0 7px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text-soft);
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 550;
   white-space: nowrap;
   transition:
@@ -208,13 +202,13 @@ button.chip:hover {
 }
 
 .chip svg {
-  width: 11px;
-  height: 11px;
+  width: 10px;
+  height: 10px;
 }
 
 .chip .dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   margin-right: 1px;
 }
 
@@ -225,32 +219,32 @@ button.chip:hover {
 .chip.status-active {
   color: var(--blue);
   background: var(--blue-soft);
-  border-color: color-mix(in srgb, var(--blue) 25%, transparent);
+  border-color: color-mix(in srgb, var(--blue) 23%, transparent);
 }
 
 .chip.status-done {
   color: var(--green);
   background: var(--green-soft);
-  border-color: color-mix(in srgb, var(--green) 25%, transparent);
+  border-color: color-mix(in srgb, var(--green) 23%, transparent);
 }
 
 .chip.status-blocked {
   color: var(--red);
   background: var(--red-soft);
-  border-color: color-mix(in srgb, var(--red) 25%, transparent);
+  border-color: color-mix(in srgb, var(--red) 23%, transparent);
 }
 
 .chip.difficulty {
   color: var(--yellow);
   background: var(--yellow-soft);
-  border-color: color-mix(in srgb, var(--yellow) 26%, transparent);
+  border-color: color-mix(in srgb, var(--yellow) 24%, transparent);
   text-transform: capitalize;
 }
 
 .chip.flag {
   color: var(--green);
   background: var(--green-soft);
-  border-color: color-mix(in srgb, var(--green) 26%, transparent);
+  border-color: color-mix(in srgb, var(--green) 24%, transparent);
   font-family: var(--font-mono);
   max-width: 320px;
   overflow: hidden;
@@ -261,7 +255,7 @@ button.chip:hover {
   font-family: var(--font-mono);
   color: var(--purple);
   background: var(--purple-soft);
-  border-color: color-mix(in srgb, var(--purple) 24%, transparent);
+  border-color: color-mix(in srgb, var(--purple) 22%, transparent);
 }
 
 .chip.tag {
@@ -271,8 +265,8 @@ button.chip:hover {
 .chip.tag .remove {
   display: inline-grid;
   place-items: center;
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
   margin-left: 1px;
   border-radius: 50%;
   color: var(--faint);
@@ -284,8 +278,8 @@ button.chip:hover {
 }
 
 .chip.tag .remove svg {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
 }
 
 .chip.add {
@@ -302,8 +296,8 @@ button.chip:hover {
 
 .dot {
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--faint);
   flex: none;
@@ -315,7 +309,7 @@ button.chip:hover {
 
 .dot.active {
   background: var(--blue);
-  box-shadow: 0 0 7px color-mix(in srgb, var(--blue) 55%, transparent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--blue) 55%, transparent);
 }
 
 .dot.done {
@@ -331,13 +325,13 @@ button.chip:hover {
 .tree-row {
   display: flex;
   align-items: center;
-  gap: 7px;
-  height: 28px;
-  padding-right: 7px;
-  margin: 1px 0;
-  border-radius: 7px;
+  gap: 6px;
+  height: 26px;
+  padding-right: 6px;
+  margin: 0.5px 0;
+  border-radius: 5px;
   color: var(--text-soft);
-  font-size: 12px;
+  font-size: 11.5px;
   cursor: default;
   user-select: none;
   position: relative;
@@ -347,8 +341,13 @@ button.chip:hover {
 }
 
 .tree-row:hover {
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--surface-2) 72%, transparent);
   color: var(--text);
+}
+
+.tree-row:focus-visible {
+  outline: 1px solid var(--border-accent);
+  outline-offset: -1px;
 }
 
 .tree-row.selected {
@@ -360,10 +359,10 @@ button.chip:hover {
   content: "";
   position: absolute;
   left: 0;
-  top: 5px;
-  bottom: 5px;
+  top: 4px;
+  bottom: 4px;
   width: 2px;
-  border-radius: 2px;
+  border-radius: 1px;
   background: var(--accent);
 }
 
@@ -373,15 +372,15 @@ button.chip:hover {
 }
 
 .tree-row.dragging {
-  opacity: 0.45;
+  opacity: 0.42;
 }
 
 .tree-row .chevron {
   display: inline-grid;
   place-items: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
   color: var(--faint);
   flex: none;
 }
@@ -392,8 +391,8 @@ button.chip:hover {
 }
 
 .tree-row .chevron svg {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   transition: transform var(--speed-fast) var(--ease);
 }
 
@@ -416,8 +415,8 @@ button.chip:hover {
 }
 
 .tree-row .node-icon svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 }
 
 .tree-row .node-title {
@@ -429,7 +428,7 @@ button.chip:hover {
 }
 
 .tree-row .node-title.folder {
-  font-weight: 550;
+  font-weight: 560;
   color: var(--text);
 }
 
@@ -437,14 +436,15 @@ button.chip:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 16px;
-  height: 16px;
+  min-width: 15px;
+  height: 15px;
   padding: 0 4px;
-  border-radius: var(--radius-full);
+  border-radius: 4px;
   background: var(--surface-3);
   color: var(--muted);
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .tree-row .row-flag {
@@ -453,25 +453,57 @@ button.chip:hover {
 
 .tree-row .row-flag svg,
 .tree-row .row-pin svg {
-  width: 11px;
-  height: 11px;
+  width: 10px;
+  height: 10px;
 }
 
 .tree-row .row-pin {
   color: var(--accent);
 }
 
+.tree-row .status-glyph {
+  width: 11px;
+  height: 11px;
+  flex: none;
+}
+
+.tree-row .status-glyph.active {
+  color: var(--blue);
+}
+
+.tree-row .status-glyph.done {
+  color: var(--green);
+}
+
+.tree-row .status-glyph.blocked {
+  color: var(--red);
+}
+
+.tree-inline-input {
+  flex: 1;
+  min-width: 0;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--border-accent);
+  border-radius: 3px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 11.5px;
+  outline: 0;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
 .tree-empty {
-  padding: 26px 18px;
+  padding: 30px 18px;
   text-align: center;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11.5px;
   line-height: 1.7;
 }
 
-.tree-empty svg {
-  width: 26px;
-  height: 26px;
+.tree-empty > svg {
+  width: 24px;
+  height: 24px;
   margin-bottom: 8px;
   color: var(--faint);
 }
@@ -483,13 +515,13 @@ button.chip:hover {
 .tree-skeleton {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 8px;
   padding: 10px;
 }
 
 .tree-skeleton span {
-  height: 12px;
-  border-radius: 4px;
+  height: 11px;
+  border-radius: 3px;
   background: linear-gradient(
     90deg,
     var(--surface-2) 25%,
@@ -506,13 +538,13 @@ button.chip:hover {
 .select,
 .textarea {
   width: 100%;
-  height: 34px;
-  padding: 0 11px;
+  height: 32px;
+  padding: 0 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface-2);
   color: var(--text);
-  font-size: 12.5px;
+  font-size: 12px;
   outline: 0;
   transition:
     border-color var(--speed-fast) var(--ease),
@@ -522,7 +554,7 @@ button.chip:hover {
 
 .textarea {
   height: auto;
-  padding: 9px 11px;
+  padding: 8px 10px;
   resize: vertical;
   line-height: 1.6;
 }
@@ -545,26 +577,26 @@ button.chip:hover {
   background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
     linear-gradient(135deg, var(--muted) 50%, transparent 50%);
   background-position:
-    calc(100% - 16px) 14px,
-    calc(100% - 11px) 14px;
+    calc(100% - 15px) 13px,
+    calc(100% - 10px) 13px;
   background-size:
     5px 5px,
     5px 5px;
   background-repeat: no-repeat;
-  padding-right: 30px;
+  padding-right: 28px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .field > label {
   display: flex;
   align-items: baseline;
   gap: 6px;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 550;
   color: var(--text-soft);
 }
@@ -572,31 +604,31 @@ button.chip:hover {
 .field > label .opt {
   font-weight: 400;
   color: var(--faint);
-  font-size: 10.5px;
+  font-size: 10px;
 }
 
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
 }
 
 .check {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 9px 11px;
+  padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface-2);
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-soft);
 }
 
 .check input {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   accent-color: var(--accent);
 }
 
@@ -606,7 +638,7 @@ button.chip:hover {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface-2);
-  gap: 2px;
+  gap: 1px;
 }
 
 .segmented button {
@@ -614,11 +646,11 @@ button.chip:hover {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 6px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 4px;
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: 11px;
   transition:
     background var(--speed-fast) var(--ease),
     color var(--speed-fast) var(--ease);
@@ -636,8 +668,8 @@ button.chip:hover {
 }
 
 .segmented button svg {
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
 }
 
 /* -------------------------------------------------------------- Empty state */
@@ -647,16 +679,16 @@ button.chip:hover {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 40px 20px;
+  gap: 7px;
+  padding: 36px 20px;
   text-align: center;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11.5px;
 }
 
 .empty svg {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   color: var(--faint);
   margin-bottom: 2px;
 }
