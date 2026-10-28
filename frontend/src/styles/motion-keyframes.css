@@ -93,3 +93,14 @@
     transform: translate3d(0, 0, 0) scale(1);
   }
 }
+
+@keyframes mx-toast-out {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(24px, 2px, 0) scale(0.96);
+  }
+}
