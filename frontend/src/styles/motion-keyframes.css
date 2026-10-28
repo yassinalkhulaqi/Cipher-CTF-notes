@@ -19,3 +19,12 @@
     transform: translateY(0);
   }
 }
+
+@keyframes mx-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
