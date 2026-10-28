@@ -1,0 +1,268 @@
+.dashboard {
+  animation: mx-page-in var(--motion-duration-slower) var(--motion-ease-out)
+    both;
+}
+
+.dash-title h1 {
+  background: linear-gradient(
+    100deg,
+    var(--text) 0%,
+    var(--text) 46%,
+    color-mix(in srgb, var(--accent) 55%, var(--text)) 58%,
+    var(--text) 72%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: mx-shimmer 7s linear infinite;
+}
+
+.dash-actions .btn {
+  transition:
+    transform var(--motion-duration-fast) var(--motion-ease-spring),
+    box-shadow var(--motion-duration-base) var(--motion-ease-out),
+    background var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.dash-actions .btn:hover {
+  transform: translateY(-1px);
+}
+
+.pulse-cell {
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.pulse-cell:hover {
+  transform: translateY(-1px);
+}
+
+.pulse-cell strong {
+  transition: color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.pulse-cell:hover strong {
+  color: var(--accent);
+}
+
+.pulse-cell strong.green:hover {
+  color: var(--green);
+}
+
+.pulse-note svg {
+  transition: transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.pulse-cell:hover .pulse-note svg {
+  transform: scale(1.14);
+}
+
+.dash-panel {
+  transition:
+    border-color var(--motion-duration-fast) var(--motion-ease-out),
+    box-shadow var(--motion-duration-slow) var(--motion-ease-out);
+}
+
+.dash-panel:hover {
+  border-color: color-mix(in srgb, var(--border-strong) 82%, var(--accent));
+}
+
+.panel-glyph {
+  transition: transform var(--motion-duration-base) var(--motion-ease-spring);
+}
+
+.dash-panel:hover .panel-glyph {
+  transform: rotate(-6deg) scale(1.08);
+}
+
+.work-row {
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.work-row:hover {
+  transform: translateX(1px);
+}
+
+.work-row:hover .work-arrow {
+  animation: mx-arrow-slide var(--motion-duration-fast)
+    var(--motion-ease-spring) both;
+}
+
+.work-row:hover .work-index {
+  color: var(--accent);
+}
+
+.work-index {
+  transition: color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.mini-row {
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.mini-row:hover {
+  transform: translateX(2px);
+}
+
+.flag-row {
+  position: relative;
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.flag-row:hover {
+  transform: translateX(1px);
+}
+
+.flag-row data,
+.flag-row .flag-mark svg {
+  transition: transform var(--motion-duration-base) var(--motion-ease-spring);
+}
+
+.flag-row:hover .flag-mark svg {
+  transform: rotate(-8deg) scale(1.12);
+}
+
+.flag-row[data-copied="true"] {
+  animation: mx-copy-burst 700ms var(--motion-ease-out);
+}
+
+.flag-row[data-copied="true"] .flag-mark svg {
+  animation: mx-flag-pop var(--motion-duration-slow) var(--motion-ease-spring);
+  color: var(--green);
+}
+
+.target-pill,
+.tag-chip {
+  transition:
+    transform var(--motion-duration-fast) var(--motion-ease-spring),
+    border-color var(--motion-duration-fast) var(--motion-ease-out),
+    background var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.target-pill:hover,
+.tag-chip:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-accent);
+}
+
+.start-card,
+.template-tile {
+  transition:
+    transform var(--motion-duration-base) var(--motion-ease-spring),
+    border-color var(--motion-duration-fast) var(--motion-ease-out),
+    background var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.start-card:hover,
+.template-tile:hover {
+  transform: translateY(-2px);
+}
+
+.start-card:hover .start-icon,
+.template-tile:hover .tile-icon {
+  transform: rotate(-7deg) scale(1.1);
+}
+
+.start-icon,
+.tile-icon {
+  transition: transform var(--motion-duration-base) var(--motion-ease-spring);
+}
+
+.start-card > svg {
+  transition: transform var(--motion-duration-base) var(--motion-ease-spring);
+}
+
+.start-card:hover > svg {
+  transform: translate(2px, -2px) scale(1.08);
+  color: var(--accent);
+}
+
+.template-tile {
+  position: relative;
+  overflow: hidden;
+}
+
+.template-tile::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform var(--motion-duration-base) var(--motion-ease-out);
+}
+
+.template-tile:hover::after {
+  transform: scaleX(1);
+}
+
+.dash-foot .link-btn {
+  transition:
+    color var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.dash-foot .link-btn:hover {
+  transform: translateY(-1px);
+}
+
+html[data-motion-ready="true"] .work-list .work-row {
+  animation: mx-rise-soft var(--motion-duration-slow) var(--motion-ease-out)
+    both;
+}
+
+.work-list .work-row:nth-child(2) {
+  animation-delay: calc(var(--motion-stagger-step) * 1);
+}
+.work-list .work-row:nth-child(3) {
+  animation-delay: calc(var(--motion-stagger-step) * 2);
+}
+.work-list .work-row:nth-child(4) {
+  animation-delay: calc(var(--motion-stagger-step) * 3);
+}
+.work-list .work-row:nth-child(5) {
+  animation-delay: calc(var(--motion-stagger-step) * 4);
+}
+.work-list .work-row:nth-child(6) {
+  animation-delay: calc(var(--motion-stagger-step) * 5);
+}
+
+html[data-motion-ready="true"] .empty-start-grid .start-card,
+html[data-motion-ready="true"] .template-rail .template-tile {
+  animation: mx-rise var(--motion-duration-slower) var(--motion-ease-out) both;
+}
+
+.empty-start-grid .start-card:nth-child(2),
+.template-rail .template-tile:nth-child(2) {
+  animation-delay: calc(var(--motion-stagger-step) * 1);
+}
+.empty-start-grid .start-card:nth-child(3),
+.template-rail .template-tile:nth-child(3) {
+  animation-delay: calc(var(--motion-stagger-step) * 2);
+}
+.template-rail .template-tile:nth-child(4) {
+  animation-delay: calc(var(--motion-stagger-step) * 3);
+}
+.template-rail .template-tile:nth-child(5) {
+  animation-delay: calc(var(--motion-stagger-step) * 4);
+}
+.template-rail .template-tile:nth-child(6) {
+  animation-delay: calc(var(--motion-stagger-step) * 5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-motion-mode="system"] .dash-title h1 {
+    animation: none;
+    -webkit-text-fill-color: currentColor;
+  }
+}

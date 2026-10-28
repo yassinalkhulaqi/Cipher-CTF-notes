@@ -1,0 +1,218 @@
+.tree {
+  position: relative;
+}
+
+.tree-selection {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--accent-soft) 78%, var(--surface-2));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    transform var(--motion-duration-slow) var(--motion-ease-spring),
+    width var(--motion-duration-slow) var(--motion-ease-spring),
+    height var(--motion-duration-slow) var(--motion-ease-spring),
+    opacity var(--motion-duration-fast) var(--motion-ease-out);
+  will-change: transform, width, height;
+}
+
+.tree-selection.is-active {
+  opacity: 1;
+}
+
+.tree-selection::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 0;
+  width: 2px;
+  border-radius: 1px;
+  background: linear-gradient(var(--accent), var(--accent-2));
+  box-shadow: 0 0 10px var(--accent-soft);
+}
+
+.tree[data-selection="true"] .tree-row.selected {
+  background: transparent;
+}
+
+.tree[data-selection="true"] .tree-row.selected::before {
+  opacity: 0;
+}
+
+.tree > .tree-row {
+  z-index: 1;
+}
+
+.tree-row .chevron svg {
+  transition: transform var(--motion-duration-base) var(--motion-ease-spring);
+}
+
+.tree-row .node-icon {
+  transition:
+    transform var(--motion-duration-fast) var(--motion-ease-spring),
+    color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.tree-row:hover .node-icon {
+  transform: scale(1.08);
+}
+
+.tree-row:hover .chevron svg {
+  transform: translateX(1px);
+}
+
+.tree-row.selected .node-icon {
+  transform: scale(1.04);
+}
+
+.tree-row.drop-target {
+  animation: mx-pulse-ring 700ms var(--motion-ease-out);
+}
+
+.tree-row.dragging {
+  transform: scale(0.985);
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.tree-pinned .tree-row {
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.tree-pinned .tree-row:hover {
+  transform: translateX(1px);
+}
+
+.sidebar-head .icon-btn {
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.sidebar-head .icon-btn:hover {
+  transform: translateY(-1px) scale(1.06);
+}
+
+.sidebar-search {
+  transition:
+    border-color var(--motion-duration-fast) var(--motion-ease-out),
+    box-shadow var(--motion-duration-base) var(--motion-ease-out),
+    background var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.sidebar-search:focus-within > svg {
+  color: var(--accent);
+}
+
+.sidebar-search > svg {
+  transition: color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.sidebar-count {
+  transition: color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.sidebar-head:hover .sidebar-count {
+  color: var(--text-soft);
+}
+
+.sidebar-resizer {
+  transition: background var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.sidebar-resizer:hover,
+.sidebar-resizer:focus-visible,
+.sidebar-resizer.dragging {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--accent) 34%, transparent) 18%,
+    color-mix(in srgb, var(--accent) 34%, transparent) 82%,
+    transparent
+  );
+}
+
+.sidebar-foot .btn {
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.sidebar-foot .btn:hover {
+  transform: translateY(-1px);
+}
+
+html[data-motion-ready="true"] .tree > .tree-row {
+  animation: mx-row-in var(--motion-duration-slow) var(--motion-ease-out) both;
+}
+
+.tree > .tree-row:nth-child(2) {
+  animation-delay: calc(var(--motion-stagger-step) * 1);
+}
+.tree > .tree-row:nth-child(3) {
+  animation-delay: calc(var(--motion-stagger-step) * 2);
+}
+.tree > .tree-row:nth-child(4) {
+  animation-delay: calc(var(--motion-stagger-step) * 3);
+}
+.tree > .tree-row:nth-child(5) {
+  animation-delay: calc(var(--motion-stagger-step) * 4);
+}
+.tree > .tree-row:nth-child(6) {
+  animation-delay: calc(var(--motion-stagger-step) * 5);
+}
+.tree > .tree-row:nth-child(7) {
+  animation-delay: calc(var(--motion-stagger-step) * 6);
+}
+.tree > .tree-row:nth-child(8) {
+  animation-delay: calc(var(--motion-stagger-step) * 7);
+}
+.tree > .tree-row:nth-child(9) {
+  animation-delay: calc(var(--motion-stagger-step) * 8);
+}
+.tree > .tree-row:nth-child(10) {
+  animation-delay: calc(var(--motion-stagger-step) * 9);
+}
+.tree > .tree-row:nth-child(11) {
+  animation-delay: calc(var(--motion-stagger-step) * 10);
+}
+.tree > .tree-row:nth-child(12) {
+  animation-delay: calc(var(--motion-stagger-step) * 11);
+}
+.tree > .tree-row:nth-child(n + 13) {
+  animation-delay: calc(var(--motion-stagger-step) * 12);
+}
+
+@media (max-width: 920px) {
+  .sidebar {
+    transition: transform var(--motion-duration-slower)
+      var(--motion-ease-spring);
+    will-change: transform;
+  }
+
+  .app-shell[data-mobile-sidebar="true"] .mobile-backdrop {
+    backdrop-filter: blur(2px);
+    animation: mx-fade var(--motion-duration-base) var(--motion-ease-out);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-motion-mode="system"] .tree-selection {
+    transition-duration: 0ms;
+  }
+
+  html[data-motion-mode="system"] .tree > .tree-row {
+    animation: none;
+  }
+}

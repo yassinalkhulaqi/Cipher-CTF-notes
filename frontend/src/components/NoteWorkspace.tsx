@@ -50,6 +50,7 @@ import {
 import { MarkdownPreview } from "./editor/MarkdownPreview";
 import { Menu, type MenuEntry } from "./Menu";
 import { StatusIcon } from "./StatusIcon";
+import { ScrollProgress } from "../motion/ScrollProgress";
 import { useAppStore } from "../store/useAppStore";
 import { useUiStore } from "../store/useUiStore";
 import {
@@ -118,6 +119,7 @@ export function NoteWorkspace() {
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const cancelRename = useRef(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const [title, setTitle] = useState(note?.title ?? "");
   const [exportMenu, setExportMenu] = useState<{ x: number; y: number } | null>(
     null,
@@ -172,8 +174,7 @@ export function NoteWorkspace() {
       toast("Snippet inserted at the cursor", "success");
     };
     window.addEventListener("redscribe:insert-snippet", insert);
-    return () =>
-      window.removeEventListener("redscribe:insert-snippet", insert);
+    return () => window.removeEventListener("redscribe:insert-snippet", insert);
   }, [toast]);
 
   if (!note) return null;
@@ -218,6 +219,7 @@ export function NoteWorkspace() {
   };
 
   const syncPreview = (scrollTop: number, scrollable: number) => {
+    setScrollProgress(scrollable > 0 ? scrollTop / scrollable : 0);
     if (!syncScroll || effectiveView !== "split") return;
     const previewPane = previewScrollRef.current;
     if (!previewPane || scrollable <= 0) return;
@@ -410,6 +412,10 @@ export function NoteWorkspace() {
 
   return (
     <section className="note">
+      <ScrollProgress
+        value={scrollProgress}
+        visible={scrollProgress > 0.01 && scrollProgress < 0.995}
+      />
       <header className="note-head">
         <div className="note-topline">
           <div className="breadcrumbs" aria-label="Breadcrumb">
@@ -501,11 +507,7 @@ export function NoteWorkspace() {
             >
               <MoreHorizontal />
             </button>
-            <div
-              className="view-switch"
-              role="group"
-              aria-label="Editor view"
-            >
+            <div className="view-switch" role="group" aria-label="Editor view">
               <button
                 type="button"
                 aria-pressed={viewMode === "editor"}
@@ -697,9 +699,7 @@ export function NoteWorkspace() {
                 editorRef.current?.wrapSelection("[", "](https://)", "label"),
               )}
               {formatButton(SquareCode, "Code block", undefined, () =>
-                editorRef.current?.insertBlock(
-                  "```bash\n\n```\n",
-                ),
+                editorRef.current?.insertBlock("```bash\n\n```\n"),
               )}
               <span className="tool-sep" />
               {formatButton(Search, "Find in note", `${modLabel()}+F`, () =>

@@ -1,0 +1,138 @@
+@media (max-width: 1100px) {
+  .cursor-glow {
+    width: 520px;
+    height: 520px;
+  }
+
+  .aurora-orb-a {
+    opacity: 0.12;
+  }
+}
+
+@media (max-width: 920px) {
+  .cursor-glow,
+  .aurora-field {
+    display: none;
+  }
+
+  [data-tilt].is-tilting {
+    transform: none;
+  }
+
+  .modal {
+    animation-name: mx-sheet-in;
+    transform-origin: 50% 100%;
+  }
+
+  .modal.is-closing {
+    animation-name: mx-sheet-out;
+  }
+
+  .motion-demo-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .overlay {
+    padding: clamp(14px, 4vh, 40px) 10px 16px;
+  }
+
+  .overlay.palette-overlay {
+    padding-top: clamp(18px, 6vh, 60px);
+  }
+
+  .modal {
+    max-height: min(86vh, 900px);
+  }
+
+  .dash-title h1,
+  .dashboard-empty .dash-title h1 {
+    animation-duration: 11s;
+  }
+
+  .boot-orbit {
+    width: min(76vmin, 420px);
+  }
+
+  .boot-progress {
+    width: 136px;
+  }
+}
+
+@media (max-width: 560px) {
+  .toast {
+    animation-name: mx-toast-in-mobile;
+  }
+
+  .toast.is-exiting {
+    animation-name: mx-toast-out-mobile;
+  }
+
+  .tree > .tree-row {
+    animation-delay: 0ms !important;
+  }
+
+  .motion-mode small {
+    display: none;
+  }
+
+  .motion-demo {
+    min-height: 126px;
+  }
+
+  .motion-demo-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .demo-counter {
+    font-size: 25px;
+  }
+}
+
+@media (max-width: 420px) {
+  .motion-mode {
+    padding: 8px;
+  }
+
+  .modal-head {
+    padding: 13px 14px 10px;
+  }
+
+  .modal-body {
+    padding: 13px 14px;
+  }
+
+  .modal-foot {
+    padding: 10px 14px;
+  }
+
+  .demo-pill {
+    min-width: 27px;
+  }
+}
+
+@media (max-height: 620px) {
+  .boot-orbit {
+    width: min(48vmin, 340px);
+  }
+
+  .modal {
+    max-height: 90vh;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .command-trigger::after,
+  .template-tile::after {
+    display: none;
+  }
+
+  .work-row:hover,
+  .mini-row:hover,
+  .menu-item:hover,
+  .flag-row:hover,
+  .palette-item.selected {
+    transform: none;
+  }
+}

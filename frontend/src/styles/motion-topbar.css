@@ -1,0 +1,122 @@
+.topbar {
+  animation: mx-slide-down var(--motion-duration-slower) var(--motion-ease-out)
+    both;
+}
+
+.topbar .brand-mark {
+  transition:
+    transform var(--motion-duration-slow) var(--motion-ease-spring),
+    box-shadow var(--motion-duration-slow) var(--motion-ease-out);
+}
+
+.topbar .brand:hover .brand-mark {
+  transform: rotate(-5deg) scale(1.06);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.topbar .brand:active .brand-mark {
+  transform: rotate(-2deg) scale(0.98);
+}
+
+.topbar .brand-name em {
+  transition: color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.topbar .brand:hover .brand-name em {
+  color: var(--accent);
+}
+
+.vault-pill .dot {
+  animation: mx-dot-breathe 3.6s var(--motion-ease-in-out) infinite;
+}
+
+.vault-pill {
+  transition:
+    border-color var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.vault-pill:hover {
+  border-color: var(--border-strong);
+  color: var(--text-soft);
+}
+
+.command-trigger {
+  position: relative;
+  overflow: hidden;
+}
+
+.command-trigger::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 42%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    color-mix(in srgb, var(--text) 7%, transparent),
+    transparent
+  );
+  transform: translateX(-140%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.command-trigger:hover::after {
+  opacity: 1;
+  animation: mx-scan 1.1s var(--motion-ease-out);
+}
+
+.command-trigger:hover svg {
+  color: var(--accent);
+}
+
+.command-trigger svg,
+.command-trigger kbd {
+  transition: color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.command-trigger kbd {
+  transition:
+    color var(--motion-duration-fast) var(--motion-ease-out),
+    border-color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.command-trigger:hover kbd {
+  color: var(--text-soft);
+  border-color: var(--border-strong);
+}
+
+.topbar .icon-btn svg {
+  transition: transform var(--motion-duration-base) var(--motion-ease-spring);
+}
+
+.topbar .icon-btn:hover svg {
+  transform: scale(1.1);
+}
+
+.topbar .icon-btn:active svg {
+  transform: scale(0.92);
+}
+
+.topbar .theme-toggle svg {
+  animation: mx-spin-in var(--motion-duration-slow) var(--motion-ease-spring);
+}
+
+.topbar-new svg {
+  transition: transform var(--motion-duration-base) var(--motion-ease-spring);
+}
+
+.topbar-new:hover svg {
+  transform: rotate(90deg) scale(1.08);
+}
+
+.topbar-divider {
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+html[data-motion="off"] .vault-pill .dot {
+  animation: none;
+}

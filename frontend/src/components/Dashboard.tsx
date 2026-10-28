@@ -29,6 +29,9 @@ import { api } from "../lib/api";
 import { STATUS_LABEL } from "../lib/constants";
 import type { FlagHit, NodeSummary, Template } from "../lib/types";
 import { copyText, modLabel, plural, relativeTime } from "../lib/utils";
+import { AnimatedNumber } from "../motion/AnimatedNumber";
+import { Confetti } from "../motion/Confetti";
+import { Skeleton } from "../motion/Skeleton";
 import { useAppStore } from "../store/useAppStore";
 import { useUiStore } from "../store/useUiStore";
 import { StatusIcon } from "./StatusIcon";
@@ -64,6 +67,8 @@ export function Dashboard() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [copiedFlag, setCopiedFlag] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [burst, setBurst] = useState(0);
+  const [flagsLoading, setFlagsLoading] = useState(true);
 
   const notes = useMemo(
     () =>
@@ -124,16 +129,22 @@ export function Dashboard() {
   useEffect(() => {
     if (stats.notes === 0) {
       setFlags([]);
+      setFlagsLoading(false);
       return;
     }
     let cancelled = false;
+    setFlagsLoading(true);
     api
       .collectedFlags()
       .then((items) => {
-        if (!cancelled) setFlags(items);
+        if (cancelled) return;
+        setFlags(items);
+        setFlagsLoading(false);
       })
       .catch(() => {
-        if (!cancelled) setFlags([]);
+        if (cancelled) return;
+        setFlags([]);
+        setFlagsLoading(false);
       });
     return () => {
       cancelled = true;
@@ -192,7 +203,10 @@ export function Dashboard() {
 
   const copyFlag = (value: string) => {
     void copyText(value).then(
-      () => setCopiedFlag(value),
+      () => {
+        setCopiedFlag(value);
+        setBurst((current) => current + 1);
+      },
       () => toast("Could not copy the flag", "error"),
     );
   };
@@ -240,11 +254,7 @@ export function Dashboard() {
               >
                 <Plus /> New note
               </button>
-              <button
-                className="btn ghost"
-                type="button"
-                onClick={handleDemo}
-              >
+              <button className="btn ghost" type="button" onClick={handleDemo}>
                 <Sparkles /> Add samples
               </button>
             </div>
@@ -366,14 +376,16 @@ export function Dashboard() {
           </div>
         </header>
 
-        <div className="pulse-strip" aria-label="Vault statistics">
+        <div className="pulse-strip" aria-label="Vault statistics" data-reveal>
           <button
             type="button"
             className="pulse-cell"
             onClick={() => setFilter("")}
           >
             <span className="pulse-label">Notes</span>
-            <strong>{stats.notes}</strong>
+            <strong>
+              <AnimatedNumber value={stats.notes} />
+            </strong>
             <span className="pulse-note">
               <CircleDot /> {stats.statuses.active} active
             </span>
@@ -384,7 +396,9 @@ export function Dashboard() {
             onClick={() => openModal("dashboard")}
           >
             <span className="pulse-label">Captured</span>
-            <strong className="green">{flags.length}</strong>
+            <strong className="green">
+              <AnimatedNumber value={flags.length} />
+            </strong>
             <span className="pulse-note">
               <Flag /> {stats.statuses.done} completed
             </span>
@@ -398,7 +412,9 @@ export function Dashboard() {
             }}
           >
             <span className="pulse-label">Targets</span>
-            <strong>{stats.targets.length}</strong>
+            <strong>
+              <AnimatedNumber value={stats.targets.length} />
+            </strong>
             <span className="pulse-note">
               <Target /> {stats.targets[0]?.[0] ?? "none yet"}
             </span>
@@ -412,7 +428,9 @@ export function Dashboard() {
             }}
           >
             <span className="pulse-label">Tags</span>
-            <strong>{stats.tags.length}</strong>
+            <strong>
+              <AnimatedNumber value={stats.tags.length} />
+            </strong>
             <span className="pulse-note">
               <Tag /> {stats.tags[0]?.[0] ?? "untagged"}
             </span>
@@ -421,7 +439,7 @@ export function Dashboard() {
 
         <div className="desk-grid">
           <div className="desk-main">
-            <section className="dash-panel">
+            <section className="dash-panel" data-tilt data-reveal>
               <div className="dash-panel-head">
                 <div>
                   <h2>Continue working</h2>
@@ -477,7 +495,7 @@ export function Dashboard() {
             </section>
 
             <div className="dash-split">
-              <section className="dash-panel compact">
+              <section className="dash-panel compact" data-tilt data-reveal>
                 <div className="dash-panel-head">
                   <div>
                     <h2>In progress</h2>
@@ -518,7 +536,7 @@ export function Dashboard() {
                 </div>
               </section>
 
-              <section className="dash-panel compact">
+              <section className="dash-panel compact" data-tilt data-reveal>
                 <div className="dash-panel-head">
                   <div>
                     <h2>Pinned</h2>
@@ -562,7 +580,7 @@ export function Dashboard() {
           </div>
 
           <aside className="desk-side">
-            <section className="dash-panel flags-panel">
+            <section className="dash-panel flags-panel" data-tilt data-reveal>
               <div className="dash-panel-head">
                 <div>
                   <h2>Captured flags</h2>
@@ -583,12 +601,15 @@ export function Dashboard() {
                 </button>
               </div>
               <div className="flag-list">
-                {visibleFlags.length ? (
+                {flagsLoading ? (
+                  <Skeleton lines={4} compact />
+                ) : visibleFlags.length ? (
                   visibleFlags.map((hit) => (
                     <button
                       key={`${hit.node_id}-${hit.flag}`}
                       type="button"
                       className="flag-row"
+                      data-copied={copiedFlag === hit.flag ? "true" : "false"}
                       onClick={() => copyFlag(hit.flag)}
                       title={`Copy ${hit.flag}`}
                     >
@@ -613,7 +634,7 @@ export function Dashboard() {
               </div>
             </section>
 
-            <section className="dash-panel compact">
+            <section className="dash-panel compact" data-tilt data-reveal>
               <div className="dash-panel-head">
                 <div>
                   <h2>Targets</h2>
@@ -643,7 +664,7 @@ export function Dashboard() {
               </div>
             </section>
 
-            <section className="dash-panel compact">
+            <section className="dash-panel compact" data-tilt data-reveal>
               <div className="dash-panel-head">
                 <div>
                   <h2>Tags</h2>
@@ -676,7 +697,7 @@ export function Dashboard() {
           </aside>
         </div>
 
-        <section className="dash-panel template-panel">
+        <section className="dash-panel template-panel" data-tilt data-reveal>
           <div className="dash-panel-head">
             <div>
               <h2>Start from a template</h2>
@@ -736,6 +757,7 @@ export function Dashboard() {
           </button>
         </footer>
       </div>
+      <Confetti fire={burst} />
     </section>
   );
 }

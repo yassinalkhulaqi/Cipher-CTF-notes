@@ -1,0 +1,64 @@
+:root {
+  --motion-duration-instant: 70ms;
+  --motion-duration-fast: 140ms;
+  --motion-duration-base: 220ms;
+  --motion-duration-slow: 340ms;
+  --motion-duration-slower: 520ms;
+  --motion-duration-cinematic: 760ms;
+  --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --motion-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --motion-distance: 12px;
+  --motion-distance-sm: 6px;
+  --motion-lift: -2px;
+  --motion-stagger-step: 32ms;
+  --motion-press-scale: 0.97;
+  --motion-glow-opacity: 0.28;
+  --motion-blur: 8px;
+}
+
+html[data-motion="subtle"] {
+  --motion-duration-slow: 240ms;
+  --motion-duration-slower: 320ms;
+  --motion-duration-cinematic: 420ms;
+  --motion-distance: 6px;
+  --motion-distance-sm: 3px;
+  --motion-lift: -1px;
+  --motion-stagger-step: 18ms;
+  --motion-press-scale: 0.985;
+  --motion-glow-opacity: 0.16;
+  --motion-blur: 4px;
+}
+
+html[data-motion="off"] {
+  --motion-duration-instant: 0ms;
+  --motion-duration-fast: 0ms;
+  --motion-duration-base: 0ms;
+  --motion-duration-slow: 0ms;
+  --motion-duration-slower: 0ms;
+  --motion-duration-cinematic: 0ms;
+  --motion-distance: 0px;
+  --motion-distance-sm: 0px;
+  --motion-lift: 0px;
+  --motion-stagger-step: 0ms;
+  --motion-press-scale: 1;
+  --motion-glow-opacity: 0;
+}
+
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-motion="off"] .cursor-glow,
+html[data-motion="off"] .aurora-field,
+html[data-motion="off"] .confetti-canvas {
+  display: none !important;
+}

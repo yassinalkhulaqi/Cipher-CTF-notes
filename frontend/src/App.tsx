@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
-import { AlertTriangle, RefreshCw } from "lucide-react";
-import { BrandMark } from "./components/BrandMark";
+import { BootScreen } from "./components/BootScreen";
 import { NoteWorkspace } from "./components/NoteWorkspace";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
@@ -10,13 +9,17 @@ import { Dashboard } from "./components/Dashboard";
 import { ModalHost } from "./components/modals/ModalHost";
 import { useAutosaveLifecycle } from "./hooks/useAutosaveLifecycle";
 import { useGlobalHotkeys } from "./hooks/useGlobalHotkeys";
+import { Aurora } from "./motion/Aurora";
+import { CursorGlow } from "./motion/CursorGlow";
+import { useCardTilt } from "./motion/useCardTilt";
+import { useGlobalRipple } from "./motion/useGlobalRipple";
+import { useScrollReveal } from "./motion/useScrollReveal";
 import { useAppStore } from "./store/useAppStore";
 import { useUiStore } from "./store/useUiStore";
 
 export function App() {
   const boot = useAppStore((state) => state.boot);
   const bootError = useAppStore((state) => state.bootError);
-  const loading = useAppStore((state) => state.loading);
   const note = useAppStore((state) => state.note);
   const focusMode = useAppStore((state) => state.focusMode);
   const bootApp = useAppStore((state) => state.bootApp);
@@ -26,6 +29,9 @@ export function App() {
   const started = useRef(false);
   useGlobalHotkeys();
   useAutosaveLifecycle();
+  useGlobalRipple();
+  useCardTilt();
+  useScrollReveal();
 
   useEffect(() => {
     if (started.current) return;
@@ -33,48 +39,18 @@ export function App() {
     void bootApp();
   }, [bootApp]);
 
-  if (loading && !boot) {
-    return (
-      <div className="boot-screen">
-        <BrandMark />
-        <div className="boot-copy">
-          <h1>
-            Red<em>Scribe</em>
-          </h1>
-          <p>Opening your vault…</p>
-        </div>
-        <span className="spinner" />
-      </div>
-    );
-  }
-
-  if (bootError) {
-    return (
-      <div className="boot-screen error">
-        <span className="boot-error-icon">
-          <AlertTriangle />
-        </span>
-        <div className="boot-copy">
-          <h1>Could not open the vault</h1>
-          <p>{bootError}</p>
-        </div>
-        <button
-          type="button"
-          className="btn primary"
-          onClick={() => void bootApp()}
-        >
-          <RefreshCw /> Try again
-        </button>
-      </div>
-    );
-  }
-
   if (!boot) {
     return (
-      <div className="boot-screen">
-        <BrandMark />
-        <span className="spinner" />
-      </div>
+      <BootScreen
+        error={bootError}
+        onRetry={
+          bootError
+            ? () => {
+                void bootApp();
+              }
+            : undefined
+        }
+      />
     );
   }
 
@@ -84,6 +60,8 @@ export function App() {
       data-focus={focusMode ? "true" : "false"}
       data-mobile-sidebar={mobileSidebarOpen ? "true" : "false"}
     >
+      <Aurora />
+      <CursorGlow />
       <TopBar />
       <div className="app-main">
         <Sidebar />
@@ -94,7 +72,9 @@ export function App() {
           aria-label="Close the sidebar"
         />
         <main className="workspace">
-          {note ? <NoteWorkspace /> : <Dashboard />}
+          <div className="motion-page" key={note ? `note-${note.id}` : "desk"}>
+            {note ? <NoteWorkspace /> : <Dashboard />}
+          </div>
         </main>
       </div>
       <StatusBar />
