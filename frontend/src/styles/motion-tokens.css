@@ -45,3 +45,20 @@ html[data-motion="off"] {
   --motion-press-scale: 1;
   --motion-glow-opacity: 0;
 }
+
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-motion="off"] .cursor-glow,
+html[data-motion="off"] .aurora-field,
+html[data-motion="off"] .confetti-canvas {
+  display: none !important;
+}
