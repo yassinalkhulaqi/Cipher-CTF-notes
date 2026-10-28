@@ -12,6 +12,7 @@ import {
   Sun,
 } from "lucide-react";
 import { BrandMark } from "./BrandMark";
+import { startThemeTransition } from "../lib/viewTransition";
 import { useAppStore } from "../store/useAppStore";
 import { useUiStore } from "../store/useUiStore";
 import { baseName, modLabel } from "../lib/utils";
@@ -30,6 +31,11 @@ export function TopBar() {
   const toggleMobileSidebar = () => setMobileSidebar(!mobileSidebarOpen);
 
   const vaultName = boot ? baseName(boot.vault_path) || "Vault" : "Vault";
+
+  const toggleTheme = (x: number, y: number) => {
+    const next = theme === "dark" ? "light" : "dark";
+    startThemeTransition({ x, y }, () => setTheme(next));
+  };
 
   const goHome = () => {
     setMobileSidebar(false);
@@ -66,7 +72,10 @@ export function TopBar() {
           </span>
         </button>
         {boot ? (
-          <span className="vault-pill" title={`${boot.vault_path}\nLocal SQLite vault`}>
+          <span
+            className="vault-pill"
+            title={`${boot.vault_path}\nLocal SQLite vault`}
+          >
             <span className="dot" />
             <HardDrive />
             {vaultName}
@@ -126,9 +135,9 @@ export function TopBar() {
           <span className="new-note-label">New note</span>
         </button>
         <button
-          className="icon-btn"
+          className="icon-btn theme-toggle"
           type="button"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          onClick={(event) => toggleTheme(event.clientX, event.clientY)}
           title={
             theme === "dark" ? "Switch to light theme" : "Switch to dark theme"
           }
