@@ -223,3 +223,13 @@
     transform: translate3d(-5%, 6%, 0) scale(0.96);
   }
 }
+
+@keyframes mx-orb-c {
+  0%,
+  100% {
+    transform: translate3d(0, 2%, 0) scale(0.98);
+  }
+  50% {
+    transform: translate3d(4%, -4%, 0) scale(1.06);
+  }
+}
