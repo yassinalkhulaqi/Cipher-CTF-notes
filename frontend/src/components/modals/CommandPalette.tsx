@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import {
+  Activity,
   Code2,
   Command,
   FilePlus2,
@@ -129,7 +130,9 @@ export function CommandPalette() {
         icon: SlidersHorizontal,
         shortcut: "F2",
         run: () =>
-          note ? openModal("properties") : toast("Open a note first", "default"),
+          note
+            ? openModal("properties")
+            : toast("Open a note first", "default"),
       },
       {
         label: "Settings",
@@ -137,6 +140,12 @@ export function CommandPalette() {
         icon: Settings,
         shortcut: `${modLabel()} ,`,
         run: () => openModal("settings"),
+      },
+      {
+        label: "Motion lab",
+        detail: "Preview springs, stagger, and reduced motion",
+        icon: Activity,
+        run: () => openModal("motion"),
       },
       {
         label:
