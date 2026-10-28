@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import { Menu, type MenuEntry } from "./Menu";
 import { StatusIcon } from "./StatusIcon";
+import { useFlipList } from "../motion/useFlipList";
+import { useFloatingSelection } from "../motion/useFloatingSelection";
 import {
   allIds,
   countNotes,
@@ -220,10 +222,7 @@ function TreeRow({
         </span>
       ) : null}
       {!renaming && !folder ? (
-        <StatusIcon
-          status={node.status}
-          label={`Status: ${node.status}`}
-        />
+        <StatusIcon status={node.status} label={`Status: ${node.status}`} />
       ) : null}
       {!renaming && folder && node.children.length > 0 ? (
         <span className="row-badge">{node.children.length}</span>
@@ -294,6 +293,27 @@ export function Sidebar() {
     [nodes],
   );
   const anyExpanded = folderIds.some((id) => expanded.has(id));
+
+  const flipSignature = useMemo(
+    () => rows.map((row) => row.node.id).join(":"),
+    [rows],
+  );
+  const selectionSignature = useMemo(
+    () =>
+      `${selectedId ?? "none"}:${filter}:${rows
+        .map((row) => row.node.id)
+        .join(":")}:${pinned.map((node) => node.id).join(":")}`,
+    [selectedId, filter, rows, pinned],
+  );
+
+  useFlipList(treeRef, flipSignature, {
+    selector: ".tree > .tree-row[data-node-id]",
+  });
+  const selection = useFloatingSelection(
+    treeRef,
+    selectedId,
+    selectionSignature,
+  );
 
   useEffect(() => {
     const focusFilter = () => {
@@ -692,7 +712,18 @@ export function Sidebar() {
         ) : null}
       </div>
 
-      <div ref={treeRef} className="tree" role="tree" aria-label="Vault tree">
+      <div
+        ref={treeRef}
+        className="tree"
+        role="tree"
+        aria-label="Vault tree"
+        data-selection={selection.active ? "true" : "false"}
+      >
+        <span
+          className={`tree-selection ${selection.active ? "is-active" : ""}`}
+          style={selection.style}
+          aria-hidden="true"
+        />
         {!forceOpen && pinned.length > 0 ? (
           <div className="tree-pinned">
             <div className="list-label">Pinned</div>
@@ -702,6 +733,7 @@ export function Sidebar() {
                 type="button"
                 className={`tree-row ${selectedId === node.id ? "selected" : ""}`}
                 style={{ paddingLeft: "5px" }}
+                data-node-id={node.id}
                 onClick={() => handleSelect(node.id)}
                 title={node.path || node.title}
               >
@@ -726,8 +758,7 @@ export function Sidebar() {
             row={row}
             selected={selectedId === row.node.id}
             focusable={
-              selectedId === row.node.id ||
-              (selectedId === null && index === 0)
+              selectedId === row.node.id || (selectedId === null && index === 0)
             }
             expanded={expanded.has(row.node.id)}
             dragging={draggingId === row.node.id}
