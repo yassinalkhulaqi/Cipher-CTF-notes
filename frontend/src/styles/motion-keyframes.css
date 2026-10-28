@@ -376,3 +376,14 @@
     opacity: 1;
   }
 }
+
+@keyframes mx-copy-burst {
+  0% {
+    box-shadow: 0 0 0 0 var(--green-soft);
+    background: var(--green-soft);
+  }
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+    background: transparent;
+  }
+}
