@@ -342,3 +342,14 @@
     box-shadow: 0 0 0 0 transparent;
   }
 }
+
+@keyframes mx-caret-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  95% {
+    opacity: 0;
+  }
+}
