@@ -191,3 +191,9 @@
     transform: scale(1);
   }
 }
+
+@keyframes mx-orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
