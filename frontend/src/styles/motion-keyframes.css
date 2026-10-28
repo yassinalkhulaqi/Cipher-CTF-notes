@@ -276,3 +276,15 @@
     transform: scale(1.15);
   }
 }
+
+@keyframes mx-boot-progress {
+  0% {
+    transform: translateX(-105%) scaleX(0.35);
+  }
+  55% {
+    transform: translateX(10%) scaleX(0.7);
+  }
+  100% {
+    transform: translateX(105%) scaleX(0.4);
+  }
+}
