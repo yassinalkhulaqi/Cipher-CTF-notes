@@ -67,3 +67,14 @@
     transform: translateY(-6px) scale(0.997);
   }
 }
+
+@keyframes mx-row-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--motion-distance-sm)));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
