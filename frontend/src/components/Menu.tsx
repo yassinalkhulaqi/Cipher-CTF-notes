@@ -3,6 +3,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { createPortal } from "react-dom";
@@ -96,7 +97,13 @@ export function Menu({ x, y, items, onClose, label = "Actions" }: MenuProps) {
         className="context-menu"
         role="menu"
         aria-label={label}
-        style={{ left: position.left, top: position.top }}
+        style={
+          {
+            left: position.left,
+            top: position.top,
+            "--menu-origin": `${x - position.left}px ${y - position.top}px`,
+          } as CSSProperties
+        }
         onMouseDown={(event) => event.stopPropagation()}
         onKeyDown={onMenuKeyDown}
       >
