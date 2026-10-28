@@ -365,3 +365,14 @@
     transform: scale(1) rotate(0);
   }
 }
+
+@keyframes mx-arrow-slide {
+  from {
+    transform: translateX(-2px);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateX(2px);
+    opacity: 1;
+  }
+}
