@@ -319,3 +319,14 @@
     transform: scale(1) rotate(0);
   }
 }
+
+@keyframes mx-boot-hint {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 0.8;
+    transform: translateY(0);
+  }
+}
