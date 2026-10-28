@@ -78,3 +78,18 @@
     transform: translateX(0);
   }
 }
+
+@keyframes mx-toast-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(18px, 4px, 0) scale(0.96);
+  }
+  58% {
+    opacity: 1;
+    transform: translate3d(-2px, 0, 0) scale(1.006);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
