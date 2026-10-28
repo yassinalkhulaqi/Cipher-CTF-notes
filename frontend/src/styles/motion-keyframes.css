@@ -166,3 +166,14 @@
     backdrop-filter: blur(7px) saturate(120%);
   }
 }
+
+@keyframes mx-backdrop-out {
+  from {
+    opacity: 1;
+    backdrop-filter: blur(7px) saturate(120%);
+  }
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0) saturate(100%);
+  }
+}
