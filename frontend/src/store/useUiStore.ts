@@ -11,6 +11,7 @@ export type ModalName =
   | "trash"
   | "dashboard"
   | "settings"
+  | "motion"
   | "help"
   | "confirm"
   | null;
@@ -34,6 +35,7 @@ export interface ConfirmRequest {
 interface UiState {
   modal: ModalName;
   modalStack: ModalName[];
+  modalClosing: boolean;
   newNoteParent: number | null | undefined;
   newNoteTemplate: string | null | undefined;
   newFolderParent: number | null | undefined;
@@ -48,10 +50,7 @@ interface UiState {
   openModal: (modal: Exclude<ModalName, null>) => void;
   closeModal: () => void;
   closeAllModals: () => void;
-  openNewNote: (
-    parentId?: number | null,
-    templateKey?: string | null,
-  ) => void;
+  openNewNote: (parentId?: number | null, templateKey?: string | null) => void;
   openNewFolder: (parentId?: number | null) => void;
   openSnippetForm: (id: number | null) => void;
   askConfirm: (request: ConfirmRequest) => void;
@@ -65,10 +64,14 @@ interface UiState {
 }
 
 let toastId = 0;
+let modalCloseTimer: ReturnType<typeof setTimeout> | null = null;
+
+const MODAL_EXIT_MS = 160;
 
 export const useUiStore = create<UiState>()((set, get) => ({
   modal: null,
   modalStack: [],
+  modalClosing: false,
   newNoteParent: undefined,
   newNoteTemplate: undefined,
   newFolderParent: undefined,
@@ -81,23 +84,44 @@ export const useUiStore = create<UiState>()((set, get) => ({
   cursorColumn: 1,
 
   openModal: (modal) => {
+    if (modalCloseTimer !== null) {
+      window.clearTimeout(modalCloseTimer);
+      modalCloseTimer = null;
+    }
     const stack = get().modalStack.filter((item) => item !== modal);
     stack.push(modal);
-    set({ modal, modalStack: stack });
+    set({ modal, modalStack: stack, modalClosing: false });
   },
 
   closeModal: () => {
-    const stack = [...get().modalStack];
-    stack.pop();
-    set({
-      modal: stack[stack.length - 1] ?? null,
-      modalStack: stack,
-      confirmRequest: stack.includes("confirm") ? get().confirmRequest : null,
-    });
+    const state = get();
+    if (state.modal === null || state.modalClosing) return;
+    set({ modalClosing: true });
+    modalCloseTimer = window.setTimeout(() => {
+      modalCloseTimer = null;
+      const stack = [...get().modalStack];
+      stack.pop();
+      set({
+        modal: stack[stack.length - 1] ?? null,
+        modalStack: stack,
+        modalClosing: false,
+        confirmRequest: stack.includes("confirm") ? get().confirmRequest : null,
+      });
+    }, MODAL_EXIT_MS);
   },
 
-  closeAllModals: () =>
-    set({ modal: null, modalStack: [], confirmRequest: null }),
+  closeAllModals: () => {
+    if (modalCloseTimer !== null) {
+      window.clearTimeout(modalCloseTimer);
+      modalCloseTimer = null;
+    }
+    set({
+      modal: null,
+      modalStack: [],
+      modalClosing: false,
+      confirmRequest: null,
+    });
+  },
 
   openNewNote: (parentId, templateKey) => {
     set({ newNoteParent: parentId, newNoteTemplate: templateKey });
@@ -120,9 +144,10 @@ export const useUiStore = create<UiState>()((set, get) => ({
   },
 
   resolveConfirm: () => {
-    const request = get().confirmRequest;
+    const state = get();
+    if (state.modalClosing) return;
+    const request = state.confirmRequest;
     get().closeModal();
-    set({ confirmRequest: null });
     if (request) void request.action();
   },
 
