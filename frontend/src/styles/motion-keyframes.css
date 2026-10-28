@@ -203,3 +203,13 @@
     transform: rotate(-360deg);
   }
 }
+
+@keyframes mx-orb-a {
+  0%,
+  100% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6%, 4%, 0) scale(1.08);
+  }
+}
