@@ -104,3 +104,12 @@
     transform: translate3d(24px, 2px, 0) scale(0.96);
   }
 }
+
+@keyframes mx-toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
