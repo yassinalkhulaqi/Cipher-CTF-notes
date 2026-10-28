@@ -243,3 +243,12 @@
     opacity: var(--motion-glow-opacity);
   }
 }
+
+@keyframes mx-shimmer {
+  from {
+    background-position: 180% 0;
+  }
+  to {
+    background-position: -180% 0;
+  }
+}
