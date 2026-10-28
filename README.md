@@ -29,6 +29,10 @@ network calls.
   dashboard, command palette, focused editor, find and replace, live preview,
   snippet library, and warm light or graphite dark themes. Runs in a native
   webview or any modern browser.
+- **Motion that explains.** Spring-based page and tree transitions, a sliding
+  selection indicator, tilt-aware dashboard panels, animated counters, a reading
+  progress bar, view-transition theme changes, and a Motion lab with System,
+  Full, Subtle, and Off modes.
 - **Small and portable.** The entire vault is one file that you can back up,
   sync, or move. Frontend assets are bundled into the wheel.
 
@@ -66,23 +70,23 @@ Windows, `~/Library/Application Support/RedScribe` on macOS, and
 
 ## Shortcuts
 
-| Shortcut | Action |
-| --- | --- |
-| `Ctrl+N` | New note (last template) |
-| `Ctrl+Shift+N` | New folder |
-| `Ctrl+P` | Quick switch |
-| `Ctrl+Shift+F` | Full-text search |
-| `Ctrl+Shift+S` | Snippets |
-| `Ctrl+Shift+D` | Dashboard |
-| `Ctrl+Shift+P` | Pin or unpin the current note |
-| `Ctrl+E` | Cycle editor / split / preview |
-| `Ctrl+S` | Save now |
-| `Ctrl+,` | Settings |
-| `Ctrl+F` / `Ctrl+H` | Find / replace |
-| `F2` | Note properties |
-| `Delete` | Move the selected tree item to trash |
-| `Ctrl+Up` / `Ctrl+Down` | Reorder the selected tree item |
-| `F1` | All shortcuts |
+| Shortcut                | Action                               |
+| ----------------------- | ------------------------------------ |
+| `Ctrl+N`                | New note (last template)             |
+| `Ctrl+Shift+N`          | New folder                           |
+| `Ctrl+P`                | Quick switch                         |
+| `Ctrl+Shift+F`          | Full-text search                     |
+| `Ctrl+Shift+S`          | Snippets                             |
+| `Ctrl+Shift+D`          | Dashboard                            |
+| `Ctrl+Shift+P`          | Pin or unpin the current note        |
+| `Ctrl+E`                | Cycle editor / split / preview       |
+| `Ctrl+S`                | Save now                             |
+| `Ctrl+,`                | Settings                             |
+| `Ctrl+F` / `Ctrl+H`     | Find / replace                       |
+| `F2`                    | Note properties                      |
+| `Delete`                | Move the selected tree item to trash |
+| `Ctrl+Up` / `Ctrl+Down` | Reorder the selected tree item       |
+| `F1`                    | All shortcuts                        |
 
 When the editor has focus: `Ctrl+B` bold, `Ctrl+I` italic, `Ctrl+K`
 inline code, `Ctrl+Shift+X` strikethrough, `Tab` / `Shift+Tab` indent, and
@@ -107,6 +111,10 @@ npm run dev       # watch and rebuild the Python static bundle
 npm test          # TypeScript typecheck
 npm run build     # production bundle
 ```
+
+The motion engine is dependency-free. Modes, tokens, primitives, performance
+rules, and the accessibility contract are documented in
+[docs/MOTION.md](docs/MOTION.md).
 
 The GUI smoke test runs with `python -m pytest -m gui` on a machine with a
 display. Architecture notes live in
