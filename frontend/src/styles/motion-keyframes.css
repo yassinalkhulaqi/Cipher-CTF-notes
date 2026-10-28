@@ -288,3 +288,19 @@
     transform: translateX(105%) scaleX(0.4);
   }
 }
+
+@keyframes mx-boot-ellipsis {
+  0%,
+  20% {
+    opacity: 0.2;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+  100% {
+    opacity: 0.2;
+    transform: translateY(0);
+  }
+}
