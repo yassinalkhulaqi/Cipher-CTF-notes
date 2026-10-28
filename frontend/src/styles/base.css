@@ -32,8 +32,7 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(
+  background: radial-gradient(
       820px 420px at 4% -16%,
       var(--hero-glow-1),
       transparent 65%
@@ -255,9 +254,9 @@ hr {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  html[data-motion-mode="system"] *,
+  html[data-motion-mode="system"] *::before,
+  html[data-motion-mode="system"] *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
