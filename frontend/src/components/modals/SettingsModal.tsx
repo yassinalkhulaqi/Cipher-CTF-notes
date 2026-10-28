@@ -1,4 +1,5 @@
 import {
+  Activity,
   BookOpen,
   Moon,
   Settings,
@@ -9,6 +10,8 @@ import {
 } from "lucide-react";
 import { VIEW_MODES } from "../../lib/constants";
 import type { ViewMode } from "../../lib/types";
+import { useMotion } from "../../motion/MotionProvider";
+import { MOTION_MODE_LABEL, type MotionMode } from "../../motion/preferences";
 import { useAppStore } from "../../store/useAppStore";
 import { useUiStore } from "../../store/useUiStore";
 import { Modal } from "./Modal";
@@ -24,10 +27,9 @@ export function SettingsModal() {
   const setFontSize = useAppStore((state) => state.setFontSize);
   const setViewMode = useAppStore((state) => state.setViewMode);
   const setSyncScroll = useAppStore((state) => state.setSyncScroll);
-  const setRestoreLastNote = useAppStore(
-    (state) => state.setRestoreLastNote,
-  );
+  const setRestoreLastNote = useAppStore((state) => state.setRestoreLastNote);
   const loadDemo = useAppStore((state) => state.loadDemo);
+  const { mode, setMode } = useMotion();
 
   const openModal = useUiStore((state) => state.openModal);
   const askConfirm = useUiStore((state) => state.askConfirm);
@@ -111,6 +113,42 @@ export function SettingsModal() {
 
         <section className="settings-section">
           <div className="settings-head">
+            <h3>Motion</h3>
+            <p>
+              Animation intensity follows your system unless you override it.
+            </p>
+          </div>
+          <div
+            className="segmented motion-segmented"
+            role="group"
+            aria-label="Motion intensity"
+          >
+            {(["system", "full", "subtle", "off"] as MotionMode[]).map(
+              (value) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={mode === value ? "selected" : ""}
+                  onClick={() => setMode(value)}
+                >
+                  {MOTION_MODE_LABEL[value]}
+                </button>
+              ),
+            )}
+          </div>
+          <div className="settings-actions">
+            <button
+              type="button"
+              className="btn ghost sm"
+              onClick={() => openModal("motion")}
+            >
+              <Activity /> Open motion lab
+            </button>
+          </div>
+        </section>
+
+        <section className="settings-section">
+          <div className="settings-head">
             <h3>Editor</h3>
             <p>Typography and the default workspace layout.</p>
           </div>
@@ -156,9 +194,7 @@ export function SettingsModal() {
             <input
               type="checkbox"
               checked={restoreLastNote}
-              onChange={(event) =>
-                setRestoreLastNote(event.target.checked)
-              }
+              onChange={(event) => setRestoreLastNote(event.target.checked)}
             />
             Reopen the last note when starting
           </label>
