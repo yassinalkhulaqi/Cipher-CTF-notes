@@ -353,3 +353,15 @@
     opacity: 0;
   }
 }
+
+@keyframes mx-flag-pop {
+  0% {
+    transform: scale(0.7) rotate(-12deg);
+  }
+  55% {
+    transform: scale(1.18) rotate(3deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
