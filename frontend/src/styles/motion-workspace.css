@@ -1,0 +1,163 @@
+.note {
+  position: relative;
+  animation: mx-page-in var(--motion-duration-slower) var(--motion-ease-out)
+    both;
+}
+
+.note-head {
+  animation: mx-slide-down var(--motion-duration-slow) var(--motion-ease-out)
+    40ms both;
+}
+
+.title-input {
+  transition:
+    box-shadow var(--motion-duration-base) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.title-input:focus {
+  box-shadow:
+    inset 0 -1px 0 var(--border-accent),
+    0 10px 30px -22px color-mix(in srgb, var(--accent) 80%, transparent);
+}
+
+.breadcrumbs button {
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.view-switch button {
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.view-switch button:hover {
+  transform: translateY(-1px);
+}
+
+.view-switch button[aria-pressed="true"] {
+  animation: mx-pop-soft var(--motion-duration-base) var(--motion-ease-spring);
+}
+
+.note-actions .icon-btn,
+.tool-btn {
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.note-actions .icon-btn:hover,
+.tool-btn:hover {
+  transform: translateY(-1px);
+}
+
+.note-actions .icon-btn:active,
+.tool-btn:active {
+  transform: scale(0.92);
+}
+
+.tool-btn svg {
+  transition: transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.tool-btn:hover svg {
+  transform: scale(1.08);
+}
+
+.pane {
+  animation: mx-fade var(--motion-duration-base) var(--motion-ease-out);
+}
+
+.pane-head {
+  animation: mx-fade var(--motion-duration-slow) var(--motion-ease-out) 60ms
+    both;
+}
+
+.pane-editor .editor-shell,
+.pane-preview .markdown-body {
+  animation: mx-fade var(--motion-duration-slow) var(--motion-ease-out) 100ms
+    both;
+}
+
+.split-sash::after {
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.split-sash:hover::after,
+.split-sash.dragging::after {
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.find-bar {
+  animation: mx-pop var(--motion-duration-slow) var(--motion-ease-spring) both;
+}
+
+.save-error-banner {
+  animation: mx-slide-down var(--motion-duration-base) var(--motion-ease-out)
+    both;
+}
+
+.save-dot.saved {
+  animation: mx-save-pop 800ms var(--motion-ease-out);
+}
+
+.save-dot.error {
+  box-shadow: 0 0 0 2px var(--red-soft);
+}
+
+.preview-pending .dot {
+  animation: mx-dot-breathe 1.4s var(--motion-ease-in-out) infinite;
+}
+
+.markdown-body {
+  animation: mx-fade var(--motion-duration-slower) var(--motion-ease-out);
+}
+
+.markdown-body a {
+  transition:
+    color var(--motion-duration-fast) var(--motion-ease-out),
+    text-decoration-color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.markdown-body img {
+  transition: opacity var(--motion-duration-slow) var(--motion-ease-out);
+}
+
+.flag-callout,
+.callout {
+  transition:
+    border-color var(--motion-duration-fast) var(--motion-ease-out),
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-base) var(--motion-ease-spring);
+}
+
+.flag-callout:hover,
+.callout:hover {
+  transform: translateY(-1px);
+}
+
+.note-body[data-view="split"] .pane + .pane {
+  animation: mx-fade var(--motion-duration-base) var(--motion-ease-out) 40ms
+    both;
+}
+
+html[data-motion="subtle"] .pane,
+html[data-motion="subtle"] .pane-head {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-motion-mode="system"] .note,
+  html[data-motion-mode="system"] .note-head,
+  html[data-motion-mode="system"] .pane,
+  html[data-motion-mode="system"] .pane-head {
+    animation: none;
+  }
+}
