@@ -1,0 +1,152 @@
+.boot-screen {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.boot-orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  width: min(62vmin, 560px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.boot-orbit span {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+}
+
+.boot-orbit span:nth-child(1) {
+  inset: 0;
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--accent) 26%, transparent);
+  animation: mx-orbit-spin 32s linear infinite;
+}
+
+.boot-orbit span:nth-child(2) {
+  inset: 13%;
+  border-color: color-mix(in srgb, var(--blue) 18%, transparent);
+  animation: mx-orbit-spin-reverse 24s linear infinite;
+}
+
+.boot-orbit span:nth-child(3) {
+  inset: 27%;
+  border-color: color-mix(in srgb, var(--accent-2) 16%, transparent);
+  animation: mx-orbit-spin 18s linear infinite;
+}
+
+.boot-orbit::before,
+.boot-orbit::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 18px 4px var(--accent-soft);
+}
+
+.boot-orbit::before {
+  top: 8%;
+  left: 24%;
+  animation: mx-dot-breathe 2.8s var(--motion-ease-in-out) infinite;
+}
+
+.boot-orbit::after {
+  right: 18%;
+  bottom: 12%;
+  width: 4px;
+  height: 4px;
+  background: var(--blue);
+  box-shadow: 0 0 16px 3px var(--blue-soft);
+  animation: mx-dot-breathe 3.4s var(--motion-ease-in-out) infinite reverse;
+}
+
+.boot-mark {
+  animation: mx-boot-logo var(--motion-duration-cinematic)
+    var(--motion-ease-spring) both;
+}
+
+.boot-loading .boot-copy {
+  animation: mx-rise var(--motion-duration-slower) var(--motion-ease-out) 120ms
+    both;
+}
+
+.boot-loading .boot-hint {
+  animation: mx-boot-hint var(--motion-duration-slow) var(--motion-ease-out)
+    420ms both;
+}
+
+.boot-ellipsis {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 1px;
+  margin-left: 1px;
+}
+
+.boot-ellipsis i {
+  font-style: normal;
+  animation: mx-boot-ellipsis 1.2s var(--motion-ease-in-out) infinite;
+}
+
+.boot-ellipsis i:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.boot-ellipsis i:nth-child(3) {
+  animation-delay: 240ms;
+}
+
+.boot-progress {
+  position: relative;
+  width: 168px;
+  height: 3px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-3) 58%, transparent);
+  overflow: hidden;
+}
+
+.boot-progress > span {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transform-origin: 0 50%;
+  animation: mx-boot-progress 1.5s var(--motion-ease-in-out) infinite;
+}
+
+.boot-hint {
+  color: var(--faint);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.boot-screen.boot-error {
+  animation: mx-fade var(--motion-duration-base) var(--motion-ease-out);
+}
+
+.boot-screen.boot-error .boot-error-icon {
+  animation: mx-pop var(--motion-duration-slow) var(--motion-ease-spring) both;
+}
+
+.boot-screen.boot-error .boot-copy {
+  animation: mx-rise var(--motion-duration-slow) var(--motion-ease-out) 80ms
+    both;
+}
+
+html[data-motion="off"] .boot-orbit,
+html[data-motion="off"] .boot-ellipsis {
+  display: none;
+}
+
+html[data-motion="off"] .boot-progress > span {
+  transform: scaleX(1);
+}
