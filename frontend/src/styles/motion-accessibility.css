@@ -1,0 +1,120 @@
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-motion="off"] .confetti-canvas,
+html[data-motion="off"] .cursor-glow,
+html[data-motion="off"] .aurora-field {
+  display: none !important;
+}
+
+html[data-motion="off"] [data-reveal],
+html[data-motion="off"] .reveal,
+html[data-motion="off"] .motion-stagger > * {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+html[data-motion="off"] .boot-progress > span {
+  animation: none !important;
+  transform: scaleX(1) !important;
+}
+
+html[data-motion="off"] .dash-title h1 {
+  animation: none !important;
+  background: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+html[data-motion="off"] .skeleton-line {
+  animation: none !important;
+  background: var(--surface-3);
+}
+
+html[data-motion="off"] .tree-selection,
+html[data-motion="off"] .scroll-progress > span {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-motion-mode="system"] *,
+  html[data-motion-mode="system"] *::before,
+  html[data-motion-mode="system"] *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html[data-motion-mode="system"] [data-reveal],
+  html[data-motion-mode="system"] .reveal,
+  html[data-motion-mode="system"] .motion-stagger > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  html[data-motion-mode="system"] .confetti-canvas,
+  html[data-motion-mode="system"] .cursor-glow,
+  html[data-motion-mode="system"] .aurora-field {
+    display: none !important;
+  }
+
+  html[data-motion-mode="system"] .dash-title h1 {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+  }
+
+  html[data-motion-mode="system"] .skeleton-line {
+    background: var(--surface-3);
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+html[data-motion="subtle"] .cursor-glow {
+  display: none;
+}
+
+html[data-motion="subtle"] .aurora-field {
+  opacity: 0.5;
+}
+
+@media (prefers-contrast: more) {
+  .tree-selection {
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+
+  [data-tilt]::after {
+    display: none;
+  }
+}
+
+@media print {
+  .cursor-glow,
+  .aurora-field,
+  .confetti-canvas,
+  .boot-orbit {
+    display: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
