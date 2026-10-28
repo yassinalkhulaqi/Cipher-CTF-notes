@@ -1,10 +1,12 @@
-import { useRef, type ReactNode } from "react";
+import { createContext, useContext, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useUiStore } from "../../store/useUiStore";
 
 type ModalSize = "default" | "wide" | "slim" | "palette";
+
+export const ModalExitContext = createContext(false);
 
 interface ModalProps {
   title?: ReactNode;
@@ -44,21 +46,26 @@ export function Modal({
 }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeModal = useUiStore((state) => state.closeModal);
-  useFocusTrap(dialogRef, active);
+  const closing = useContext(ModalExitContext);
+  useFocusTrap(dialogRef, active && !closing);
 
   const close = onClose ?? closeModal;
   const ariaLabel = label ?? (typeof title === "string" ? title : "Dialog");
 
   return createPortal(
     <div
-      className={`overlay ${size === "palette" ? "palette-overlay" : ""}`}
+      className={`overlay ${size === "palette" ? "palette-overlay" : ""} ${
+        closing ? "is-closing" : ""
+      }`.trim()}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) close();
       }}
     >
       <div
         ref={dialogRef}
-        className={`modal ${SIZE_CLASS[size]} ${className}`.trim()}
+        className={`modal ${SIZE_CLASS[size]} ${className} ${
+          closing ? "is-closing" : ""
+        }`.trim()}
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel}
