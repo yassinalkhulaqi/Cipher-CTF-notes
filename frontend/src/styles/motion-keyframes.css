@@ -330,3 +330,15 @@
     transform: translateY(0);
   }
 }
+
+@keyframes mx-save-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--green-soft);
+  }
+  60% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
