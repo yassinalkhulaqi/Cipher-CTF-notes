@@ -1,0 +1,136 @@
+.toast {
+  position: relative;
+  overflow: hidden;
+  animation: mx-toast-in var(--motion-duration-slow) var(--motion-ease-spring)
+    both;
+}
+
+.toast.is-exiting {
+  animation: mx-toast-out var(--motion-duration-base) var(--motion-ease-in) both;
+  pointer-events: none;
+}
+
+.toast::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--border-strong);
+  opacity: 0.55;
+  transform-origin: 0 50%;
+  animation: mx-toast-progress 3200ms linear both;
+}
+
+.toast.success::after {
+  background: var(--green);
+  opacity: 0.8;
+}
+
+.toast.error::after {
+  background: var(--red);
+  opacity: 0.8;
+}
+
+.toast.is-exiting::after {
+  animation: none;
+}
+
+.toast .toast-icon {
+  animation: mx-pop var(--motion-duration-slow) var(--motion-ease-spring) both;
+}
+
+.toast .toast-close {
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.toast .toast-close:hover {
+  transform: rotate(90deg);
+}
+
+.toast .toast-close svg {
+  transition: transform var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.context-menu {
+  transform-origin: var(--menu-origin, top left);
+  animation: mx-menu-in var(--motion-duration-base) var(--motion-ease-spring)
+    both;
+}
+
+.context-menu.is-closing {
+  animation: mx-menu-out var(--motion-duration-fast) var(--motion-ease-in) both;
+}
+
+.menu-item {
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.menu-item:hover,
+.menu-item:focus-visible {
+  transform: translateX(1px);
+}
+
+.menu-item svg {
+  transition: transform var(--motion-duration-fast) var(--motion-ease-spring);
+}
+
+.menu-item:hover svg {
+  transform: scale(1.1);
+}
+
+html[data-motion-ready="true"] .context-menu .menu-item {
+  animation: mx-fade var(--motion-duration-base) var(--motion-ease-out) both;
+}
+
+.context-menu .menu-item:nth-child(2) {
+  animation-delay: 24ms;
+}
+.context-menu .menu-item:nth-child(3) {
+  animation-delay: 48ms;
+}
+.context-menu .menu-item:nth-child(4) {
+  animation-delay: 72ms;
+}
+.context-menu .menu-item:nth-child(5) {
+  animation-delay: 96ms;
+}
+.context-menu .menu-item:nth-child(6) {
+  animation-delay: 120ms;
+}
+.context-menu .menu-item:nth-child(n + 7) {
+  animation-delay: 144ms;
+}
+
+.menu-backdrop {
+  animation: mx-fade var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+[data-tip]::after {
+  transform-origin: 50% 0;
+}
+
+[data-tip]:hover::after {
+  animation: mx-tip-in var(--motion-duration-base) var(--motion-ease-spring);
+}
+
+[data-tip-side="right"]:hover::after {
+  animation-name: mx-tip-in-side;
+}
+
+html[data-motion="off"] .toast::after {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-motion-mode="system"] .toast::after {
+    animation: none;
+  }
+}
