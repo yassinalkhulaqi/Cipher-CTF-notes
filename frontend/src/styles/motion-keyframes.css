@@ -124,3 +124,21 @@
     transform: scale(1) translateY(0);
   }
 }
+
+@keyframes mx-modal-in {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.965);
+    filter: blur(4px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.004);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
