@@ -5,6 +5,8 @@ import { CommandPalette } from "./CommandPalette";
 import { ConfirmModal } from "./ConfirmModal";
 import { DashboardModal } from "./DashboardModal";
 import { HelpModal } from "./HelpModal";
+import { ModalExitContext } from "./Modal";
+import { MotionLab } from "./MotionLab";
 import { NewFolderModal } from "./NewFolderModal";
 import { NewNoteModal } from "./NewNoteModal";
 import { PropertiesModal } from "./PropertiesModal";
@@ -36,6 +38,8 @@ function renderModal(name: Exclude<ModalName, null>) {
       return <DashboardModal />;
     case "settings":
       return <SettingsModal />;
+    case "motion":
+      return <MotionLab />;
     case "help":
       return <HelpModal />;
     case "confirm":
@@ -45,12 +49,18 @@ function renderModal(name: Exclude<ModalName, null>) {
 
 export function ModalHost() {
   const stack = useUiStore((state) => state.modalStack);
+  const closing = useUiStore((state) => state.modalClosing);
 
   return (
     <>
       {stack.map((name, index) =>
         name ? (
-          <Fragment key={`${name}-${index}`}>{renderModal(name)}</Fragment>
+          <ModalExitContext.Provider
+            key={`${name}-${index}`}
+            value={closing && index === stack.length - 1}
+          >
+            <Fragment>{renderModal(name)}</Fragment>
+          </ModalExitContext.Provider>
         ) : null,
       )}
     </>
