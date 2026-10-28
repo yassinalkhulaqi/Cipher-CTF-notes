@@ -197,3 +197,9 @@
     transform: rotate(360deg);
   }
 }
+
+@keyframes mx-orbit-spin-reverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
