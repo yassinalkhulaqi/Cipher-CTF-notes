@@ -304,3 +304,18 @@
     transform: translateY(0);
   }
 }
+
+@keyframes mx-boot-logo {
+  0% {
+    opacity: 0;
+    transform: scale(0.82) rotate(-8deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.04) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
