@@ -424,3 +424,12 @@
     transform: translateY(0) scale(1);
   }
 }
+
+@keyframes mx-scan {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(220%);
+  }
+}
