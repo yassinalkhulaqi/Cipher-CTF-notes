@@ -47,11 +47,11 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--ui",
-        choices=("window", "browser", "tk"),
+        choices=("window", "browser"),
         default="window",
         help=(
             "Frontend to launch: a native web window (default, needs the "
-            "'web' extra), the system browser, or the classic Tk interface."
+            "'web' extra), or the system browser."
         ),
     )
     parser.add_argument(
@@ -92,50 +92,6 @@ def _vault_path(value: Path | None) -> Path:
     return path
 
 
-def _run_tk(args: argparse.Namespace) -> int:
-    import tkinter as tk
-    import tkinter.messagebox as messagebox
-
-    from redscribe.ui.mainwindow import MainWindow
-
-    root = tk.Tk()
-    root.withdraw()
-    root.option_add("*tearOff", False)
-    vault = Vault(_vault_path(args.vault))
-    try:
-        if args.demo and vault.basic_stats().notes == 0:
-            seed_demo(vault)
-        window = MainWindow(
-            root,
-            vault,
-            theme_name=args.theme,
-            font_size=args.font_size,
-        )
-        window.pack(fill="both", expand=True)
-
-        def report_error(
-            exc_type: type[BaseException],
-            exc: BaseException,
-            tb: TracebackType | None,
-        ) -> None:
-            LOGGER.error(
-                "Unhandled UI exception",
-                exc_info=(exc_type, exc, tb),
-            )
-            messagebox.showerror(
-                "Unexpected error",
-                f"{exc_type.__name__}: {exc}",
-                parent=root,
-            )
-
-        root.report_callback_exception = report_error
-        root.deiconify()
-        root.mainloop()
-    finally:
-        vault.close()
-    return 0
-
-
 def _run_web(args: argparse.Namespace) -> int:
     from redscribe.ui.web import run_web_ui
 
@@ -151,21 +107,11 @@ def _run_web(args: argparse.Namespace) -> int:
 
 
 def _run(args: argparse.Namespace) -> int:
-    if args.ui == "tk":
-        return _run_tk(args)
     return _run_web(args)
 
 
 def _report_startup_failure(details: str) -> None:
-    try:
-        import tkinter.messagebox as messagebox
-
-        messagebox.showerror(
-            "RedScribe could not start",
-            details,
-        )
-    except Exception:
-        sys.stderr.write(f"RedScribe could not start: {details}\n")
+    sys.stderr.write(f"RedScribe could not start: {details}\n")
 
 
 def main(argv: Sequence[str] | None = None) -> int:

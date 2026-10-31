@@ -15,14 +15,11 @@ Activate the environment, then:
 
 ```bash
 python -m pip install -e ".[dev]"
-python -m pytest -m "not gui"
+python -m pytest
 python -m ruff check .
 python -m ruff format --check .
 python -m mypy src
 ```
-
-Tkinter ships with the official Python installers on Windows and macOS. On
-Debian/Ubuntu, install it with `sudo apt-get install python3-tk`.
 
 ## Running the app
 
@@ -35,8 +32,8 @@ point at a specific database.
 
 ## Guidelines
 
-- No runtime dependencies. The core and UI must run on a stock Python 3.10+
-  installation with Tkinter.
+- No runtime dependencies. The core must run on a stock Python 3.10+
+  installation; the optional `web` extra provides the native window.
 - Keep database work on the UI thread and vault writes transactional.
 - New behavior in `src/redscribe` needs tests in `tests`.
 - Run `ruff format` before committing.

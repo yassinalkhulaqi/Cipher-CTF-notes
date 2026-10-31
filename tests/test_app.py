@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from redscribe import __version__, app
+from redscribe import __version__
 from redscribe.app import _build_parser, _vault_path, default_vault_path, main
 
 
@@ -45,53 +45,14 @@ def test_parser_has_expected_defaults() -> None:
     assert args.font_size is None
 
 
+def test_parser_rejects_legacy_tk_interface() -> None:
+    """The classic Tkinter backend was removed; only web frontends remain."""
+    with pytest.raises(SystemExit):
+        _build_parser().parse_args(["--ui", "tk"])
+
+
 def test_main_prints_version(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as excinfo:
         main(["--version"])
     assert excinfo.value.code == 0
     assert capsys.readouterr().out.strip() == f"RedScribe {__version__}"
-
-
-def test_run_returns_zero_when_mainloop_exits(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    class FakeRoot:
-        def withdraw(self) -> None:
-            pass
-
-        def option_add(self, *_args: object) -> None:
-            pass
-
-        def deiconify(self) -> None:
-            pass
-
-        def mainloop(self) -> None:
-            pass
-
-        def report_callback_exception(self, _handler: object) -> None:
-            pass
-
-    class FakeWindow:
-        def __init__(self, *_args: object, **_kwargs: object) -> None:
-            pass
-
-        def pack(self, **_kwargs: object) -> None:
-            pass
-
-    class FakeVault:
-        def __init__(self, _path: Path) -> None:
-            self.closed = False
-
-        def stats(self) -> object:
-            return type("Stats", (), {"notes": 0})()
-
-        def close(self) -> None:
-            self.closed = True
-
-    import tkinter as tk
-
-    monkeypatch.setattr(tk, "Tk", FakeRoot)
-    monkeypatch.setattr("redscribe.ui.mainwindow.MainWindow", FakeWindow)
-    monkeypatch.setattr(app, "Vault", FakeVault)
-    args = _build_parser().parse_args(["--ui", "tk", "--vault", str(tmp_path / "vault.sqlite")])
-    assert app._run(args) == 0

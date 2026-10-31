@@ -11,12 +11,9 @@ requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "RedScribe contributors" }]
-keywords = ["ctf", "pentest", "notebook", "security", "markdown", "tkinter"]
+keywords = ["ctf", "pentest", "notebook", "security", "markdown"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
-  "Environment :: MacOS X",
-  "Environment :: Win32 (MS Windows)",
-  "Environment :: X11 Applications",
   "Intended Audience :: Information Technology",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
@@ -59,9 +56,6 @@ redscribe = ["py.typed", "ui/web/static/*", "ui/web/static/assets/*"]
 addopts = "-ra --strict-markers --strict-config"
 testpaths = ["tests"]
 filterwarnings = ["error"]
-markers = [
-  "gui: tests that create a Tk window (skipped without a display)",
-]
 
 [tool.coverage.run]
 branch = true

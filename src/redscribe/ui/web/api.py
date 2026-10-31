@@ -4,7 +4,7 @@ Every method takes a JSON-serializable dict and returns a JSON-serializable
 value. The HTTP layer (:mod:`redscribe.ui.web.server`) routes
 ``POST /api/<method>`` calls into :meth:`Api.handle` and serializes the
 result. Vault behavior (SQLite, FTS search, snippets, exporters) is reused
-from the Tk interface without modification.
+from the storage layer without modification.
 """
 
 from __future__ import annotations

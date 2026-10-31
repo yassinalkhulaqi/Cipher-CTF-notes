@@ -1,7 +1,7 @@
 # Architecture
 
 RedScribe is a small desktop application with a strict split between the
-storage/domain layer and the Tkinter user interface. The core uses only the
+storage/domain layer and the web-based user interface. The core uses only the
 Python standard library.
 
 ## Layers
@@ -12,10 +12,11 @@ Python standard library.
 | Content | `markdown.py`, `highlight.py`, `templates.py`, `snippets.py` | Markdown parsing, code highlighting, note templates, command snippet library |
 | Storage | `db.py` | SQLite schema, migrations, queries, settings, exports/imports support |
 | Services | `importer.py`, `exporter.py`, `demo.py` | Markdown import, Markdown/HTML export, demo vault seeding |
-| UI | `ui/*.py`, `app.py` | Tkinter widgets, dialogs, theming, window lifecycle |
+| UI | `ui/web/`, `app.py` | Localhost HTTP API + bundled React web frontend (native webview or browser) |
 
-Core modules never import Tkinter. The UI calls the `Vault` API and renders
-returned models; it does not issue SQL directly.
+Core modules never import the desktop UI layer. The web frontend calls the
+same `Vault` API over localhost HTTP and renders returned models; it does not
+issue SQL directly.
 
 ## Data model
 
@@ -40,31 +41,26 @@ newer schema is rejected instead of being modified.
 
 ## Application flow
 
-1. `app.main()` parses CLI flags, resolves the vault path, and creates the Tk
-   root. The root is hidden while the initial layout is built.
-2. `MainWindow` reads persisted settings, configures ttk styles, constructs the
-   header, sidebar, content stack, status bar, menus, and shortcuts, then opens
-   the last note or the dashboard.
-3. Editing updates the title/save state immediately, debounces preview rendering
-   (250 ms), and debounces auto-save (1200 ms). Navigation and destructive
-   operations force a save first. Split view can synchronize editor and preview
-   scroll positions; the preference is persisted with the vault.
-4. Theme or font changes save the open note, capture sash positions, rebuild
-   the widget tree, and reopen the note in the new appearance.
-5. Closing saves pending edits, geometry, and sash positions, then destroys the
-   root. `app._run()` closes the vault in a `finally` block.
+1. `app.main()` parses CLI flags, resolves the vault path, and hands off to
+   `redscribe.ui.web.launcher.run`, which starts the local HTTP server and
+   opens the bundled React frontend in a native webview or the system browser.
+2. The launcher starts the threaded API server on `127.0.0.1`, seeds the demo
+   vault when empty, and serves the SPA shell and assets from the wheel.
+3. The web frontend loads the tree, opens the last note or the dashboard, and
+   saves content through the JSON API; the launcher serializes vault access
+   through a single-worker executor.
+4. Theme or font overrides are passed to the API and persisted via settings.
+5. Closing shuts the server down and closes the vault.
 
 ## Threading
 
-All database and UI work runs on the Tk main thread. Operations are small enough
-that no worker threads or queues are needed, which keeps SQLite connections
-single-threaded and avoids cross-thread Tk calls.
+The local API server is threaded, but all database work funnels through a
+single-worker executor inside the launcher, which keeps SQLite connections
+single-threaded and avoids cross-thread writes.
 
 ## Testing
 
-- `pytest -m "not gui"` runs core, storage, import/export, and service tests.
-- `pytest -m gui` constructs the real window against a temporary vault. It needs
-  a display; CI runs it under Xvfb.
+- `pytest` runs core, storage, import/export, and service tests.
 - `ruff check`/`ruff format --check` enforce style, and `mypy src` checks the
   typed source tree.
 
@@ -75,5 +71,5 @@ single-threaded and avoids cross-thread Tk calls.
 - Add a note template in `templates.py`; it appears in the new-note dialog.
 - Add a vault operation as a `Vault` method with tests before wiring it into a
   dialog or menu.
-- Add UI colors and fonts through `Palette`/`Theme` in `ui/theme.py` so both
-  themes and the appearance rebuild stay consistent.
+- Add UI colors through the design tokens in `frontend/src/styles/` so both
+  themes stay consistent.

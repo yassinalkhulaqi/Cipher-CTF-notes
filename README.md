@@ -53,7 +53,7 @@ python -m pip install -e ".[dev]"
 python -m redscribe --demo
 ```
 
-Linux users need Tkinter: `sudo apt-get install python3-tk`.
+Linux users may need WebKitGTK for the native window: `sudo apt-get install python3-webkit2gtk`.
 
 ## Quick start
 
@@ -99,7 +99,7 @@ inline code, `Ctrl+Shift+X` strikethrough, `Tab` / `Shift+Tab` indent, and
 python -m ruff check .
 python -m ruff format --check .
 python -m mypy src
-python -m pytest -m "not gui"
+python -m pytest
 ```
 
 Frontend work lives in `frontend/` and uses Node 20+:
@@ -116,8 +116,7 @@ The motion engine is dependency-free. Modes, tokens, primitives, performance
 rules, and the accessibility contract are documented in
 [docs/MOTION.md](docs/MOTION.md).
 
-The GUI smoke test runs with `python -m pytest -m gui` on a machine with a
-display. Architecture notes live in
+Architecture notes live in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md); the Aurora UI notes live in
 [docs/AURORA.md](docs/AURORA.md).
 
@@ -127,7 +126,6 @@ Command-line options:
 redscribe --vault PATH     # use a specific SQLite vault
 redscribe --demo           # seed example notes into an empty vault
 redscribe --ui browser     # browser tab instead of a native window
-redscribe --ui tk          # classic Tkinter interface
 redscribe --port 8765      # fixed local web port (0 = choose one)
 redscribe --no-open        # start the web server without opening a browser
 redscribe --theme light    # override the stored theme
