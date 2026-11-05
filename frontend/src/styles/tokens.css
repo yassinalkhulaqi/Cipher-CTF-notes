@@ -33,6 +33,10 @@
   --sidebar-text-hover: var(--text);
   --sidebar-icon-hover: var(--accent);
   --sidebar-divider: rgba(255, 255, 255, 0.072);
+  --topbar-btn-h: 40px;
+  --topbar-btn-size: 40px;
+  --topbar-btn-transition: background var(--speed-fast) var(--ease),
+    color var(--speed-fast) var(--ease);
 
   --speed-fast: 110ms;
   --speed: 170ms;
