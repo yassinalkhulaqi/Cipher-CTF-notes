@@ -28,6 +28,11 @@
   --topbar-h: 50px;
   --statusbar-h: 27px;
   --sidebar-w: 272px;
+  --sidebar-w collapsed: 80px;
+  --sidebar-bg-hover: var(--surface-2);
+  --sidebar-text-hover: var(--text);
+  --sidebar-icon-hover: var(--accent);
+  --sidebar-divider: rgba(255, 255, 255, 0.072);
 
   --speed-fast: 110ms;
   --speed: 170ms;
