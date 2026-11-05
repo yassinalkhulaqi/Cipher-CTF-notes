@@ -32,7 +32,9 @@
   --speed-fast: 110ms;
   --speed: 170ms;
   --speed-slow: 280ms;
+  --speed-faster: 75ms;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-fast: cubic-bezier(0.4, 0, 0.2, 1);
 
   --z-topbar: 20;
   --z-sash: 30;
