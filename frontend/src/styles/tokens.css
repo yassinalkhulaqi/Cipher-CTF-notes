@@ -28,11 +28,22 @@
   --topbar-h: 50px;
   --statusbar-h: 27px;
   --sidebar-w: 272px;
+  --sidebar-w collapsed: 80px;
+  --sidebar-bg-hover: var(--surface-2);
+  --sidebar-text-hover: var(--text);
+  --sidebar-icon-hover: var(--accent);
+  --sidebar-divider: rgba(255, 255, 255, 0.072);
+  --topbar-btn-h: 40px;
+  --topbar-btn-size: 40px;
+  --topbar-btn-transition: background var(--speed-fast) var(--ease),
+    color var(--speed-fast) var(--ease);
 
   --speed-fast: 110ms;
   --speed: 170ms;
   --speed-slow: 280ms;
+  --speed-faster: 75ms;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-fast: cubic-bezier(0.4, 0, 0.2, 1);
 
   --z-topbar: 20;
   --z-sash: 30;
@@ -86,6 +97,10 @@
   --glow: 0 0 0 1px rgba(240, 82, 72, 0.16),
     0 12px 36px rgba(240, 82, 72, 0.1);
   --inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  --focus-ring: 0 0 0 2px var(--focus-ring-color);
+  --focus-ring-color: #f05248;
+  --focus-ring-width: 2px;
+  --focus-transition: color var(--speed-fast) var(--ease);
   --editor-bg: #0c0e13;
   --editor-gutter: #090b0f;
   --preview-bg: #0a0c10;
