@@ -10,8 +10,7 @@ import {
   Search,
   Settings,
   Sun,
-} from "lucide-react";
-import { BrandMark } from "./BrandMark";
+} from "lucide-react";import { BrandMark } from "./BrandMark";
 import { startThemeTransition } from "../lib/viewTransition";
 import { useAppStore } from "../store/useAppStore";
 import { useUiStore } from "../store/useUiStore";
@@ -81,6 +80,7 @@ export function TopBar() {
             {vaultName}
           </span>
         ) : null}
+        <span className="topbar-divider desktop-only" />
       </div>
 
       <div className="topbar-center">
@@ -88,7 +88,7 @@ export function TopBar() {
           className="command-trigger"
           type="button"
           onClick={() => openModal("palette")}
-          title={`Quick switch (${modLabel()}+P)`}
+          data-tooltip={`Quick switch (${modLabel()}+P)`}
         >
           <Command />
           <span>Jump to a note or run a command…</span>
@@ -101,7 +101,7 @@ export function TopBar() {
           className="icon-btn desktop-only"
           type="button"
           onClick={() => openModal("search")}
-          title={`Full-text search (${modLabel()}+Shift+F)`}
+          data-tooltip={`Full-text search (${modLabel()}+Shift+F)`}
           aria-label="Full-text search"
         >
           <Search />
@@ -110,7 +110,7 @@ export function TopBar() {
           className="icon-btn desktop-only"
           type="button"
           onClick={() => openModal("snippets")}
-          title={`Snippet library (${modLabel()}+Shift+S)`}
+          data-tooltip={`Snippet library (${modLabel()}+Shift+S)`}
           aria-label="Snippet library"
         >
           <Code2 />
@@ -119,7 +119,7 @@ export function TopBar() {
           className="icon-btn desktop-only"
           type="button"
           onClick={() => openModal("dashboard")}
-          title={`Vault insights (${modLabel()}+Shift+D)`}
+          data-tooltip={`Vault insights (${modLabel()}+Shift+D)`}
           aria-label="Vault insights"
         >
           <LayoutDashboard />
@@ -129,7 +129,7 @@ export function TopBar() {
           className="btn primary topbar-new"
           type="button"
           onClick={() => openNewNote()}
-          title={`New note (${modLabel()}+N for quick note)`}
+          data-tooltip={`New note (${modLabel()}+N for quick note)`}
         >
           <Plus />
           <span className="new-note-label">New note</span>
@@ -138,7 +138,7 @@ export function TopBar() {
           className="icon-btn theme-toggle"
           type="button"
           onClick={(event) => toggleTheme(event.clientX, event.clientY)}
-          title={
+          data-tooltip={
             theme === "dark" ? "Switch to light theme" : "Switch to dark theme"
           }
           aria-label="Toggle theme"
@@ -149,7 +149,7 @@ export function TopBar() {
           className="icon-btn desktop-only"
           type="button"
           onClick={() => openModal("settings")}
-          title={`Settings (${modLabel()}+,)`}
+          data-tooltip={`Settings (${modLabel()}+,)`}
           aria-label="Settings"
         >
           <Settings />
@@ -158,7 +158,7 @@ export function TopBar() {
           className="icon-btn desktop-only"
           type="button"
           onClick={() => openModal("help")}
-          title="Keyboard shortcuts (F1)"
+          data-tooltip="Keyboard shortcuts (F1)"
           aria-label="Keyboard shortcuts"
         >
           <CircleHelp />
