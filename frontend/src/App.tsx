@@ -4,6 +4,7 @@ import { NoteWorkspace } from "./components/NoteWorkspace";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 import { ToastStack } from "./components/ToastStack";
+import { TooltipHost } from "./components/TooltipHost";
 import { TopBar } from "./components/TopBar";
 import { Dashboard } from "./components/Dashboard";
 import { ModalHost } from "./components/modals/ModalHost";
@@ -80,6 +81,7 @@ export function App() {
       <StatusBar />
       <ModalHost />
       <ToastStack />
+      <TooltipHost />
     </div>
   );
 }

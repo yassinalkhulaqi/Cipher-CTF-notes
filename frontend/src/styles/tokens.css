@@ -8,6 +8,29 @@
   --font-editor: var(--font-mono);
   --editor-size: 13px;
 
+  /* Typography scale */
+  --text-xs: 10px;
+  --text-sm: 11px;
+  --text-base: 13px;
+  --text-lg: 14px;
+  --text-xl: 16px;
+  --text-2xl: 18px;
+  --text-3xl: 21px;
+  --text-4xl: clamp(21px, 2.2vw, 27px);
+
+  --leading-none: 1.2;
+  --leading-tight: 1.35;
+  --leading-base: 1.55;
+  --leading-relaxed: 1.7;
+
+  --tracking-tight: -0.02em;
+  --tracking-wide: 0.12em;
+
+  --font-weight-normal: 450;
+  --font-weight-medium: 520;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 650;
+
   --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 8px;
@@ -28,7 +51,7 @@
   --topbar-h: 50px;
   --statusbar-h: 27px;
   --sidebar-w: 272px;
-  --sidebar-w collapsed: 80px;
+  --sidebar-w-collapsed: 80px;
   --sidebar-bg-hover: var(--surface-2);
   --sidebar-text-hover: var(--text);
   --sidebar-icon-hover: var(--accent);
@@ -44,6 +67,17 @@
   --speed-faster: 75ms;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-fast: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Elevation */
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.34);
+  --elev-2: 0 4px 12px rgba(0, 0, 0, 0.32);
+  --elev-3: 0 12px 34px rgba(0, 0, 0, 0.38);
+  --elev-4: 0 28px 80px rgba(0, 0, 0, 0.55);
+
+  /* Interactive states */
+  --ring: 0 0 0 2px var(--focus-ring-color);
+  --ring-inset: inset 0 0 0 2px var(--focus-ring-color);
+  --pressed-scale: 0.96;
 
   --z-topbar: 20;
   --z-sash: 30;
@@ -163,6 +197,13 @@
   --glow: 0 0 0 1px rgba(186, 58, 48, 0.14),
     0 14px 36px rgba(186, 58, 48, 0.1);
   --inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --elev-1: 0 1px 2px rgba(60, 46, 28, 0.08);
+  --elev-2: 0 4px 12px rgba(60, 46, 28, 0.1);
+  --elev-3: 0 14px 36px rgba(60, 46, 28, 0.12);
+  --elev-4: 0 30px 80px rgba(60, 46, 28, 0.2);
+  --ring: 0 0 0 2px var(--focus-ring-color);
+  --ring-inset: inset 0 0 0 2px var(--focus-ring-color);
+  --pressed-scale: 0.96;
   --editor-bg: #fdfbf7;
   --editor-gutter: #f6f1e8;
   --preview-bg: #fbf8f2;

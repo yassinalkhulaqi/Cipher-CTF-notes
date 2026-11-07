@@ -63,8 +63,9 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--panel-bg) 82%, transparent);
+  background: color-mix(in srgb, var(--panel-bg) 78%, transparent);
   overflow: hidden;
+  box-shadow: var(--elev-1);
 }
 
 .pulse-cell {
@@ -74,19 +75,39 @@
     "label count"
     "note note";
   align-items: end;
-  gap: 4px 12px;
-  padding: 11px 14px;
+  gap: 5px 14px;
+  padding: 12px 16px;
   text-align: left;
   border-right: 1px solid var(--border);
-  transition: background var(--speed-fast) var(--ease);
+  transition:
+    background var(--speed-fast) var(--ease),
+    transform var(--speed-faster) var(--ease);
+  position: relative;
 }
 
 .pulse-cell:last-child {
   border-right: 0;
 }
 
+.pulse-cell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.04),
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
 .pulse-cell:hover {
-  background: color-mix(in srgb, var(--surface-2) 50%, transparent);
+  background: color-mix(in srgb, var(--surface-2) 65%, transparent);
+  transform: translateY(-1px);
+}
+
+.pulse-cell:active {
+  transform: translateY(0);
 }
 
 .pulse-label {
@@ -151,16 +172,29 @@
 .dash-panel {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--panel-bg) 84%, transparent);
+  background: color-mix(in srgb, var(--panel-bg) 80%, transparent);
   min-width: 0;
   overflow: hidden;
+  box-shadow: var(--elev-1);
+  transition:
+    border-color var(--speed-fast) var(--ease),
+    box-shadow var(--speed-fast) var(--ease);
+}
+
+.dash-panel:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--elev-2);
+}
+
+.dash-panel.compact {
+  border-radius: var(--radius-sm);
 }
 
 .dash-panel-head {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 11px 13px 9px;
+  padding: 12px 14px 10px;
 }
 
 .dash-panel-head > div {
@@ -171,13 +205,13 @@
 }
 
 .dash-panel-head h2 {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 620;
   color: var(--text);
 }
 
 .dash-panel-head span {
-  color: var(--faint);
+  color: var(--muted);
   font-size: 10.5px;
 }
 
@@ -191,14 +225,14 @@
 }
 
 .panel-glyph {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   color: var(--faint);
   flex: none;
 }
 
 .work-list {
-  padding: 0 5px 5px;
+  padding: 0 6px 6px;
 }
 
 .work-row {
@@ -207,19 +241,21 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  min-height: 43px;
-  padding: 5px 8px;
-  border-radius: 5px;
+  min-height: 46px;
+  padding: 7px 9px;
+  border-radius: 6px;
   text-align: left;
   color: var(--text-soft);
   transition:
     background var(--speed-fast) var(--ease),
-    color var(--speed-fast) var(--ease);
+    color var(--speed-fast) var(--ease),
+    transform var(--speed-faster) var(--ease);
 }
 
 .work-row:hover {
   background: var(--surface-2);
   color: var(--text);
+  transform: translateX(2px);
 }
 
 .work-index {
@@ -321,17 +357,22 @@
   align-items: center;
   gap: 7px;
   width: 100%;
-  min-height: 30px;
-  padding: 5px 7px;
-  border-radius: 4px;
+  min-height: 32px;
+  padding: 6px 8px;
+  border-radius: 5px;
   text-align: left;
   color: var(--text-soft);
   font-size: 11.5px;
+  transition:
+    background var(--speed-fast) var(--ease),
+    color var(--speed-fast) var(--ease),
+    transform var(--speed-faster) var(--ease);
 }
 
 .mini-row:hover {
   background: var(--surface-2);
   color: var(--text);
+  transform: translateX(2px);
 }
 
 .mini-row > svg {
@@ -371,24 +412,29 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 5px 7px;
-  border-radius: 4px;
+  padding: 6px 8px;
+  border-radius: 5px;
   text-align: left;
+  transition:
+    background var(--speed-fast) var(--ease),
+    transform var(--speed-faster) var(--ease);
 }
 
 .flag-row:hover {
   background: var(--surface-2);
+  transform: translateX(2px);
 }
 
 .flag-mark {
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 5px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   background: var(--green-soft);
   color: var(--green);
   flex: none;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--green) 35%, transparent);
 }
 
 .flag-mark svg {
@@ -513,43 +559,54 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
-  min-height: 88px;
-  padding: 10px 11px;
+  min-height: 92px;
+  padding: 11px 12px;
   background: var(--panel-bg);
   text-align: left;
-  transition: background var(--speed-fast) var(--ease);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  transition:
+    background var(--speed-fast) var(--ease),
+    border-color var(--speed-fast) var(--ease),
+    transform var(--speed-faster) var(--ease);
+  box-shadow: var(--elev-1);
 }
 
 .template-tile:hover {
+  border-color: var(--border-accent);
   background: var(--surface-2);
+  transform: translateY(-2px);
+  box-shadow: var(--elev-3);
 }
 
 .tile-icon {
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
-  margin-bottom: 2px;
-  border-radius: 5px;
+  width: 26px;
+  height: 26px;
+  margin-bottom: 4px;
+  border-radius: 7px;
   background: var(--accent-soft);
   color: var(--accent);
+  flex: none;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .tile-icon svg {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
 }
 
 .template-tile strong {
-  font-size: 10.5px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 620;
   color: var(--text);
 }
 
 .template-tile > span:last-child {
-  color: var(--faint);
-  font-size: 9.5px;
-  line-height: 1.45;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
 }
 
 .dash-foot {
@@ -626,37 +683,40 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 13px;
+  padding: 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--panel-bg) 84%, transparent);
+  background: color-mix(in srgb, var(--panel-bg) 82%, transparent);
   text-align: left;
   transition:
     border-color var(--speed) var(--ease),
     background var(--speed) var(--ease),
-    transform var(--speed) var(--ease);
+    transform var(--speed-faster) var(--ease);
+  box-shadow: var(--elev-1);
 }
 
 .start-card:hover {
   border-color: var(--border-accent);
   background: var(--panel-bg);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: var(--elev-3);
 }
 
 .start-icon {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   background: var(--accent-soft);
   color: var(--accent);
   flex: none;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .start-icon svg {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
 }
 
 .start-copy {
@@ -668,14 +728,14 @@
 }
 
 .start-copy strong {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 620;
 }
 
 .start-copy span {
   color: var(--muted);
-  font-size: 10.5px;
-  line-height: 1.45;
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 .start-card > svg {
@@ -802,38 +862,41 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 32px;
-  height: 32px;
-  padding: 0 10px 0 14px;
+  min-height: 36px;
+  height: 36px;
+  padding: 0 12px 0 14px;
   border-bottom: 1px solid var(--border);
-  color: var(--faint);
-  font-size: 9px;
+  color: var(--text-soft);
+  font-size: 9.5px;
   font-weight: 650;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
   flex: none;
-  background: color-mix(in srgb, var(--surface) 34%, transparent);
+  background: color-mix(in srgb, var(--surface) 40%, transparent);
+  box-shadow: var(--inset-highlight);
 }
 
 .pane-label {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   flex: none;
 }
 
 .pane-label svg {
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
+  color: var(--muted);
 }
 
 .pane-head .pane-meta {
   margin-left: auto;
   letter-spacing: 0;
   text-transform: none;
-  font-weight: 400;
-  font-size: 9.5px;
+  font-weight: 500;
+  font-size: 10px;
   white-space: nowrap;
+  color: var(--muted);
 }
 
 .pane-head .preview-pending {
@@ -846,40 +909,51 @@
   display: flex;
   align-items: center;
   gap: 0;
-  margin-left: 6px;
+  margin-left: 8px;
   min-width: 0;
 }
 
 .tool-btn {
   display: inline-grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  color: var(--faint);
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  color: var(--muted);
   flex: none;
+  transition:
+    background var(--speed-fast) var(--ease),
+    color var(--speed-fast) var(--ease),
+    transform var(--speed-faster) var(--ease);
+  border: 1px solid transparent;
 }
 
 .tool-btn:hover {
   background: var(--surface-2);
   color: var(--text);
+  border-color: var(--border);
+  transform: translateY(-1px);
+}
+
+.tool-btn:active {
+  transform: var(--pressed-scale);
 }
 
 .tool-btn svg {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
 }
 
 .tool-sep {
   width: 1px;
-  height: 13px;
-  margin: 0 3px;
+  height: 14px;
+  margin: 0 4px;
   background: var(--border);
   flex: none;
 }
 
 .pane-copy {
-  margin-left: 2px;
+  margin-left: 3px;
 }
 
 .editor-shell {
