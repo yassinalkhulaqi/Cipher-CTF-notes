@@ -31,6 +31,7 @@ from redscribe.services.flag_intel import (
 )
 from redscribe.services.graph import build_vault_graph, graph_payload
 from redscribe.storage.db import Vault
+import hashlib
 
 _SETTING_KEYS = (
     "theme",
@@ -43,6 +44,7 @@ _SETTING_KEYS = (
     "split_sash",
     "sync_preview_scroll",
     "tree_expanded",
+    "onboarding_seen",
 )
 _OFF_AXIS_KEYS = frozenset(_SETTING_KEYS)
 _FONT_RANGE = range(9, 19)
@@ -186,6 +188,9 @@ class Api:
             "graph": self.graph,
             "flag_patterns": self.flag_patterns,
             "flag_insights": self.flag_insights,
+            "attachments": self.attachments,
+            "attachment": self.attachment,
+            "create_attachment": self.create_attachment,
             "search_snippets": self.search_snippets,
             "quick_capture": self.quick_capture,
         }
@@ -450,6 +455,30 @@ class Api:
     def graph(self, body: dict[str, Any]) -> dict[str, Any]:
         """Return the vault knowledge graph: vertices and relationships."""
         return graph_payload(build_vault_graph(self._vault))
+
+    def attachments(self, body: dict[str, Any]) -> dict[str, Any]:
+        """List attachments for a note."""
+        node_id = _require_int(body, "id")
+        return self._vault.list_attachments(node_id)
+
+    def attachment(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Get an attachment by ID (returns metadata + allows blob download)."""
+        att_id = _require_int(body, "id")
+        att = self._vault.get_attachment(att_id)
+        if att is None:
+            raise ApiError("Attachment does not exist", status=404)
+        return att
+
+    def create_attachment(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Create an attachment for a note."""
+        node_id = _require_int(body, "node_id")
+        filename = _require_str(body, "filename")
+        mime_type = _require_str(body, "mime_type")
+        data = _require_str(body, "data")  # base64-encoded
+        import base64
+        binary_data = base64.b64decode(data)
+        result = self._vault.create_attachment(node_id, filename, mime_type, binary_data)
+        return result
 
     # ------------------------------------------------------------------
     # Templates and snippets

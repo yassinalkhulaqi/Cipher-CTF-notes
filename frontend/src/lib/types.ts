@@ -58,6 +58,7 @@ export interface BootData {
   vault_path: string;
   stats: VaultStats;
   empty: boolean;
+  onboarding_seen: string;
 }
 
 export interface SearchHit {
@@ -178,4 +179,11 @@ export interface FlagInsights {
   by_source: FlagSourceCount[];
   duplicates: DuplicateFlag[];
   missing_flag_notes: number;
+}
+
+export interface Attachment {
+  id: number;
+  filename: string;
+  sha256: string;
+  created_at: string;
 }
