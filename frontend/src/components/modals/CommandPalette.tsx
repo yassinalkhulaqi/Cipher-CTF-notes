@@ -11,6 +11,7 @@ import {
   Keyboard,
   LayoutDashboard,
   Moon,
+  Network,
   Pin,
   Save,
   Search,
@@ -95,6 +96,13 @@ export function CommandPalette() {
         icon: LayoutDashboard,
         shortcut: `${modLabel()} Shift D`,
         run: () => openModal("dashboard"),
+      },
+      {
+        label: "Vault graph",
+        detail: "Map notes and their wikilinks",
+        icon: Network,
+        shortcut: `${modLabel()} Shift G`,
+        run: () => openModal("graph"),
       },
       {
         label: "Find in note",

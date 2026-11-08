@@ -13,6 +13,7 @@ export type ModalName =
   | "settings"
   | "motion"
   | "help"
+  | "graph"
   | "confirm"
   | null;
 

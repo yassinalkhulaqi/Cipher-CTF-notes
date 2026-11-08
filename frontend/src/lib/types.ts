@@ -125,3 +125,28 @@ export interface ExportPayload {
 export interface TrashedNode extends NodeSummary {
   trashed_at?: string;
 }
+
+export interface GraphNode {
+  id: number;
+  title: string;
+  kind: "note" | "folder" | "reference";
+  path: string;
+  status: Status;
+  flag: string;
+  tags: string[];
+  target: string;
+  pinned: boolean;
+  resolved: boolean;
+}
+
+export interface GraphEdge {
+  source: number;
+  target: number;
+  kind: "parent" | "link";
+  resolved: boolean;
+}
+
+export interface VaultGraph {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}

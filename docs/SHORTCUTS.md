@@ -10,6 +10,7 @@
 | `Ctrl+Shift+F` | Full-text search |
 | `Ctrl+Shift+S` | Snippet library |
 | `Ctrl+Shift+D` | Dashboard |
+| `Ctrl+Shift+G` | Vault graph |
 | `Ctrl+Shift+P` | Pin or unpin the current note |
 | `Ctrl+E` | Cycle Write / Split / Preview |
 | `Ctrl+S` | Save the current note |

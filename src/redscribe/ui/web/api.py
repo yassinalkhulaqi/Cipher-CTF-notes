@@ -24,6 +24,7 @@ from redscribe.domain.fuzzy import rank_items
 from redscribe.domain.models import DIFFICULTIES, STATUSES, Node, SearchHit, Snippet
 from redscribe.services.demo import seed_demo
 from redscribe.services.exporter import note_to_markdown, vault_report_text
+from redscribe.services.graph import build_vault_graph, graph_payload
 from redscribe.storage.db import Vault
 
 _SETTING_KEYS = (
@@ -177,6 +178,7 @@ class Api:
             "export_note_markdown": self.export_note_markdown,
             "export_note_html": self.export_note_html,
             "export_vault_html": self.export_vault_html,
+            "graph": self.graph,
         }
 
     def handle(self, method: str, body: dict[str, Any]) -> Any:
@@ -405,6 +407,10 @@ class Api:
         return [
             node_summary(node, path=self._path_of(node.id)) for node in self._vault.tag_nodes(tag)
         ]
+
+    def graph(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Return the vault knowledge graph: vertices and relationships."""
+        return graph_payload(build_vault_graph(self._vault))
 
     # ------------------------------------------------------------------
     # Templates and snippets
