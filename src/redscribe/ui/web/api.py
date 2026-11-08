@@ -24,6 +24,11 @@ from redscribe.domain.fuzzy import rank_items
 from redscribe.domain.models import DIFFICULTIES, STATUSES, Node, SearchHit, Snippet
 from redscribe.services.demo import seed_demo
 from redscribe.services.exporter import note_to_markdown, vault_report_text
+from redscribe.services.flag_intel import (
+    build_flag_insights,
+    flag_insights_payload,
+    flag_patterns_payload,
+)
 from redscribe.services.graph import build_vault_graph, graph_payload
 from redscribe.storage.db import Vault
 
@@ -179,6 +184,8 @@ class Api:
             "export_note_html": self.export_note_html,
             "export_vault_html": self.export_vault_html,
             "graph": self.graph,
+            "flag_patterns": self.flag_patterns,
+            "flag_insights": self.flag_insights,
         }
 
     def handle(self, method: str, body: dict[str, Any]) -> Any:
@@ -398,6 +405,18 @@ class Api:
 
     def collected_flags(self, body: dict[str, Any]) -> list[dict[str, Any]]:
         return [dataclasses.asdict(hit) for hit in self._vault.collected_flags()]
+
+    # ------------------------------------------------------------------
+    # Flag intelligence
+    # ------------------------------------------------------------------
+
+    def flag_patterns(self, body: dict[str, Any]) -> list[dict[str, Any]]:
+        """Return the registry of known event flag formats."""
+        return flag_patterns_payload()
+
+    def flag_insights(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Return aggregate flag statistics for the dashboard."""
+        return flag_insights_payload(build_flag_insights(self._vault))
 
     def tag_counts(self, body: dict[str, Any]) -> list[dict[str, Any]]:
         return [dataclasses.asdict(tag) for tag in self._vault.tag_counts()]

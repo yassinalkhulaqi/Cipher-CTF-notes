@@ -19,6 +19,10 @@ network calls.
 - **Built for security work.** Templates for CTF challenges, host recon, web
   assessments, findings, and engagement logs. Notes carry a target, status,
   difficulty, tags, and a captured flag.
+- **Flag intelligence.** A registry of known event formats (HTB, picoCTF,
+  THM, and dozens more) with format validation and one-tap prefix presets in
+  note properties. The dashboard breaks flags down by source, spots the same
+  flag captured on two notes, and flags done notes still missing a flag.
 - **Useful snippets.** More than 70 built-in commands for recon, web, Active
   Directory, credentials, shells, privesc, pivoting, and CTF tooling. Copy with
   placeholders filled from the current note.

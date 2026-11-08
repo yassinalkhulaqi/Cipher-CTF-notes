@@ -150,3 +150,32 @@ export interface VaultGraph {
   nodes: GraphNode[];
   edges: GraphEdge[];
 }
+
+export interface FlagPattern {
+  prefix: string;
+  pattern_key: string;
+  platform: string;
+  example: string;
+  hint: string;
+  category: string;
+}
+
+export interface FlagSourceCount {
+  prefix: string;
+  platform: string;
+  count: number;
+}
+
+export interface DuplicateFlag {
+  flag: string;
+  note_count: number;
+}
+
+export interface FlagInsights {
+  unique_flags: number;
+  manual_flags: number;
+  detected_flags: number;
+  by_source: FlagSourceCount[];
+  duplicates: DuplicateFlag[];
+  missing_flag_notes: number;
+}

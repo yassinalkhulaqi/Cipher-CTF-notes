@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pin, Save, SlidersHorizontal } from "lucide-react";
+import { api } from "../../lib/api";
 import { DIFFICULTIES, STATUSES, STATUS_LABEL } from "../../lib/constants";
-import type { Status } from "../../lib/types";
+import type { FlagPattern, Status } from "../../lib/types";
 import { formatDate } from "../../lib/utils";
 import { useAppStore } from "../../store/useAppStore";
 import { useUiStore } from "../../store/useUiStore";
@@ -25,6 +26,7 @@ export function PropertiesModal() {
   const [flag, setFlag] = useState(note?.flag ?? "");
   const [pinned, setPinned] = useState(note?.pinned ?? false);
   const [saving, setSaving] = useState(false);
+  const [patterns, setPatterns] = useState<FlagPattern[]>([]);
 
   useEffect(() => {
     if (!note) return;
@@ -36,6 +38,26 @@ export function PropertiesModal() {
     setFlag(note.flag);
     setPinned(note.pinned);
   }, [note]);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .flagPatterns()
+      .then((items) => {
+        if (!cancelled) setPatterns(items);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const matchedPattern = useMemo<FlagPattern | null>(() => {
+    const brace = flag.indexOf("{");
+    if (brace <= 0) return null;
+    const prefix = flag.slice(0, brace).trim().toLowerCase();
+    return patterns.find((pattern) => pattern.pattern_key === prefix) ?? null;
+  }, [flag, patterns]);
 
   if (!note) return null;
 
@@ -170,6 +192,30 @@ export function PropertiesModal() {
             autoComplete="off"
             placeholder="CTF{...}"
           />
+          {matchedPattern ? (
+            <span className="field-hint">
+              Looks like a {matchedPattern.platform} flag —{" "}
+              {matchedPattern.hint}.
+            </span>
+          ) : null}
+          {patterns.length > 0 ? (
+            <div
+              className="flag-chips"
+              aria-label="Start a flag with a known prefix"
+            >
+              {patterns.slice(0, 8).map((pattern) => (
+                <button
+                  key={pattern.pattern_key}
+                  type="button"
+                  className="flag-chip"
+                  onClick={() => setFlag(`${pattern.prefix}{`)}
+                  title={`Start a ${pattern.platform} flag`}
+                >
+                  {pattern.example}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
         <label className="check">
           <input

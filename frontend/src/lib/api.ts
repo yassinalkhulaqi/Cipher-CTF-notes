@@ -2,6 +2,8 @@ import type {
   BootData,
   ExportPayload,
   FlagHit,
+  FlagInsights,
+  FlagPattern,
   NodeDetail,
   NodeSummary,
   SearchHit,
@@ -141,6 +143,8 @@ export const api = {
     call<ExportPayload>("export_note_html", { id }),
   exportVaultHtml: () => call<ExportPayload>("export_vault_html"),
   graph: () => call<VaultGraph>("graph"),
+  flagPatterns: () => call<FlagPattern[]>("flag_patterns"),
+  flagInsights: () => call<FlagInsights>("flag_insights"),
 };
 
 export function downloadNote(id: number, format: "md" | "html"): void {

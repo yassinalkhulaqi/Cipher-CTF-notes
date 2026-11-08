@@ -1599,3 +1599,49 @@
     display: none;
   }
 }
+
+/* Flag insights */
+
+.source-list {
+  padding: 0 9px 4px;
+}
+
+.source-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.source-name {
+  flex: none;
+  width: 88px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-soft);
+  font-size: 10.5px;
+}
+
+.source-bar {
+  flex: 1;
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.source-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--green);
+}
+
+.source-count {
+  flex: none;
+  width: 18px;
+  text-align: right;
+  color: var(--faint);
+  font-size: 10.5px;
+}

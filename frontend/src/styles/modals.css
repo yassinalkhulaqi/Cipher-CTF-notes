@@ -1576,3 +1576,34 @@
     height: min(88vh, 720px);
   }
 }
+
+/* Flag intelligence (note properties) */
+
+.field-hint {
+  color: var(--faint);
+  font-size: 10.5px;
+}
+
+.flag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.flag-chip {
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  transition:
+    border-color var(--speed-fast) var(--ease),
+    color var(--speed-fast) var(--ease);
+}
+
+.flag-chip:hover {
+  border-color: var(--border-accent);
+  color: var(--text);
+}
