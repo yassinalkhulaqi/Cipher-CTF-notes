@@ -130,6 +130,8 @@ function persist(values: Record<string, string | number>): void {
   });
 }
 
+export { persist };
+
 export const useAppStore = create<AppState>()((set, get) => ({
   boot: null,
   bootError: null,

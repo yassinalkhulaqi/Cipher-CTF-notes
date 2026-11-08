@@ -38,6 +38,7 @@ import {
   Tag,
   Target,
   Trash2,
+  Upload,
   type LucideIcon,
 } from "lucide-react";
 import { api } from "../lib/api";
@@ -700,6 +701,9 @@ export function NoteWorkspace() {
               )}
               {formatButton(SquareCode, "Code block", undefined, () =>
                 editorRef.current?.insertBlock("```bash\n\n```\n"),
+              )}
+              {formatButton(Upload, "Attach file", `${modLabel()}+U`, () =>
+                editorRef.current?.insertText("[[attachment:]]"),
               )}
               <span className="tool-sep" />
               {formatButton(Search, "Find in note", `${modLabel()}+F`, () =>

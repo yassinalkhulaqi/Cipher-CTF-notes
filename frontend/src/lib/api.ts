@@ -15,6 +15,7 @@ import type {
   TreeNode,
   VaultGraph,
   VaultStats,
+  Attachment,
 } from "./types";
 
 type Envelope<T> = { ok: true; data: T } | { ok: false; error?: string };
@@ -147,6 +148,8 @@ export const api = {
   graph: () => call<VaultGraph>("graph"),
   flagPatterns: () => call<FlagPattern[]>("flag_patterns"),
   flagInsights: () => call<FlagInsights>("flag_insights"),
+  attachments: () => call<Attachment[]>("attachments"),
+  attachment: (body: { id: number }) => call<Attachment>("attachment", body),
   quickCapture: (body: {
     title: string;
     content: string;

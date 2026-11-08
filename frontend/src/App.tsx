@@ -7,6 +7,7 @@ import { ToastStack } from "./components/ToastStack";
 import { TooltipHost } from "./components/TooltipHost";
 import { TopBar } from "./components/TopBar";
 import { Dashboard } from "./components/Dashboard";
+import { OnboardingTour } from "./components/modals/OnboardingTour";
 import { ModalHost } from "./components/modals/ModalHost";
 import { useAutosaveLifecycle } from "./hooks/useAutosaveLifecycle";
 import { useGlobalHotkeys } from "./hooks/useGlobalHotkeys";
@@ -55,6 +56,8 @@ export function App() {
     );
   }
 
+  const onboardingShown = boot?.onboarding_seen === "1";
+
   return (
     <div
       className="app-shell"
@@ -82,6 +85,7 @@ export function App() {
       <ModalHost />
       <ToastStack />
       <TooltipHost />
+      {onboardingShown !== true && <OnboardingTour />}
     </div>
   );
 }

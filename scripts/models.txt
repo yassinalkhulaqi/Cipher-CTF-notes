@@ -1,0 +1,4 @@
+openrouter/cohere/north-mini-code:free
+openrouter/nvidia/nemotron-3.5-lightning:free
+openrouter/recursive/flint-v1.0:free
+openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free

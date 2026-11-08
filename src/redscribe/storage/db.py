@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import json
 import logging
 import re
 import sqlite3
 from collections.abc import Iterator
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TypeVar, cast
 
@@ -28,7 +30,7 @@ from redscribe.domain.utils import collapse_whitespace, slugify, truncate, utc_n
 LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 _MIGRATION_1 = """
 CREATE TABLE IF NOT EXISTS nodes (
@@ -83,9 +85,26 @@ CREATE INDEX IF NOT EXISTS idx_snippets_title
     ON snippets(title COLLATE NOCASE);
 """
 
+_MIGRATION_3 = """
+CREATE TABLE IF NOT EXISTS attachments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    node_id INTEGER NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
+    filename TEXT NOT NULL,
+    mime_type TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    sha256 TEXT NOT NULL UNIQUE,
+    stored_path TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_attachments_node
+    ON attachments(node_id, deleted_at);
+"""
+
 _MIGRATIONS: dict[int, str] = {
     1: _MIGRATION_1,
     2: _MIGRATION_2,
+    3: _MIGRATION_3,
 }
 
 _FTS_TRIGGERS = ("nodes_fts_ai", "nodes_fts_ad", "nodes_fts_au")
@@ -1010,6 +1029,129 @@ class Vault:
         finally:
             destination_connection.close()
         return target
+
+    # -- attachments --
+
+    def attachment_path(self, sha256: str) -> Path:
+        """Return the filesystem path for an attachment blob, creating the assets dir if needed."""
+        if self.path is None:
+            return Path(sha256)
+        assets_dir = self.path.parent / ".assets"
+        assets_dir.mkdir(parents=True, exist_ok=True)
+        return assets_dir / sha256
+
+    def list_attachments(self, node_id: int) -> list[dict[str, Any]]:
+        """Return attachments for a given node."""
+        rows = self._connection.execute(
+            "SELECT id, filename, mime_type, size, sha256, stored_path, created_at FROM attachments WHERE node_id = ? AND deleted_at IS NULL",
+            (node_id,),
+        ).fetchall()
+        return [
+            {
+                "id": row[0],
+                "filename": row[1],
+                "mime_type": row[2],
+                "size": row[3],
+                "sha256": row[4],
+                "stored_path": row[5],
+                "created_at": row[6],
+            }
+            for row in rows
+        ]
+
+    def create_attachment(
+        self,
+        node_id: int,
+        filename: str,
+        mime_type: str,
+        data: bytes,
+    ) -> dict[str, Any]:
+        """Store an attachment blob and return its metadata."""
+        sha256 = hashlib.sha256(data).hexdigest()
+        stored_path = str(self.attachment_path(sha256))
+        with open(stored_path, "wb") as f:
+            f.write(data)
+        size = len(data)
+        with self._connection:
+            self._connection.execute(
+                "INSERT INTO attachments(node_id, filename, mime_type, size, sha256, stored_path, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (node_id, filename, mime_type, size, sha256, stored_path, self._now()),
+            )
+        return {
+            "id": self._connection.lastrowid,
+            "filename": filename,
+            "mime_type": mime_type,
+            "size": size,
+            "sha256": sha256,
+            "stored_path": stored_path,
+        }
+
+    def get_attachment(self, attachment_id: int) -> dict[str, Any] | None:
+        """Return attachment metadata + allow reading the blob."""
+        row = self._connection.execute(
+            "SELECT id, node_id, filename, mime_type, size, sha256, stored_path, created_at FROM attachments WHERE id = ? AND deleted_at IS NULL",
+            (attachment_id,),
+        ).fetchone()
+        if row is None:
+            return None
+        data = self._read_blob(row[5])
+        return {
+            "id": row[0],
+            "node_id": row[1],
+            "filename": row[2],
+            "mime_type": row[3],
+            "size": row[4],
+            "sha256": row[5],
+            "stored_path": row[6],
+            "created_at": row[7],
+            "data": data,
+        }
+
+    def update_attachment(self, attachment_id: int, **fields: Any) -> bool:
+        """Update attachment metadata (filename, mime_type, size)."""
+        set_clause = ", ".join(f"{k} = ?" for k in fields)
+        vals = list(fields.values()) + [attachment_id]
+        with self._connection:
+            cur = self._connection.execute(
+                f"UPDATE attachments SET {set_clause} WHERE id = ?",
+                vals,
+            )
+        return cur.rowcount > 0
+
+    def delete_attachment(self, attachment_id: int, *, permanent: bool = False) -> int:
+        """Soft-delete an attachment (set deleted_at), or permanently remove it."""
+        if permanent:
+            # remove blob file
+            row = self._connection.execute(
+                "SELECT stored_path FROM attachments WHERE id = ? AND deleted_at IS NULL",
+                (attachment_id,),
+            ).fetchone()
+            if row:
+                try:
+                    p = Path(row[0])
+                    if p.exists():
+                        p.unlink()
+                except Exception:
+                    pass
+            with self._connection:
+                self._connection.execute(
+                    "DELETE FROM attachments WHERE id = ?", (attachment_id,)
+                )
+            return 1
+        else:
+            with self._connection:
+                self._connection.execute(
+                    "UPDATE attachments SET deleted_at = ? WHERE id = ?",
+                    (self._now(), attachment_id),
+                )
+            return 1
+
+    def _now(self) -> str:
+        return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+    def _read_blob(self, path: str) -> bytes:
+        with open(path, "rb") as f:
+            return f.read()
 
     def iter_notes(self) -> Iterator[Node]:
         rows = self._connection.execute(
