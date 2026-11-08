@@ -12,6 +12,7 @@ import {
   Keyboard,
   LayoutDashboard,
   Moon,
+  CalendarClock,
   Network,
   Pin,
   Plus,
@@ -115,6 +116,13 @@ export function CommandPalette() {
         icon: Network,
         shortcut: `${modLabel()} Shift G`,
         run: () => openModal("graph"),
+      },
+      {
+        label: "Timeline",
+        detail: "Recent vault activity, newest first",
+        icon: CalendarClock,
+        shortcut: `${modLabel()} Shift T`,
+        run: () => openModal("timeline"),
       },
       {
         label: "Find in note",

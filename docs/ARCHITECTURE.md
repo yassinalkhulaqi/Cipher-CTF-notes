@@ -11,7 +11,7 @@ Python standard library.
 | Domain | `models.py`, `flags.py`, `fuzzy.py`, `utils.py` | Immutable data classes, flag detection, fuzzy ranking, formatting |
 | Content | `markdown.py`, `highlight.py`, `templates.py`, `snippets.py` | Markdown parsing, code highlighting, note templates, command snippet library |
 | Storage | `db.py` | SQLite schema, migrations, queries, settings, exports/imports support |
-| Services | `importer.py`, `exporter.py`, `demo.py`, `graph.py`, `flag_intel.py` | Markdown import, Markdown/HTML export, demo vault seeding, vault knowledge graph, flag format registry and insights |
+| Services | `importer.py`, `exporter.py`, `demo.py`, `graph.py`, `flag_intel.py` | Markdown import, Markdown/HTML export, demo vault seeding, vault knowledge graph and backlinks/timeline, flag format registry and insights |
 | UI | `ui/web/`, `app.py` | Localhost HTTP API + bundled React web frontend (native webview or browser) |
 
 Core modules never import the desktop UI layer. The web frontend calls the

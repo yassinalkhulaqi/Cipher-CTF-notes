@@ -7,7 +7,7 @@ import re
 from typing import Any
 
 from redscribe.domain.models import Node
-from redscribe.domain.utils import slugify
+from redscribe.domain.utils import collapse_whitespace, slugify, truncate
 from redscribe.storage.db import Vault
 
 WIKILINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]", re.IGNORECASE)
@@ -151,3 +151,213 @@ def graph_payload(graph: VaultGraph) -> dict[str, Any]:
         "nodes": [dataclasses.asdict(node) for node in graph.nodes],
         "edges": [dataclasses.asdict(edge) for edge in graph.edges],
     }
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class Backlink:
+    """A live note that links to another note via a wikilink."""
+
+    node_id: int
+    title: str
+    path: str = ""
+    status: str = "todo"
+    target: str = ""
+    updated_at: str = ""
+    snippet: str = ""
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class NoteLink:
+    """A resolved wikilink target of a note."""
+
+    node_id: int
+    title: str
+    path: str = ""
+    status: str = "todo"
+    alias: str = ""
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class UnresolvedLink:
+    """A wikilink in a note that does not resolve to a live note."""
+
+    target: str
+    alias: str = ""
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class NoteLinks:
+    """All wikilink relationships for one note."""
+
+    backlinks: tuple[Backlink, ...] = ()
+    outlinks: tuple[NoteLink, ...] = ()
+    unresolved: tuple[UnresolvedLink, ...] = ()
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class TimelineEvent:
+    """One recent vault activity item."""
+
+    node_id: int
+    title: str
+    path: str = ""
+    kind: str = "note"
+    activity: str = "updated"
+    at: str = ""
+    status: str = "todo"
+    target: str = ""
+    flag: str = ""
+
+
+def _notes_by_slug(vault: Vault) -> dict[str, Node]:
+    """Map note title slugs to live notes (first title wins, like the graph)."""
+    mapping: dict[str, Node] = {}
+    for node in vault.live_nodes():
+        if node.is_note:
+            mapping.setdefault(slugify(node.title), node)
+    return mapping
+
+
+def _link_snippet(content: str, target_slug: str) -> str:
+    """Return a short context excerpt around the first matching wikilink."""
+    for match in WIKILINK_RE.finditer(content):
+        if slugify(match.group(1)) != target_slug:
+            continue
+        start = max(0, match.start() - 60)
+        end = min(len(content), match.end() + 90)
+        excerpt = collapse_whitespace(content[start:end])
+        excerpt = excerpt.replace("[[", "").replace("]]", "")
+        prefix = "…" if start > 0 else ""
+        suffix = "…" if end < len(content) else ""
+        return truncate(f"{prefix}{excerpt}{suffix}", 160)
+    return ""
+
+
+def note_links(vault: Vault, note_id: int) -> NoteLinks:
+    """Return backlinks, outlinks, and unresolved wikilinks for ``note_id``.
+
+    Derived on demand from live wikilinks — no schema change. Self-links are
+    ignored, matching :func:`build_vault_graph`.
+    """
+    note = vault.get_node(note_id)
+    if note is None:
+        raise ValueError("Node does not exist")
+    if not note.is_note:
+        return NoteLinks()
+    by_slug = _notes_by_slug(vault)
+    target_slug = slugify(note.title)
+    backlinks: list[Backlink] = []
+    outlinks: list[NoteLink] = []
+    unresolved: list[UnresolvedLink] = []
+    seen_out: set[int] = set()
+    seen_unresolved: set[str] = set()
+    for other in vault.live_nodes():
+        if not other.is_note or other.id == note_id:
+            continue
+        for target, alias in wikilink_pairs(other.content):
+            if slugify(target) != target_slug:
+                continue
+            backlinks.append(
+                Backlink(
+                    node_id=other.id,
+                    title=other.title,
+                    path=vault.path_of(other.id, include_self=False),
+                    status=other.status,
+                    target=other.target,
+                    updated_at=other.updated_at,
+                    snippet=_link_snippet(other.content, target_slug),
+                )
+            )
+            break
+    for target, alias in wikilink_pairs(note.content):
+        slug = slugify(target)
+        resolved = by_slug.get(slug)
+        if resolved is not None and resolved.id != note_id:
+            if resolved.id in seen_out:
+                continue
+            seen_out.add(resolved.id)
+            outlinks.append(
+                NoteLink(
+                    node_id=resolved.id,
+                    title=resolved.title,
+                    path=vault.path_of(resolved.id, include_self=False),
+                    status=resolved.status,
+                    alias=alias or "",
+                )
+            )
+        elif resolved is None:
+            key = target.lower()
+            if key in seen_unresolved:
+                continue
+            seen_unresolved.add(key)
+            unresolved.append(UnresolvedLink(target=target, alias=alias or ""))
+    backlinks.sort(key=lambda item: (item.updated_at, item.title.lower()), reverse=True)
+    return NoteLinks(
+        backlinks=tuple(backlinks),
+        outlinks=tuple(outlinks),
+        unresolved=tuple(unresolved),
+    )
+
+
+def backlinks_for(vault: Vault, note_id: int) -> tuple[Backlink, ...]:
+    """Return the notes linking to ``note_id``, newest first."""
+    return note_links(vault, note_id).backlinks
+
+
+def _descendant_ids(vault: Vault, folder_id: int) -> set[int]:
+    found: set[int] = set()
+    stack = [folder_id]
+    while stack:
+        current = stack.pop()
+        if current in found:
+            continue
+        found.add(current)
+        stack.extend(child.id for child in vault.children(current))
+    return found
+
+
+def build_timeline(
+    vault: Vault, *, folder_id: int | None = None, limit: int = 50
+) -> tuple[TimelineEvent, ...]:
+    """Return recent vault activity, optionally scoped to a folder subtree.
+
+    Activity is ``created`` when a node was never edited after creation,
+    otherwise ``updated``. Sorted newest first.
+    """
+    limit = max(1, min(limit, 200))
+    scope = _descendant_ids(vault, folder_id) if folder_id is not None else None
+    if folder_id is not None and vault.get_node(folder_id) is None:
+        raise ValueError("Folder does not exist")
+    events: list[TimelineEvent] = []
+    for node in vault.live_nodes():
+        if scope is not None and node.id not in scope:
+            continue
+        events.append(
+            TimelineEvent(
+                node_id=node.id,
+                title=node.title,
+                path=vault.path_of(node.id, include_self=False),
+                kind=node.kind,
+                activity="created" if node.created_at == node.updated_at else "updated",
+                at=node.updated_at,
+                status=node.status,
+                target=node.target,
+                flag=node.flag,
+            )
+        )
+    events.sort(key=lambda item: (item.at, item.title.lower()), reverse=True)
+    return tuple(events[:limit])
+
+
+def note_links_payload(links: NoteLinks) -> dict[str, Any]:
+    """Return the JSON payload for one note's wikilink relationships."""
+    return {
+        "backlinks": [dataclasses.asdict(item) for item in links.backlinks],
+        "outlinks": [dataclasses.asdict(item) for item in links.outlinks],
+        "unresolved": [dataclasses.asdict(item) for item in links.unresolved],
+    }
+
+
+def timeline_payload(events: tuple[TimelineEvent, ...]) -> list[dict[str, Any]]:
+    """Return the JSON payload for the timeline view."""
+    return [dataclasses.asdict(event) for event in events]
