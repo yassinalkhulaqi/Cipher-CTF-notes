@@ -1461,3 +1461,118 @@
     flex-direction: column;
   }
 }
+
+/* Vault knowledge graph */
+
+.graph-modal {
+  width: min(980px, 100%);
+  height: min(76vh, 720px);
+}
+
+.graph-body {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.graph-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
+.graph-search {
+  flex: 1;
+}
+
+.graph-meta {
+  color: var(--faint);
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.graph-canvas-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 320px;
+  min-width: 0;
+}
+
+.graph-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.graph-edge {
+  stroke: var(--border-strong);
+  stroke-width: 1.4;
+}
+
+.graph-edge.link {
+  stroke: var(--accent);
+  stroke-opacity: 0.55;
+}
+
+.graph-node {
+  cursor: pointer;
+}
+
+.graph-disc {
+  fill: var(--surface-3);
+  stroke: var(--accent);
+  stroke-width: 2;
+  transition: stroke var(--speed-fast) var(--ease);
+}
+
+.graph-node:hover .graph-disc {
+  stroke: var(--accent-hover);
+}
+
+.graph-node.reference .graph-disc {
+  fill: var(--surface-2);
+  stroke: var(--faint);
+  stroke-dasharray: 3 3;
+}
+
+.graph-label {
+  fill: var(--text-soft);
+  font-size: 10px;
+  font-weight: 500;
+  pointer-events: none;
+  user-select: none;
+}
+
+.graph-node.reference .graph-label {
+  fill: var(--muted);
+}
+
+.graph-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  color: var(--muted);
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.graph-empty p {
+  margin: 0;
+  font-size: 12.5px;
+}
+
+@media (max-width: 760px) {
+  .graph-modal {
+    height: min(88vh, 720px);
+  }
+}

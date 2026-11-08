@@ -11,6 +11,7 @@ import type {
   Template,
   TrashedNode,
   TreeNode,
+  VaultGraph,
   VaultStats,
 } from "./types";
 
@@ -139,6 +140,7 @@ export const api = {
   exportNoteHtml: (id: number) =>
     call<ExportPayload>("export_note_html", { id }),
   exportVaultHtml: () => call<ExportPayload>("export_vault_html"),
+  graph: () => call<VaultGraph>("graph"),
 };
 
 export function downloadNote(id: number, format: "md" | "html"): void {

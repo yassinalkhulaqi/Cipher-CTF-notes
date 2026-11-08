@@ -4,6 +4,7 @@ import { useUiStore } from "../../store/useUiStore";
 import { CommandPalette } from "./CommandPalette";
 import { ConfirmModal } from "./ConfirmModal";
 import { DashboardModal } from "./DashboardModal";
+import { GraphModal } from "./GraphModal";
 import { HelpModal } from "./HelpModal";
 import { ModalExitContext } from "./Modal";
 import { MotionLab } from "./MotionLab";
@@ -36,6 +37,8 @@ function renderModal(name: Exclude<ModalName, null>) {
       return <TrashModal />;
     case "dashboard":
       return <DashboardModal />;
+    case "graph":
+      return <GraphModal />;
     case "settings":
       return <SettingsModal />;
     case "motion":

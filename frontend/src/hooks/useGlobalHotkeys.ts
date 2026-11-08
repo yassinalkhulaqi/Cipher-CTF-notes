@@ -59,6 +59,11 @@ export function useGlobalHotkeys(): void {
         ui.openModal("snippets");
         return;
       }
+      if (mod && event.shiftKey && key === "g") {
+        event.preventDefault();
+        ui.openModal("graph");
+        return;
+      }
       if (mod && event.shiftKey && key === "d") {
         event.preventDefault();
         ui.openModal("dashboard");

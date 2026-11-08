@@ -33,6 +33,9 @@ network calls.
   selection indicator, tilt-aware dashboard panels, animated counters, a reading
   progress bar, view-transition theme changes, and a Motion lab with System,
   Full, Subtle, and Off modes.
+- **Vault graph.** An interactive map of the vault: folder hierarchy plus
+  `[[wikilinks]]` between notes, laid out with a spring-based force simulation and
+  browsable with a filter. Open it with `Ctrl+Shift+G`.
 - **Small and portable.** The entire vault is one file that you can back up,
   sync, or move. Frontend assets are bundled into the wheel.
 
@@ -78,6 +81,7 @@ Windows, `~/Library/Application Support/RedScribe` on macOS, and
 | `Ctrl+Shift+F`          | Full-text search                     |
 | `Ctrl+Shift+S`          | Snippets                             |
 | `Ctrl+Shift+D`          | Dashboard                            |
+| `Ctrl+Shift+G`          | Vault graph                          |
 | `Ctrl+Shift+P`          | Pin or unpin the current note        |
 | `Ctrl+E`                | Cycle editor / split / preview       |
 | `Ctrl+S`                | Save now                             |

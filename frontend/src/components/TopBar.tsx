@@ -6,11 +6,13 @@ import {
   LayoutDashboard,
   Menu,
   Moon,
+  Network,
   Plus,
   Search,
   Settings,
   Sun,
-} from "lucide-react";import { BrandMark } from "./BrandMark";
+} from "lucide-react";
+import { BrandMark } from "./BrandMark";
 import { startThemeTransition } from "../lib/viewTransition";
 import { useAppStore } from "../store/useAppStore";
 import { useUiStore } from "../store/useUiStore";
@@ -123,6 +125,15 @@ export function TopBar() {
           aria-label="Vault insights"
         >
           <LayoutDashboard />
+        </button>
+        <button
+          className="icon-btn desktop-only"
+          type="button"
+          onClick={() => openModal("graph")}
+          data-tooltip={`Vault graph (${modLabel()}+Shift+G)`}
+          aria-label="Vault graph"
+        >
+          <Network />
         </button>
         <span className="topbar-divider desktop-only" />
         <button

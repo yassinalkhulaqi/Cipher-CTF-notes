@@ -55,6 +55,10 @@ HTB{th1s_1s_4_d3m0_fl4g}
 
 - Backups are still the best initial-access vector.
 - Check task permissions, not just share permissions.
+
+## Related
+
+- [[picoCTF — buffer overflow 1]]
 """
 
 _PICO = r"""# picoCTF — buffer overflow 1
@@ -91,6 +95,10 @@ io.interactive()
 ```text
 picoCTF{demo_buffer_overflow}
 ```
+
+## Related
+
+- [[HTB — Corporate]]
 """
 
 _ENGAGEMENT = r"""# ACME external — week 1
