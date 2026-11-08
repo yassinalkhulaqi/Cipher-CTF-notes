@@ -6,11 +6,13 @@ import type {
   FlagPattern,
   NodeDetail,
   NodeSummary,
+  NoteLinks,
   SearchHit,
   Settings,
   Snippet,
   TagCount,
   Template,
+  TimelineEvent,
   TrashedNode,
   TreeNode,
   VaultGraph,
@@ -145,6 +147,12 @@ export const api = {
     call<ExportPayload>("export_note_html", { id }),
   exportVaultHtml: () => call<ExportPayload>("export_vault_html"),
   graph: () => call<VaultGraph>("graph"),
+  backlinks: (id: number) => call<NoteLinks>("backlinks", { id }),
+  timeline: (folderId?: number | null, limit = 50) =>
+    call<TimelineEvent[]>("timeline", {
+      folder_id: folderId ?? null,
+      limit,
+    }),
   flagPatterns: () => call<FlagPattern[]>("flag_patterns"),
   flagInsights: () => call<FlagInsights>("flag_insights"),
   quickCapture: (body: {

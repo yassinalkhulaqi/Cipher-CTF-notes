@@ -48,6 +48,7 @@ import {
   type MarkdownEditorHandle,
 } from "./editor/MarkdownEditor";
 import { MarkdownPreview } from "./editor/MarkdownPreview";
+import { BacklinkPanel } from "./BacklinkPanel";
 import { Menu, type MenuEntry } from "./Menu";
 import { StatusIcon } from "./StatusIcon";
 import { ScrollProgress } from "../motion/ScrollProgress";
@@ -626,6 +627,8 @@ export function NoteWorkspace() {
           </button>
         </div>
       </header>
+
+      <BacklinkPanel key={note.id} noteId={note.id} />
 
       {saveState === "error" ? (
         <div className="save-error-banner" role="alert">

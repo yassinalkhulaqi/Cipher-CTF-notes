@@ -64,6 +64,11 @@ export function useGlobalHotkeys(): void {
         ui.openModal("graph");
         return;
       }
+      if (mod && event.shiftKey && key === "t") {
+        event.preventDefault();
+        ui.openModal("timeline");
+        return;
+      }
       if (mod && event.shiftKey && key === "q") {
         event.preventDefault();
         ui.openModal("quick-capture");

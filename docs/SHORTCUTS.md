@@ -11,6 +11,7 @@
 | `Ctrl+Shift+S` | Snippet library |
 | `Ctrl+Shift+D` | Dashboard |
 | `Ctrl+Shift+G` | Vault graph |
+| `Ctrl+Shift+T` | Timeline (recent vault activity) |
 | `Ctrl+Shift+Q` | Quick capture |
 | `Ctrl+Shift+P` | Pin or unpin the current note |
 | `Ctrl+E` | Cycle Write / Split / Preview |

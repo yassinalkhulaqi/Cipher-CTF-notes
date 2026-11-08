@@ -16,6 +16,7 @@ import { SearchModal } from "./SearchModal";
 import { SettingsModal } from "./SettingsModal";
 import { SnippetFormModal } from "./SnippetFormModal";
 import { SnippetsModal } from "./SnippetsModal";
+import { TimelineModal } from "./TimelineModal";
 import { TrashModal } from "./TrashModal";
 
 function renderModal(name: Exclude<ModalName, null>) {
@@ -40,6 +41,8 @@ function renderModal(name: Exclude<ModalName, null>) {
       return <DashboardModal />;
     case "graph":
       return <GraphModal />;
+    case "timeline":
+      return <TimelineModal />;
     case "quick-capture":
       return <QuickCaptureModal />;
     case "settings":

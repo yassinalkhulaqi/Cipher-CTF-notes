@@ -29,7 +29,14 @@ from redscribe.services.flag_intel import (
     flag_insights_payload,
     flag_patterns_payload,
 )
-from redscribe.services.graph import build_vault_graph, graph_payload
+from redscribe.services.graph import (
+    build_timeline,
+    build_vault_graph,
+    graph_payload,
+    note_links,
+    note_links_payload,
+    timeline_payload,
+)
 from redscribe.storage.db import Vault
 
 _SETTING_KEYS = (
@@ -184,6 +191,8 @@ class Api:
             "export_note_html": self.export_note_html,
             "export_vault_html": self.export_vault_html,
             "graph": self.graph,
+            "backlinks": self.backlinks,
+            "timeline": self.timeline,
             "flag_patterns": self.flag_patterns,
             "flag_insights": self.flag_insights,
             "search_snippets": self.search_snippets,
@@ -450,6 +459,16 @@ class Api:
     def graph(self, body: dict[str, Any]) -> dict[str, Any]:
         """Return the vault knowledge graph: vertices and relationships."""
         return graph_payload(build_vault_graph(self._vault))
+
+    def backlinks(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Return backlinks, outlinks, and unresolved links for one note."""
+        return note_links_payload(note_links(self._vault, _require_int(body, "id")))
+
+    def timeline(self, body: dict[str, Any]) -> list[dict[str, Any]]:
+        """Return recent activity, optionally scoped to a folder subtree."""
+        folder_id = _optional_int(body, "folder_id")
+        limit = _optional_int(body, "limit") or 50
+        return timeline_payload(build_timeline(self._vault, folder_id=folder_id, limit=limit))
 
     # ------------------------------------------------------------------
     # Templates and snippets

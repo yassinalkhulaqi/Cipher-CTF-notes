@@ -18,6 +18,10 @@ All notable changes to RedScribe are documented here. The format follows
 - Motion tokens, keyframes, reduced-motion auditing, and automated tests for
   spring math, preferences, and the accessibility kill switch.
 - `docs/MOTION.md` with the motion map, performance rules, and manual QA list.
+- Backlink panel in the note workspace: notes that link to the open note,
+  resolved outlinks, and unresolved wikilinks (`[[Note Title]]`).
+- Vault timeline (`Ctrl+Shift+T`): recent vault activity, newest first,
+  filterable, with click-to-open notes.
 
 ## [1.0.0] - 2026-10-21
 

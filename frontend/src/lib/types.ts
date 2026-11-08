@@ -151,6 +151,47 @@ export interface VaultGraph {
   edges: GraphEdge[];
 }
 
+export interface Backlink {
+  node_id: number;
+  title: string;
+  path: string;
+  status: Status;
+  target: string;
+  updated_at: string;
+  snippet: string;
+}
+
+export interface NoteLink {
+  node_id: number;
+  title: string;
+  path: string;
+  status: Status;
+  alias: string;
+}
+
+export interface UnresolvedLink {
+  target: string;
+  alias: string;
+}
+
+export interface NoteLinks {
+  backlinks: Backlink[];
+  outlinks: NoteLink[];
+  unresolved: UnresolvedLink[];
+}
+
+export interface TimelineEvent {
+  node_id: number;
+  title: string;
+  path: string;
+  kind: NodeKind;
+  activity: "created" | "updated";
+  at: string;
+  status: Status;
+  target: string;
+  flag: string;
+}
+
 export interface FlagPattern {
   prefix: string;
   pattern_key: string;
