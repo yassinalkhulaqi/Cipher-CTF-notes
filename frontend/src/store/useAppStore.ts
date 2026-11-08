@@ -72,6 +72,12 @@ interface AppState {
     parent_id: number | null;
   }) => Promise<NodeSummary>;
   quickNote: () => Promise<NodeSummary>;
+  quickCapture: (input: {
+    title: string;
+    content: string;
+    target: string;
+    tags: string;
+  }) => Promise<NodeSummary>;
   createFolder: (
     title: string,
     parentId: number | null,
@@ -267,7 +273,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
     set({ draft: content, dirty: true, saveState: "dirty" });
     clearSaveTimer();
     saveTimer = setTimeout(() => {
-      void get().saveNow().catch(() => undefined);
+      void get()
+        .saveNow()
+        .catch(() => undefined);
     }, 850);
   },
 
@@ -398,6 +406,20 @@ export const useAppStore = create<AppState>()((set, get) => ({
       target: state.note?.target ?? "",
       parent_id: parentId,
     });
+  },
+
+  quickCapture: async (input) => {
+    try {
+      await get().saveNow();
+    } catch {
+      throw new Error(
+        "Could not save the current note. It is still open; retry saving before capturing.",
+      );
+    }
+    const node = await api.quickCapture(input);
+    await get().refreshTree();
+    await get().openNote(node.id);
+    return node;
   },
 
   createFolder: async (title, parentId) => {

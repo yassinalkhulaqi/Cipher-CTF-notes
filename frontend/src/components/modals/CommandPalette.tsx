@@ -20,6 +20,7 @@ import {
   Settings,
   SlidersHorizontal,
   Sun,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import { api } from "../../lib/api";
@@ -72,6 +73,13 @@ export function CommandPalette() {
         icon: FilePlus2,
         shortcut: `${modLabel()} N`,
         run: () => openNewNote(),
+      },
+      {
+        label: "Quick capture",
+        detail: "Start a note from raw text",
+        icon: Zap,
+        shortcut: `${modLabel()} Shift Q`,
+        run: () => openModal("quick-capture"),
       },
       {
         label: "New folder",

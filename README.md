@@ -15,7 +15,8 @@ network calls.
 
 - **Fast capture.** Hierarchical folders and notes, drag-and-drop organizing,
   instant fuzzy jump to notes or folders with `Ctrl+P`, full-text search with
-  `Ctrl+Shift+F`, and auto-save.
+  `Ctrl+Shift+F`, a quick-capture bar (`Ctrl+Shift+Q`) that turns raw text into
+  a note, and auto-save.
 - **Built for security work.** Templates for CTF challenges, host recon, web
   assessments, findings, and engagement logs. Notes carry a target, status,
   difficulty, tags, and a captured flag.
@@ -88,6 +89,7 @@ Windows, `~/Library/Application Support/RedScribe` on macOS, and
 | `Ctrl+Shift+S`          | Snippets                             |
 | `Ctrl+Shift+D`          | Dashboard                            |
 | `Ctrl+Shift+G`          | Vault graph                          |
+| `Ctrl+Shift+Q`          | Quick capture                        |
 | `Ctrl+Shift+P`          | Pin or unpin the current note        |
 | `Ctrl+E`                | Cycle editor / split / preview       |
 | `Ctrl+S`                | Save now                             |

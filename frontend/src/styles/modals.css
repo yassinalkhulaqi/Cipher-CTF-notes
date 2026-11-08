@@ -1607,3 +1607,14 @@
   border-color: var(--border-accent);
   color: var(--text);
 }
+
+/* Quick capture */
+
+.capture-area {
+  min-height: 140px;
+}
+
+.capture-actions {
+  display: flex;
+  gap: 6px;
+}

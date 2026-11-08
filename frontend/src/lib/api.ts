@@ -147,6 +147,12 @@ export const api = {
   graph: () => call<VaultGraph>("graph"),
   flagPatterns: () => call<FlagPattern[]>("flag_patterns"),
   flagInsights: () => call<FlagInsights>("flag_insights"),
+  quickCapture: (body: {
+    title: string;
+    content: string;
+    target: string;
+    tags: string;
+  }) => call<NodeSummary>("quick_capture", body),
 };
 
 export function downloadNote(id: number, format: "md" | "html"): void {

@@ -187,6 +187,7 @@ class Api:
             "flag_patterns": self.flag_patterns,
             "flag_insights": self.flag_insights,
             "search_snippets": self.search_snippets,
+            "quick_capture": self.quick_capture,
         }
 
     def handle(self, method: str, body: dict[str, Any]) -> Any:
@@ -273,6 +274,24 @@ class Api:
     # ------------------------------------------------------------------
     # Node mutation
     # ------------------------------------------------------------------
+
+    def quick_capture(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Create a note from raw capture text in one round trip."""
+        title = _require_str(body, "title", default="").strip()
+        content = _require_str(body, "content", default="").strip()
+        if not title and not content:
+            raise ApiError("A title or some content is required")
+        if not title:
+            first_line = content.splitlines()[0]
+            title = first_line[:60].strip() or "Untitled capture"
+        node = self._vault.create_node(
+            title,
+            None,
+            content=content,
+            tags=_require_str(body, "tags", default="").strip(),
+            target=_require_str(body, "target", default="").strip(),
+        )
+        return node_summary(node, path=self._path_of(node.id))
 
     def create_note(self, body: dict[str, Any]) -> dict[str, Any]:
         template = get_template(_require_str(body, "template_key", default="blank"))

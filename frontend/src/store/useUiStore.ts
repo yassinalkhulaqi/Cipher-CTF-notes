@@ -14,6 +14,7 @@ export type ModalName =
   | "motion"
   | "help"
   | "graph"
+  | "quick-capture"
   | "confirm"
   | null;
 
