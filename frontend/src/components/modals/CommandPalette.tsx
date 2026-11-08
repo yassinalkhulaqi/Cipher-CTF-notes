@@ -3,6 +3,7 @@ import {
   Activity,
   Code2,
   Command,
+  Copy,
   FilePlus2,
   FileText,
   Flag,
@@ -13,16 +14,18 @@ import {
   Moon,
   Network,
   Pin,
+  Plus,
   Save,
   Search,
   Settings,
   SlidersHorizontal,
   Sun,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import { api } from "../../lib/api";
-import type { NodeSummary } from "../../lib/types";
-import { modLabel } from "../../lib/utils";
+import type { NodeSummary, Snippet } from "../../lib/types";
+import { copyText, modLabel } from "../../lib/utils";
 import { useAppStore } from "../../store/useAppStore";
 import { useUiStore } from "../../store/useUiStore";
 import { Modal } from "./Modal";
@@ -37,7 +40,8 @@ interface PaletteCommand {
 
 type Entry =
   | { kind: "command"; command: PaletteCommand }
-  | { kind: "note"; node: NodeSummary };
+  | { kind: "note"; node: NodeSummary }
+  | { kind: "snippet"; snippet: Snippet };
 
 export function CommandPalette() {
   const theme = useAppStore((state) => state.theme);
@@ -57,6 +61,7 @@ export function CommandPalette() {
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<NodeSummary[]>([]);
   const [jumps, setJumps] = useState<NodeSummary[]>([]);
+  const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [selected, setSelected] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -68,6 +73,13 @@ export function CommandPalette() {
         icon: FilePlus2,
         shortcut: `${modLabel()} N`,
         run: () => openNewNote(),
+      },
+      {
+        label: "Quick capture",
+        detail: "Start a note from raw text",
+        icon: Zap,
+        shortcut: `${modLabel()} Shift Q`,
+        run: () => openModal("quick-capture"),
       },
       {
         label: "New folder",
@@ -232,6 +244,29 @@ export function CommandPalette() {
     };
   }, [query]);
 
+  useEffect(() => {
+    const text = query.trim();
+    if (!text) {
+      setSnippets([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      api
+        .searchSnippets(text)
+        .then((items) => {
+          if (!cancelled) setSnippets(items.slice(0, 6));
+        })
+        .catch(() => {
+          if (!cancelled) setSnippets([]);
+        });
+    }, 120);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [query]);
+
   const filteredCommands = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return commands;
@@ -248,8 +283,9 @@ export function CommandPalette() {
         command,
       })),
       ...notes.map((node) => ({ kind: "note" as const, node })),
+      ...snippets.map((snippet) => ({ kind: "snippet" as const, snippet })),
     ],
-    [filteredCommands, notes],
+    [filteredCommands, notes, snippets],
   );
 
   useEffect(() => {
@@ -267,8 +303,42 @@ export function CommandPalette() {
       ?.scrollIntoView({ block: "nearest" });
   }, [selected]);
 
+  const runSnippet = async (snippet: Snippet) => {
+    if (note) {
+      try {
+        const resolved = await api.resolveSnippet(
+          snippet.command,
+          note.target ?? "",
+        );
+        window.dispatchEvent(
+          new CustomEvent("redscribe:insert-snippet", {
+            detail: { text: resolved.command },
+          }),
+        );
+        toast(`Inserted “${snippet.title}”`, "success");
+      } catch (error) {
+        toast(
+          error instanceof Error
+            ? error.message
+            : "Could not insert the snippet",
+          "error",
+        );
+      }
+      return;
+    }
+    void copyText(snippet.command).then(
+      () => toast(`Copied “${snippet.title}”`, "success"),
+      () => toast("Could not copy the command", "error"),
+    );
+  };
+
   const execute = (entry: Entry | undefined) => {
     if (!entry) return;
+    if (entry.kind === "snippet") {
+      closeModal();
+      void runSnippet(entry.snippet);
+      return;
+    }
     closeModal();
     if (entry.kind === "command") {
       entry.command.run();
@@ -393,6 +463,37 @@ export function CommandPalette() {
                     {node.pinned ? <Pin /> : null}
                     {node.flag ? <Flag /> : null}
                   </span>
+                </button>
+              );
+            })}
+          </>
+        ) : null}
+
+        {snippets.length > 0 ? (
+          <>
+            <div className="list-label">Snippets</div>
+            {snippets.map((snippet) => {
+              actionIndex += 1;
+              const index = actionIndex;
+              const key = snippet.builtin
+                ? `builtin:${snippet.builtin_key}`
+                : `custom:${snippet.id}`;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={`palette-item ${selected === index ? "selected" : ""}`}
+                  onMouseMove={() => setSelected(index)}
+                  onClick={() => execute({ kind: "snippet", snippet })}
+                >
+                  <span className="pi-icon">
+                    <Code2 />
+                  </span>
+                  <span className="pi-copy">
+                    <span className="pi-title">{snippet.title}</span>
+                    <span className="pi-path">{snippet.command}</span>
+                  </span>
+                  <span className="pi-meta">{note ? <Plus /> : <Copy />}</span>
                 </button>
               );
             })}

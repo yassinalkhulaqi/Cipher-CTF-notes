@@ -15,13 +15,20 @@ network calls.
 
 - **Fast capture.** Hierarchical folders and notes, drag-and-drop organizing,
   instant fuzzy jump to notes or folders with `Ctrl+P`, full-text search with
-  `Ctrl+Shift+F`, and auto-save.
+  `Ctrl+Shift+F`, a quick-capture bar (`Ctrl+Shift+Q`) that turns raw text into
+  a note, and auto-save.
 - **Built for security work.** Templates for CTF challenges, host recon, web
   assessments, findings, and engagement logs. Notes carry a target, status,
   difficulty, tags, and a captured flag.
+- **Flag intelligence.** A registry of known event formats (HTB, picoCTF,
+  THM, and dozens more) with format validation and one-tap prefix presets in
+  note properties. The dashboard breaks flags down by source, spots the same
+  flag captured on two notes, and flags done notes still missing a flag.
 - **Useful snippets.** More than 70 built-in commands for recon, web, Active
-  Directory, credentials, shells, privesc, pivoting, and CTF tooling. Copy with
-  placeholders filled from the current note.
+  Directory, credentials, shells, privesc, pivoting, and CTF tooling. Search
+  them straight from the quick switch (`Ctrl+P`) to insert or copy a command
+  with placeholders filled from the current note, or browse the library with
+  arrow keys.
 - **Readable output.** Markdown editor with syntax highlighting and a split
   preview with code highlighting and optional synchronized scrolling. Export a
   note to Markdown or HTML, or export the whole vault as a browsable HTML report.
@@ -82,6 +89,7 @@ Windows, `~/Library/Application Support/RedScribe` on macOS, and
 | `Ctrl+Shift+S`          | Snippets                             |
 | `Ctrl+Shift+D`          | Dashboard                            |
 | `Ctrl+Shift+G`          | Vault graph                          |
+| `Ctrl+Shift+Q`          | Quick capture                        |
 | `Ctrl+Shift+P`          | Pin or unpin the current note        |
 | `Ctrl+E`                | Cycle editor / split / preview       |
 | `Ctrl+S`                | Save now                             |

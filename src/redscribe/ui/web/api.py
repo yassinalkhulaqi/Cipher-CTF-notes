@@ -24,6 +24,11 @@ from redscribe.domain.fuzzy import rank_items
 from redscribe.domain.models import DIFFICULTIES, STATUSES, Node, SearchHit, Snippet
 from redscribe.services.demo import seed_demo
 from redscribe.services.exporter import note_to_markdown, vault_report_text
+from redscribe.services.flag_intel import (
+    build_flag_insights,
+    flag_insights_payload,
+    flag_patterns_payload,
+)
 from redscribe.services.graph import build_vault_graph, graph_payload
 from redscribe.storage.db import Vault
 
@@ -179,6 +184,10 @@ class Api:
             "export_note_html": self.export_note_html,
             "export_vault_html": self.export_vault_html,
             "graph": self.graph,
+            "flag_patterns": self.flag_patterns,
+            "flag_insights": self.flag_insights,
+            "search_snippets": self.search_snippets,
+            "quick_capture": self.quick_capture,
         }
 
     def handle(self, method: str, body: dict[str, Any]) -> Any:
@@ -265,6 +274,24 @@ class Api:
     # ------------------------------------------------------------------
     # Node mutation
     # ------------------------------------------------------------------
+
+    def quick_capture(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Create a note from raw capture text in one round trip."""
+        title = _require_str(body, "title", default="").strip()
+        content = _require_str(body, "content", default="").strip()
+        if not title and not content:
+            raise ApiError("A title or some content is required")
+        if not title:
+            first_line = content.splitlines()[0]
+            title = first_line[:60].strip() or "Untitled capture"
+        node = self._vault.create_node(
+            title,
+            None,
+            content=content,
+            tags=_require_str(body, "tags", default="").strip(),
+            target=_require_str(body, "target", default="").strip(),
+        )
+        return node_summary(node, path=self._path_of(node.id))
 
     def create_note(self, body: dict[str, Any]) -> dict[str, Any]:
         template = get_template(_require_str(body, "template_key", default="blank"))
@@ -399,6 +426,18 @@ class Api:
     def collected_flags(self, body: dict[str, Any]) -> list[dict[str, Any]]:
         return [dataclasses.asdict(hit) for hit in self._vault.collected_flags()]
 
+    # ------------------------------------------------------------------
+    # Flag intelligence
+    # ------------------------------------------------------------------
+
+    def flag_patterns(self, body: dict[str, Any]) -> list[dict[str, Any]]:
+        """Return the registry of known event flag formats."""
+        return flag_patterns_payload()
+
+    def flag_insights(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Return aggregate flag statistics for the dashboard."""
+        return flag_insights_payload(build_flag_insights(self._vault))
+
     def tag_counts(self, body: dict[str, Any]) -> list[dict[str, Any]]:
         return [dataclasses.asdict(tag) for tag in self._vault.tag_counts()]
 
@@ -421,6 +460,19 @@ class Api:
 
     def list_snippets(self, body: dict[str, Any]) -> list[dict[str, Any]]:
         return [_snippet_data(snippet) for snippet in builtin_plus_custom(self._vault)]
+
+    def search_snippets(self, body: dict[str, Any]) -> list[dict[str, Any]]:
+        """Search builtin and custom snippets with fuzzy ranking."""
+        query = _require_str(body, "query")
+        limit = _optional_int(body, "limit") or 12
+        snippets = builtin_plus_custom(self._vault)
+        ranked = rank_items(
+            query,
+            snippets,
+            key=lambda item: f"{item.title} {item.command} {item.description} {item.tags}",
+            limit=limit,
+        )
+        return [_snippet_data(snippet) for snippet in ranked]
 
     def resolve_snippet(self, body: dict[str, Any]) -> dict[str, Any]:
         command = _require_str(body, "command")

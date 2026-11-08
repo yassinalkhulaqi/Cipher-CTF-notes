@@ -11,6 +11,7 @@ import { MotionLab } from "./MotionLab";
 import { NewFolderModal } from "./NewFolderModal";
 import { NewNoteModal } from "./NewNoteModal";
 import { PropertiesModal } from "./PropertiesModal";
+import { QuickCaptureModal } from "./QuickCaptureModal";
 import { SearchModal } from "./SearchModal";
 import { SettingsModal } from "./SettingsModal";
 import { SnippetFormModal } from "./SnippetFormModal";
@@ -39,6 +40,8 @@ function renderModal(name: Exclude<ModalName, null>) {
       return <DashboardModal />;
     case "graph":
       return <GraphModal />;
+    case "quick-capture":
+      return <QuickCaptureModal />;
     case "settings":
       return <SettingsModal />;
     case "motion":

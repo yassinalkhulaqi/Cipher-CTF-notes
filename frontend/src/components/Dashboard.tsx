@@ -27,7 +27,12 @@ import {
 } from "lucide-react";
 import { api } from "../lib/api";
 import { STATUS_LABEL } from "../lib/constants";
-import type { FlagHit, NodeSummary, Template } from "../lib/types";
+import type {
+  FlagHit,
+  FlagInsights,
+  NodeSummary,
+  Template,
+} from "../lib/types";
 import { copyText, modLabel, plural, relativeTime } from "../lib/utils";
 import { AnimatedNumber } from "../motion/AnimatedNumber";
 import { Confetti } from "../motion/Confetti";
@@ -64,6 +69,7 @@ export function Dashboard() {
   const toast = useUiStore((state) => state.toast);
 
   const [flags, setFlags] = useState<FlagHit[]>([]);
+  const [insights, setInsights] = useState<FlagInsights | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [copiedFlag, setCopiedFlag] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -146,6 +152,23 @@ export function Dashboard() {
         setFlags([]);
         setFlagsLoading(false);
       });
+    return () => {
+      cancelled = true;
+    };
+  }, [stats.notes, nodes]);
+
+  useEffect(() => {
+    if (stats.notes === 0) {
+      setInsights(null);
+      return;
+    }
+    let cancelled = false;
+    api
+      .flagInsights()
+      .then((items) => {
+        if (!cancelled) setInsights(items);
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -632,6 +655,62 @@ export function Dashboard() {
                   </div>
                 )}
               </div>
+            </section>
+
+            <section className="dash-panel compact" data-tilt data-reveal>
+              <div className="dash-panel-head">
+                <div>
+                  <h2>Flag insights</h2>
+                  <span>
+                    {insights
+                      ? `${plural(insights.unique_flags, "unique flag")} · ${insights.manual_flags} manual`
+                      : "Flag intelligence"}
+                  </span>
+                </div>
+                <Flag className="panel-glyph" />
+              </div>
+              <div className="source-list">
+                {insights && insights.by_source.length > 0 ? (
+                  insights.by_source.slice(0, 5).map((item) => {
+                    const max = Math.max(
+                      ...insights.by_source.map((entry) => entry.count),
+                      1,
+                    );
+                    const percent = Math.max(
+                      Math.round((item.count / max) * 100),
+                      8,
+                    );
+                    return (
+                      <div className="source-row" key={item.prefix}>
+                        <span className="source-name" title={item.platform}>
+                          {item.platform}
+                        </span>
+                        <span className="source-bar" aria-hidden="true">
+                          <span style={{ width: `${percent}%` }} />
+                        </span>
+                        <span className="source-count">{item.count}</span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="mini-empty">
+                    Flags detected in note content or set in properties will
+                    break down by event here.
+                  </p>
+                )}
+              </div>
+              {insights && insights.missing_flag_notes > 0 ? (
+                <p className="mini-empty">
+                  {plural(insights.missing_flag_notes, "done note")} still
+                  missing a captured flag.
+                </p>
+              ) : null}
+              {insights && insights.duplicates.length > 0 ? (
+                <p className="mini-empty">
+                  {plural(insights.duplicates.length, "flag")} appear on more
+                  than one note.
+                </p>
+              ) : null}
             </section>
 
             <section className="dash-panel compact" data-tilt data-reveal>

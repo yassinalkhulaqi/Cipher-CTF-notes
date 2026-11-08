@@ -2,6 +2,8 @@ import type {
   BootData,
   ExportPayload,
   FlagHit,
+  FlagInsights,
+  FlagPattern,
   NodeDetail,
   NodeSummary,
   SearchHit,
@@ -112,6 +114,8 @@ export const api = {
   notesTagged: (tag: string) => call<NodeSummary[]>("notes_tagged", { tag }),
   templates: () => call<Template[]>("templates"),
   listSnippets: () => call<Snippet[]>("list_snippets"),
+  searchSnippets: (query: string) =>
+    call<Snippet[]>("search_snippets", { query }),
   resolveSnippet: (command: string, target: string) =>
     call<{ command: string }>("resolve_snippet", { command, target }),
   createSnippet: (body: {
@@ -141,6 +145,14 @@ export const api = {
     call<ExportPayload>("export_note_html", { id }),
   exportVaultHtml: () => call<ExportPayload>("export_vault_html"),
   graph: () => call<VaultGraph>("graph"),
+  flagPatterns: () => call<FlagPattern[]>("flag_patterns"),
+  flagInsights: () => call<FlagInsights>("flag_insights"),
+  quickCapture: (body: {
+    title: string;
+    content: string;
+    target: string;
+    tags: string;
+  }) => call<NodeSummary>("quick_capture", body),
 };
 
 export function downloadNote(id: number, format: "md" | "html"): void {

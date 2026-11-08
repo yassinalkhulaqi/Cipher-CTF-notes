@@ -22,6 +22,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ["Ctrl", "Shift", "D"], label: "Dashboard" },
       { keys: ["Ctrl", "Shift", "S"], label: "Snippet library" },
       { keys: ["Ctrl", "Shift", "G"], label: "Vault graph" },
+      { keys: ["Ctrl", "Shift", "Q"], label: "Quick capture" },
       { keys: ["F1"], label: "Keyboard shortcuts" },
     ],
   },
