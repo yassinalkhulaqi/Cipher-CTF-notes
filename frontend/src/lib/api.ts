@@ -145,6 +145,7 @@ export const api = {
   exportNoteHtml: (id: number) =>
     call<ExportPayload>("export_note_html", { id }),
   exportVaultHtml: () => call<ExportPayload>("export_vault_html"),
+  exportVaultPrint: () => call<ExportPayload>("export_print_html"),
   graph: () => call<VaultGraph>("graph"),
   flagPatterns: () => call<FlagPattern[]>("flag_patterns"),
   flagInsights: () => call<FlagInsights>("flag_insights"),

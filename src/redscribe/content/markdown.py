@@ -56,6 +56,12 @@ class Quote:
 
 
 @dataclass(frozen=True, slots=True)
+class CalloutBlock:
+    kind: str
+    title: str = ""
+
+
+@dataclass(frozen=True, slots=True)
 class TableBlock:
     headers: list[str]
     rows: list[list[str]]
@@ -77,6 +83,10 @@ _QUOTE_RE = re.compile(r"^ {0,3}>[ \t]?(?P<text>.*)$")
 _TASK_RE = re.compile(r"^\[(?P<state>[ xX])\][ \t]+(?P<text>.*)$")
 _SETEXT_RE = re.compile(r"^ {0,3}(?P<marker>=+|-+)[ \t]*$")
 _SEPARATOR_CELL_RE = re.compile(r"^:?-{3,}:?$")
+
+_CALLOUT_RE = re.compile(
+    r"(?i)^ {0,3}> \[!(?P<kind>note|tip|warning|faq|abstract|info|success|danger)\] [ \t]*(?P<title>.*)$"
+)
 
 _ESCAPE_RE = re.compile(r"\\([\\`*_{}\[\]()#+\-.!|~>])")
 _INLINE_RE = re.compile(
@@ -117,6 +127,17 @@ def parse_markdown(text: str) -> list[Block]:
 
         if _HR_RE.match(line):
             blocks.append(Rule())
+            index += 1
+            continue
+
+        # Check for callout blocks (> [!NOTE], > [!WARNING], etc.) before quotes
+        callout_match = _CALLOUT_RE.match(line)
+        if callout_match:
+            kind = callout_match.group("kind")
+            # Extract title from the line after the kind marker
+            title_section = line.split("]", 1)
+            callout_title = title_section[1].strip() if len(title_section) > 1 else ""
+            blocks.append(CalloutBlock(kind=kind, title=callout_title))
             index += 1
             continue
 
@@ -419,6 +440,26 @@ def render_markdown_body(text: str) -> str:
             parts.append(f"<blockquote>{inline_html(parse_inline(block.text))}</blockquote>")
         elif isinstance(block, TableBlock):
             parts.append(_table_html(block))
+        elif isinstance(block, CalloutBlock):
+            kind = html.escape(block.kind)
+            title = html.escape(block.title)
+            # Map callout kind to CSS class
+            kind_classes = {
+                "note": "info",
+                "tip": "info",
+                "warning": "warning",
+                "faq": "info",
+                "abstract": "info",
+                "info": "info",
+                "success": "success",
+                "danger": "danger",
+            }
+            css_class = kind_classes.get(kind, "info")
+            # Render title if present
+            title_html = f'<div class="callout-title">{title}</div>' if title else ""
+            parts.append(
+                f'<div class="callout callout-{css_class}">{title_html}<div class="callout-content">{inline_html(parse_inline(block.title))}</div></div>'
+            )
         elif isinstance(block, Rule):
             parts.append("<hr>")
     return "\n".join(parts)

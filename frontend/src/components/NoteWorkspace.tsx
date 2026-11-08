@@ -317,6 +317,26 @@ export function NoteWorkspace() {
           );
       },
     },
+    {
+      label: "Export whole vault as Print HTML",
+      icon: FileDown,
+      onSelect: () => {
+        void api
+          .exportVaultPrint()
+          .then((payload) => {
+            downloadText(payload.filename, payload.content, payload.mime);
+            toast("Vault print export ready", "success");
+          })
+          .catch((error: unknown) =>
+            toast(
+              error instanceof Error
+                ? error.message
+                : "Could not export the vault print",
+              "error",
+            ),
+          );
+      },
+    },
   ];
 
   const moreItems: MenuEntry[] = [

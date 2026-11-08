@@ -185,6 +185,7 @@ class Api:
             "export_note_markdown": self.export_note_markdown,
             "export_note_html": self.export_note_html,
             "export_vault_html": self.export_vault_html,
+            "export_print_html": self.export_print_html,
             "graph": self.graph,
             "flag_patterns": self.flag_patterns,
             "flag_insights": self.flag_insights,
@@ -607,5 +608,16 @@ class Api:
         return {
             "content": vault_report_text(self._vault),
             "filename": "redscribe-vault.html",
+            "mime": "text/html",
+        }
+    def export_print_html(self, body: dict[str, Any]) -> dict[str, Any]:
+        html = vault_report_text(self._vault)
+        html = html.replace(
+            "<style>",
+            "<style>\n@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }\n",
+        )
+        return {
+            "content": html,
+            "filename": "redscribe-vault-print.html",
             "mime": "text/html",
         }
