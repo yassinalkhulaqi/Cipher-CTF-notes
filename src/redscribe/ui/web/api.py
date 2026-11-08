@@ -186,6 +186,7 @@ class Api:
             "graph": self.graph,
             "flag_patterns": self.flag_patterns,
             "flag_insights": self.flag_insights,
+            "search_snippets": self.search_snippets,
         }
 
     def handle(self, method: str, body: dict[str, Any]) -> Any:
@@ -440,6 +441,19 @@ class Api:
 
     def list_snippets(self, body: dict[str, Any]) -> list[dict[str, Any]]:
         return [_snippet_data(snippet) for snippet in builtin_plus_custom(self._vault)]
+
+    def search_snippets(self, body: dict[str, Any]) -> list[dict[str, Any]]:
+        """Search builtin and custom snippets with fuzzy ranking."""
+        query = _require_str(body, "query")
+        limit = _optional_int(body, "limit") or 12
+        snippets = builtin_plus_custom(self._vault)
+        ranked = rank_items(
+            query,
+            snippets,
+            key=lambda item: f"{item.title} {item.command} {item.description} {item.tags}",
+            limit=limit,
+        )
+        return [_snippet_data(snippet) for snippet in ranked]
 
     def resolve_snippet(self, body: dict[str, Any]) -> dict[str, Any]:
         command = _require_str(body, "command")

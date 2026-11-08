@@ -120,6 +120,27 @@ export function SnippetsModal() {
     filtered[0] ??
     null;
 
+  useEffect(() => {
+    if (!current || filtered.length === 0) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select")) return;
+      event.preventDefault();
+      const index = filtered.findIndex(
+        (snippet) => snippetKey(snippet) === snippetKey(current),
+      );
+      const next =
+        event.key === "ArrowDown"
+          ? Math.min(index + 1, filtered.length - 1)
+          : Math.max(index - 1, 0);
+      const candidate = filtered[next];
+      if (candidate) setSelectedKey(snippetKey(candidate));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [filtered, current]);
+
   const copyRaw = () => {
     if (!current) return;
     void copyText(current.command).then(

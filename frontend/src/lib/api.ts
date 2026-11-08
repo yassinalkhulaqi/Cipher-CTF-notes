@@ -114,6 +114,8 @@ export const api = {
   notesTagged: (tag: string) => call<NodeSummary[]>("notes_tagged", { tag }),
   templates: () => call<Template[]>("templates"),
   listSnippets: () => call<Snippet[]>("list_snippets"),
+  searchSnippets: (query: string) =>
+    call<Snippet[]>("search_snippets", { query }),
   resolveSnippet: (command: string, target: string) =>
     call<{ command: string }>("resolve_snippet", { command, target }),
   createSnippet: (body: {
