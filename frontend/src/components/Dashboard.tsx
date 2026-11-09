@@ -34,6 +34,8 @@ import type {
   Template,
 } from "../lib/types";
 import { copyText, modLabel, plural, relativeTime } from "../lib/utils";
+import { timeGreeting } from "../lib/ux";
+import { EmptyState } from "./EmptyState";
 import { AnimatedNumber } from "../motion/AnimatedNumber";
 import { Confetti } from "../motion/Confetti";
 import { Skeleton } from "../motion/Skeleton";
@@ -373,7 +375,7 @@ export function Dashboard() {
         <header className="dash-head">
           <div className="dash-title">
             <span className="eyebrow">Workspace</span>
-            <h1>Research desk</h1>
+            <h1>{timeGreeting()}.</h1>
             <p>
               {plural(stats.notes, "note")} in the vault
               {lastTouched ? ` · last touched ${lastTouched}` : ""}
@@ -646,13 +648,12 @@ export function Dashboard() {
                     </button>
                   ))
                 ) : (
-                  <div className="flag-empty">
-                    <Flag />
-                    <span>
-                      Flags detected in note content or set in properties will
-                      collect here.
-                    </span>
-                  </div>
+                  <EmptyState
+                    icon={Flag}
+                    title="No flags captured yet"
+                    description="Flags detected in note content or set in properties will collect here."
+                    compact
+                  />
                 )}
               </div>
             </section>
