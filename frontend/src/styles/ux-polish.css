@@ -1,0 +1,417 @@
+/* ------------------------------------------------------------------
+   UX polish layer — additive only, uses existing tokens.
+   Loaded last so it refines (never replaces) layout/components.
+   ------------------------------------------------------------------ */
+
+/* Skip link: first focusable element, visible only on keyboard focus.
+   Gives keyboard and screen-reader users a fast path to the workspace. */
+.skip-link {
+  position: fixed;
+  top: -48px;
+  left: 12px;
+  z-index: 200;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: var(--shadow-lg);
+  transition: top var(--speed) var(--ease);
+}
+
+.skip-link:focus-visible {
+  top: 12px;
+  outline: 2px solid var(--accent-ink);
+  text-decoration: none;
+}
+
+/* One scannable focus treatment everywhere */
+:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+/* Cross-browser scrollbars for long trees and previews */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
+  background-clip: content-box;
+}
+
+/* Text selection follows the accent, readable in both themes */
+::selection {
+  background: var(--selection);
+  color: var(--text);
+}
+
+/* Buttons: consistent lift, pressed state, and disabled affordance */
+.btn,
+.icon-btn,
+.link-btn {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.btn:not(:disabled):hover,
+.icon-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.btn:not(:disabled):active,
+.icon-btn:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.btn:disabled,
+.icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  transform: none;
+}
+
+/* Icon buttons keep a visible hit area on touch */
+@media (pointer: coarse) {
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .btn {
+    min-height: 36px;
+  }
+}
+
+/* Inputs: clearer labels, focus ring, and placeholder contrast */
+input::placeholder,
+textarea::placeholder {
+  color: var(--faint);
+  opacity: 1;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--border-accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  outline: none;
+}
+
+/* Keyboard hints read as keys, not plain text */
+kbd {
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+/* Cards and panels share one elevation language */
+.dash-panel,
+.start-card,
+.template-tile,
+.flag-row,
+.work-row,
+.mini-row {
+  transition:
+    border-color var(--speed) var(--ease),
+    background var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease),
+    transform var(--speed) var(--ease);
+}
+
+.start-card:hover,
+.template-tile:hover,
+.flag-row:hover,
+.work-row:hover,
+.mini-row:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-md);
+}
+
+/* Empty states: one centered, scannable pattern */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--muted);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface-2) 45%, transparent);
+}
+
+.empty-state__icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.empty-state__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.empty-state__title {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.empty-state__description {
+  max-width: 42ch;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.empty-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.empty-state--compact {
+  padding: 18px 14px;
+}
+
+.empty-state--compact .empty-state__icon {
+  width: 36px;
+  height: 36px;
+}
+
+.empty-state--compact .empty-state__icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Legacy empty blocks align with the new pattern */
+.tree-empty,
+.palette-empty,
+.graph-empty,
+.attachment-empty,
+.dash-empty,
+.mini-empty,
+.flag-empty {
+  line-height: 1.6;
+}
+
+/* Skeleton shimmer for loading placeholders */
+.skeleton,
+.skel {
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-3) 50%,
+    var(--surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* Chips and pills wrap instead of clipping */
+.tag-chip,
+.target-pill,
+.pulse-cell,
+.source-row {
+  min-width: 0;
+}
+
+.tag-chip span,
+.target-pill span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Layout helpers for consistent spacing */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.spread {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* Divider with optional label */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--faint);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Responsive type scale for dashboard headings */
+.dash-title h1,
+.dash-head h1 {
+  font-size: clamp(20px, 2.4vw, 28px);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.dash-title p,
+.dash-head p {
+  text-wrap: pretty;
+}
+
+/* Long code and flags never break the layout */
+code,
+.flag-copy code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Editor and preview get a calm resting state */
+.editor-wrap,
+.preview-wrap,
+.note-editor {
+  scroll-padding: 16px;
+}
+
+/* Reduce motion: respect the OS and the app motion mode */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High-contrast (forced colors) support for Windows */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight;
+  }
+
+  .btn.primary {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .empty-state {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* Print: show the preview only, black on white */
+@media print {
+  body {
+    overflow: visible;
+    background: #fff;
+    color: #000;
+  }
+
+  .topbar,
+  .sidebar,
+  .statusbar,
+  .note-head,
+  .modal,
+  .toast-stack,
+  .tooltip-host {
+    display: none !important;
+  }
+
+  .workspace,
+  .app-main,
+  .app-shell {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
+  .preview-wrap,
+  .markdown-preview {
+    overflow: visible;
+    color: #000;
+  }
+}
+
+/* Small screens: keep primary actions reachable */
+@media (max-width: 560px) {
+  .empty-state {
+    padding: 20px 14px;
+  }
+
+  .dash-actions {
+    flex-wrap: wrap;
+  }
+
+  .btn.primary,
+  .btn.ghost {
+    min-height: 38px;
+  }
+}
+
+/* Medium screens: two-column desk grid collapses gracefully */
+@media (max-width: 1100px) {
+  .desk-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .desk-side {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+  }
+}

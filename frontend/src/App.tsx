@@ -64,6 +64,9 @@ export function App() {
       data-focus={focusMode ? "true" : "false"}
       data-mobile-sidebar={mobileSidebarOpen ? "true" : "false"}
     >
+      <a className="skip-link" href="#main-content">
+        Skip to workspace
+      </a>
       <Aurora />
       <CursorGlow />
       <TopBar />
@@ -75,7 +78,7 @@ export function App() {
           onClick={() => setMobileSidebar(false)}
           aria-label="Close the sidebar"
         />
-        <main className="workspace">
+        <main className="workspace" id="main-content" tabIndex={-1}>
           <div className="motion-page" key={note ? `note-${note.id}` : "desk"}>
             {note ? <NoteWorkspace /> : <Dashboard />}
           </div>
