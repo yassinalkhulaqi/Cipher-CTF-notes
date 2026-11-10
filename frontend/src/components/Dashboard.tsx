@@ -32,6 +32,7 @@ import type {
   FlagInsights,
   NodeSummary,
   Template,
+  TimelineEvent,
 } from "../lib/types";
 import { copyText, modLabel, plural, relativeTime } from "../lib/utils";
 import { timeGreeting } from "../lib/ux";
@@ -73,6 +74,8 @@ export function Dashboard() {
   const [flags, setFlags] = useState<FlagHit[]>([]);
   const [insights, setInsights] = useState<FlagInsights | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [activityLoading, setActivityLoading] = useState(true);
   const [copiedFlag, setCopiedFlag] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [burst, setBurst] = useState(0);
@@ -133,6 +136,26 @@ export function Dashboard() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setActivityLoading(true);
+    api
+      .timeline(null, 7)
+      .then((items) => {
+        if (cancelled) return;
+        setEvents(items);
+        setActivityLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setEvents([]);
+        setActivityLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [nodes]);
 
   useEffect(() => {
     if (stats.notes === 0) {
@@ -407,7 +430,7 @@ export function Dashboard() {
             className="pulse-cell"
             onClick={() => setFilter("")}
           >
-            <span className="pulse-label">Notes</span>
+            <span className="pulse-label">Total notes</span>
             <strong>
               <AnimatedNumber value={stats.notes} />
             </strong>
@@ -420,12 +443,25 @@ export function Dashboard() {
             className="pulse-cell"
             onClick={() => openModal("dashboard")}
           >
-            <span className="pulse-label">Captured</span>
+            <span className="pulse-label">Active challenges</span>
+            <strong>
+              <AnimatedNumber value={stats.statuses.active} />
+            </strong>
+            <span className="pulse-note">
+              <CircleDot /> {stats.statuses.done} completed
+            </span>
+          </button>
+          <button
+            type="button"
+            className="pulse-cell"
+            onClick={() => openModal("flag-intel")}
+          >
+            <span className="pulse-label">Captured flags</span>
             <strong className="green">
               <AnimatedNumber value={flags.length} />
             </strong>
             <span className="pulse-note">
-              <Flag /> {stats.statuses.done} completed
+              <Flag /> {stats.flagged} manual
             </span>
           </button>
           <button
@@ -442,22 +478,6 @@ export function Dashboard() {
             </strong>
             <span className="pulse-note">
               <Target /> {stats.targets[0]?.[0] ?? "none yet"}
-            </span>
-          </button>
-          <button
-            type="button"
-            className="pulse-cell"
-            onClick={() => {
-              const tag = stats.tags[0]?.[0];
-              if (tag) filterByTarget(tag);
-            }}
-          >
-            <span className="pulse-label">Tags</span>
-            <strong>
-              <AnimatedNumber value={stats.tags.length} />
-            </strong>
-            <span className="pulse-note">
-              <Tag /> {stats.tags[0]?.[0] ?? "untagged"}
             </span>
           </button>
         </div>
@@ -624,6 +644,15 @@ export function Dashboard() {
                 >
                   <Copy />
                 </button>
+                <button
+                  type="button"
+                  className="icon-btn sm"
+                  onClick={() => openModal("flag-intel")}
+                  aria-label="Open flag intelligence"
+                  title="Open flag intelligence"
+                >
+                  <ArrowUpRight />
+                </button>
               </div>
               <div className="flag-list">
                 {flagsLoading ? (
@@ -668,7 +697,15 @@ export function Dashboard() {
                       : "Flag intelligence"}
                   </span>
                 </div>
-                <Flag className="panel-glyph" />
+                <button
+                  type="button"
+                  className="icon-btn sm"
+                  onClick={() => openModal("flag-intel")}
+                  aria-label="Open flag intelligence"
+                  title="Open flag intelligence"
+                >
+                  <ArrowUpRight />
+                </button>
               </div>
               <div className="source-list">
                 {insights && insights.by_source.length > 0 ? (
@@ -701,16 +738,26 @@ export function Dashboard() {
                 )}
               </div>
               {insights && insights.missing_flag_notes > 0 ? (
-                <p className="mini-empty">
+                <button
+                  type="button"
+                  className="mini-empty mini-empty-action"
+                  onClick={() => openModal("flag-intel")}
+                >
                   {plural(insights.missing_flag_notes, "done note")} still
                   missing a captured flag.
-                </p>
+                  <ArrowUpRight />
+                </button>
               ) : null}
               {insights && insights.duplicates.length > 0 ? (
-                <p className="mini-empty">
+                <button
+                  type="button"
+                  className="mini-empty mini-empty-action"
+                  onClick={() => openModal("flag-intel")}
+                >
                   {plural(insights.duplicates.length, "flag")} appear on more
                   than one note.
-                </p>
+                  <ArrowUpRight />
+                </button>
               ) : null}
             </section>
 
@@ -775,6 +822,135 @@ export function Dashboard() {
               </div>
             </section>
           </aside>
+        </div>
+
+        <div className="dash-duo">
+          <section className="dash-panel activity-panel" data-tilt data-reveal>
+            <div className="dash-panel-head">
+              <div>
+                <h2>Research activity</h2>
+                <span>Last seven days</span>
+              </div>
+              <button
+                type="button"
+                className="link-btn"
+                onClick={() => openModal("timeline")}
+              >
+                View all <ArrowUpRight />
+              </button>
+            </div>
+            <div className="activity-list">
+              {activityLoading ? (
+                <Skeleton lines={4} compact />
+              ) : events.length ? (
+                events.slice(0, 6).map((event) => (
+                  <button
+                    key={`${event.node_id}-${event.at}`}
+                    type="button"
+                    className="activity-row"
+                    onClick={() => open(event.node_id)}
+                  >
+                    <span className={`activity-dot ${event.activity}`} />
+                    <span className="activity-copy">
+                      <strong>{event.title}</strong>
+                      <span>
+                        {event.activity === "created" ? "Created" : "Updated"}
+                        {event.path ? ` · ${event.path}` : ""}
+                      </span>
+                    </span>
+                    <span className="activity-time">
+                      {relativeTime(event.at)}
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <p className="mini-empty">
+                  Notes you create or update will show up here.
+                </p>
+              )}
+            </div>
+          </section>
+
+          <section
+            className="dash-panel quick-actions-panel"
+            data-tilt
+            data-reveal
+          >
+            <div className="dash-panel-head">
+              <div>
+                <h2>Quick actions</h2>
+                <span>Start structured work</span>
+              </div>
+              <Sparkles className="panel-glyph" />
+            </div>
+            <div className="quick-action-grid">
+              <button
+                type="button"
+                className="quick-action"
+                onClick={() => openNewNote(null, "ctf")}
+              >
+                <span className="quick-action-icon">
+                  <Crosshair />
+                </span>
+                <span>
+                  <strong>New CTF challenge</strong>
+                  <span>Recon, exploit, and flag sections</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                className="quick-action"
+                onClick={() => openNewNote(null, "host")}
+              >
+                <span className="quick-action-icon">
+                  <Server />
+                </span>
+                <span>
+                  <strong>New host recon</strong>
+                  <span>Scan notes and service inventory</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                className="quick-action"
+                onClick={() => openNewNote(null, "web")}
+              >
+                <span className="quick-action-icon">
+                  <Globe />
+                </span>
+                <span>
+                  <strong>New web assessment</strong>
+                  <span>Endpoints, findings, and evidence</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                className="quick-action"
+                onClick={() => openNewNote(null, "finding")}
+              >
+                <span className="quick-action-icon">
+                  <Bug />
+                </span>
+                <span>
+                  <strong>New finding</strong>
+                  <span>Impact, reproduction, and fix</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                className="quick-action"
+                onClick={() => openModal("quick-capture")}
+              >
+                <span className="quick-action-icon">
+                  <Zap />
+                </span>
+                <span>
+                  <strong>Quick capture</strong>
+                  <span>Drop a thought without leaving the desk</span>
+                </span>
+              </button>
+            </div>
+          </section>
         </div>
 
         <section className="dash-panel template-panel" data-tilt data-reveal>

@@ -17,4 +17,7 @@
 @import "./motion-utilities.css";
 @import "./motion-responsive.css";
 @import "./motion-accessibility.css";
+@import "./inspector.css";
+@import "./flag-intel.css";
+@import "./workbench.css";
 @import "./ux-polish.css";

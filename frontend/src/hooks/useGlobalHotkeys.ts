@@ -79,6 +79,25 @@ export function useGlobalHotkeys(): void {
         ui.openModal("dashboard");
         return;
       }
+      if (mod && event.shiftKey && key === "i") {
+        event.preventDefault();
+        ui.openModal("flag-intel");
+        return;
+      }
+      if (mod && event.shiftKey && key === "j") {
+        event.preventDefault();
+        if (!app.note) {
+          ui.toast("Open a note to use the inspector", "default");
+          return;
+        }
+        ui.toggleInspector();
+        return;
+      }
+      if (mod && event.shiftKey && key === "b") {
+        event.preventDefault();
+        ui.toggleSidebarCollapsed();
+        return;
+      }
       if (mod && event.shiftKey && key === "n") {
         event.preventDefault();
         ui.openNewFolder();

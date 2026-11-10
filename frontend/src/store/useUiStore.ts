@@ -16,10 +16,13 @@ export type ModalName =
   | "graph"
   | "timeline"
   | "quick-capture"
+  | "flag-intel"
   | "confirm"
   | null;
 
 export type FindMode = "find" | "replace";
+
+export type InspectorTab = "outline" | "links" | "properties";
 
 export interface ToastItem {
   id: number;
@@ -46,6 +49,9 @@ interface UiState {
   toasts: ToastItem[];
   confirmRequest: ConfirmRequest | null;
   mobileSidebarOpen: boolean;
+  sidebarCollapsed: boolean;
+  inspectorOpen: boolean;
+  inspectorTab: InspectorTab;
   findMode: FindMode | null;
   cursorLine: number;
   cursorColumn: number;
@@ -61,6 +67,11 @@ interface UiState {
   toast: (message: string, tone?: ToastItem["tone"]) => void;
   dismissToast: (id: number) => void;
   setMobileSidebar: (open: boolean) => void;
+  toggleSidebarCollapsed: () => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+  toggleInspector: () => void;
+  setInspectorOpen: (open: boolean, persist?: boolean) => void;
+  setInspectorTab: (tab: InspectorTab) => void;
   openFind: (mode?: FindMode) => void;
   closeFind: () => void;
   setCursorPosition: (line: number, column: number) => void;
@@ -70,6 +81,25 @@ let toastId = 0;
 let modalCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
 const MODAL_EXIT_MS = 160;
+const SIDEBAR_STORAGE_KEY = "redscribe.sidebarCollapsed";
+const INSPECTOR_STORAGE_KEY = "redscribe.inspectorOpen";
+
+function readStoredFlag(key: string, fallback: boolean): boolean {
+  try {
+    const value = window.localStorage.getItem(key);
+    return value === null ? fallback : value === "1";
+  } catch {
+    return fallback;
+  }
+}
+
+function storeFlag(key: string, value: boolean): void {
+  try {
+    window.localStorage.setItem(key, value ? "1" : "0");
+  } catch {
+    return;
+  }
+}
 
 export const useUiStore = create<UiState>()((set, get) => ({
   modal: null,
@@ -82,6 +112,9 @@ export const useUiStore = create<UiState>()((set, get) => ({
   toasts: [],
   confirmRequest: null,
   mobileSidebarOpen: false,
+  sidebarCollapsed: readStoredFlag(SIDEBAR_STORAGE_KEY, false),
+  inspectorOpen: readStoredFlag(INSPECTOR_STORAGE_KEY, true),
+  inspectorTab: "outline",
   findMode: null,
   cursorLine: 1,
   cursorColumn: 1,
@@ -170,6 +203,30 @@ export const useUiStore = create<UiState>()((set, get) => ({
   },
 
   setMobileSidebar: (open) => set({ mobileSidebarOpen: open }),
+
+  toggleSidebarCollapsed: () => {
+    const next = !get().sidebarCollapsed;
+    storeFlag(SIDEBAR_STORAGE_KEY, next);
+    set({ sidebarCollapsed: next });
+  },
+
+  setSidebarCollapsed: (collapsed) => {
+    storeFlag(SIDEBAR_STORAGE_KEY, collapsed);
+    set({ sidebarCollapsed: collapsed });
+  },
+
+  toggleInspector: () => {
+    const next = !get().inspectorOpen;
+    storeFlag(INSPECTOR_STORAGE_KEY, next);
+    set({ inspectorOpen: next });
+  },
+
+  setInspectorOpen: (open, persist = true) => {
+    if (persist) storeFlag(INSPECTOR_STORAGE_KEY, open);
+    set({ inspectorOpen: open });
+  },
+
+  setInspectorTab: (tab) => set({ inspectorTab: tab }),
 
   openFind: (mode = "find") => set({ findMode: mode }),
 

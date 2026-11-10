@@ -1,23 +1,29 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import {
   Activity,
+  Bug,
   Code2,
   Command,
   Copy,
+  Crosshair,
   FilePlus2,
   FileText,
   Flag,
   FolderPlus,
   Focus,
+  Globe,
   Keyboard,
   LayoutDashboard,
   Moon,
   CalendarClock,
   Network,
+  PanelLeft,
+  PanelRight,
   Pin,
   Plus,
   Save,
   Search,
+  Server,
   Settings,
   SlidersHorizontal,
   Sun,
@@ -57,6 +63,10 @@ export function CommandPalette() {
   const openNewNote = useUiStore((state) => state.openNewNote);
   const openNewFolder = useUiStore((state) => state.openNewFolder);
   const closeModal = useUiStore((state) => state.closeModal);
+  const toggleInspector = useUiStore((state) => state.toggleInspector);
+  const toggleSidebarCollapsed = useUiStore(
+    (state) => state.toggleSidebarCollapsed,
+  );
   const toast = useUiStore((state) => state.toast);
 
   const [query, setQuery] = useState("");
@@ -74,6 +84,30 @@ export function CommandPalette() {
         icon: FilePlus2,
         shortcut: `${modLabel()} N`,
         run: () => openNewNote(),
+      },
+      {
+        label: "New CTF challenge",
+        detail: "Start from the challenge template",
+        icon: Crosshair,
+        run: () => openNewNote(null, "ctf"),
+      },
+      {
+        label: "New host recon",
+        detail: "Start from the host recon template",
+        icon: Server,
+        run: () => openNewNote(null, "host"),
+      },
+      {
+        label: "New web assessment",
+        detail: "Start from the web assessment template",
+        icon: Globe,
+        run: () => openNewNote(null, "web"),
+      },
+      {
+        label: "New finding",
+        detail: "Start from the finding template",
+        icon: Bug,
+        run: () => openNewNote(null, "finding"),
       },
       {
         label: "Quick capture",
@@ -109,6 +143,28 @@ export function CommandPalette() {
         icon: LayoutDashboard,
         shortcut: `${modLabel()} Shift D`,
         run: () => openModal("dashboard"),
+      },
+      {
+        label: "Flag intelligence",
+        detail: "Review captured flags and format health",
+        icon: Flag,
+        shortcut: `${modLabel()} Shift I`,
+        run: () => openModal("flag-intel"),
+      },
+      {
+        label: "Toggle inspector",
+        detail: "Outline, links, and note properties",
+        icon: PanelRight,
+        shortcut: `${modLabel()} Shift J`,
+        run: () =>
+          note ? toggleInspector() : toast("Open a note first", "default"),
+      },
+      {
+        label: "Toggle sidebar",
+        detail: "Collapse or expand the vault sidebar",
+        icon: PanelLeft,
+        shortcut: `${modLabel()} Shift B`,
+        run: toggleSidebarCollapsed,
       },
       {
         label: "Vault graph",
@@ -207,6 +263,8 @@ export function CommandPalette() {
       saveNow,
       setTheme,
       toggleFocusMode,
+      toggleInspector,
+      toggleSidebarCollapsed,
       toast,
     ],
   );

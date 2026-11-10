@@ -26,6 +26,8 @@ import {
   List,
   ListOrdered,
   MoreHorizontal,
+  PanelRight,
+  PanelRightClose,
   PenLine,
   Pin,
   PinOff,
@@ -35,6 +37,7 @@ import {
   SlidersHorizontal,
   SquareCode,
   Strikethrough,
+  Table2,
   Tag,
   Target,
   Trash2,
@@ -48,7 +51,7 @@ import {
   type MarkdownEditorHandle,
 } from "./editor/MarkdownEditor";
 import { MarkdownPreview } from "./editor/MarkdownPreview";
-import { BacklinkPanel } from "./BacklinkPanel";
+import { NoteInspector } from "./NoteInspector";
 import { Menu, type MenuEntry } from "./Menu";
 import { StatusIcon } from "./StatusIcon";
 import { ScrollProgress } from "../motion/ScrollProgress";
@@ -61,6 +64,7 @@ import {
   plural,
   wordCount,
 } from "../lib/utils";
+import { readingTime } from "../lib/ux";
 import { STATUS_LABEL } from "../lib/constants";
 
 function ToolButton({
@@ -115,6 +119,9 @@ export function NoteWorkspace() {
   const askConfirm = useUiStore((state) => state.askConfirm);
   const toast = useUiStore((state) => state.toast);
   const setMobileSidebar = useUiStore((state) => state.setMobileSidebar);
+  const inspectorOpen = useUiStore((state) => state.inspectorOpen);
+  const toggleInspector = useUiStore((state) => state.toggleInspector);
+  const setInspectorOpen = useUiStore((state) => state.setInspectorOpen);
 
   const editorRef = useRef<MarkdownEditorHandle>(null);
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
@@ -130,6 +137,7 @@ export function NoteWorkspace() {
   );
 
   const mobile = useMediaQuery("(max-width: 720px)");
+  const compact = useMediaQuery("(max-width: 1180px)");
   const effectiveView = mobile && viewMode === "split" ? "editor" : viewMode;
   const preview = usePreview(
     draft,
@@ -166,6 +174,10 @@ export function NoteWorkspace() {
     }, 50);
     return () => window.clearTimeout(timer);
   }, [note?.id]);
+
+  useEffect(() => {
+    if (compact) setInspectorOpen(false, false);
+  }, [compact, setInspectorOpen]);
 
   useEffect(() => {
     const insert = (event: Event) => {
@@ -397,6 +409,11 @@ export function NoteWorkspace() {
     );
   };
 
+  const revealLine = (line: number) => {
+    if (effectiveView === "preview") setViewMode("split");
+    window.requestAnimationFrame(() => editorRef.current?.revealLine(line));
+  };
+
   const formatButton = (
     icon: LucideIcon,
     label: string,
@@ -472,6 +489,16 @@ export function NoteWorkspace() {
               aria-label="Note properties"
             >
               <SlidersHorizontal />
+            </button>
+            <button
+              className={`icon-btn ${inspectorOpen ? "active" : ""}`}
+              type="button"
+              onClick={toggleInspector}
+              title={`Toggle inspector (${modLabel()}+Shift+J)`}
+              aria-label="Toggle inspector"
+              aria-pressed={inspectorOpen}
+            >
+              {inspectorOpen ? <PanelRightClose /> : <PanelRight />}
             </button>
             <button
               className="icon-btn"
@@ -628,8 +655,6 @@ export function NoteWorkspace() {
         </div>
       </header>
 
-      <BacklinkPanel key={note.id} noteId={note.id} />
-
       {saveState === "error" ? (
         <div className="save-error-banner" role="alert">
           <AlertTriangle />
@@ -704,12 +729,19 @@ export function NoteWorkspace() {
               {formatButton(SquareCode, "Code block", undefined, () =>
                 editorRef.current?.insertBlock("```bash\n\n```\n"),
               )}
+              {formatButton(Table2, "Table", undefined, () =>
+                editorRef.current?.insertBlock(
+                  "| Column | Column |\n| --- | --- |\n| Value | Value |\n",
+                ),
+              )}
               <span className="tool-sep" />
               {formatButton(Search, "Find in note", `${modLabel()}+F`, () =>
                 openFind("find"),
               )}
             </div>
-            <span className="pane-meta">{plural(words, "word")}</span>
+            <span className="pane-meta">
+              {plural(words, "word")} · {readingTime(draft)}
+            </span>
             <button
               type="button"
               className="icon-btn sm pane-copy"
@@ -772,6 +804,15 @@ export function NoteWorkspace() {
             emptyText="Nothing to preview yet. Start typing in the editor to see the rendered note."
           />
         </section>
+
+        {inspectorOpen ? (
+          <NoteInspector
+            key={note.id}
+            note={note}
+            draft={draft}
+            onRevealLine={revealLine}
+          />
+        ) : null}
       </div>
 
       {exportMenu ? (

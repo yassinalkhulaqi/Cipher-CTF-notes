@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Network, Search } from "lucide-react";
+import { ArrowUpRight, Flag, Network, Search, X } from "lucide-react";
 import { api } from "../../lib/api";
+import { STATUS_LABEL } from "../../lib/constants";
 import type { GraphNode, VaultGraph } from "../../lib/types";
 import { useAppStore } from "../../store/useAppStore";
 import { useUiStore } from "../../store/useUiStore";
+import { StatusIcon } from "../StatusIcon";
 import { Modal } from "./Modal";
 
 interface Point {
@@ -36,6 +38,7 @@ export function GraphModal() {
   const [graph, setGraph] = useState<VaultGraph | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const positionsRef = useRef<Map<number, Point>>(new Map());
   const frameRef = useRef<number | null>(null);
   const alphaRef = useRef(1);
@@ -206,6 +209,25 @@ export function GraphModal() {
     return { minX: minX - 40, minY: minY - 40, width, height };
   }, [visibleNodes, positions]);
 
+  const selected = useMemo(
+    () => visibleNodes.find((node) => node.id === selectedId) ?? null,
+    [selectedId, visibleNodes],
+  );
+
+  const selectedConnections = useMemo(() => {
+    if (!selected || !graph) return 0;
+    return graph.edges.filter(
+      (edge) => edge.source === selected.id || edge.target === selected.id,
+    ).length;
+  }, [graph, selected]);
+
+  useEffect(() => {
+    if (selectedId === null) return;
+    if (!visibleNodes.some((node) => node.id === selectedId)) {
+      setSelectedId(null);
+    }
+  }, [selectedId, visibleNodes]);
+
   const open = (node: GraphNode) => {
     if (node.kind !== "note") return;
     closeModal();
@@ -256,13 +278,15 @@ export function GraphModal() {
               {danglingCount > 0 ? ` · ${danglingCount} unresolved` : ""}
             </span>
           </div>
-          <div className="graph-canvas-wrap">
-            {visibleNodes.length > 0 ? (
-              <svg
-                className="graph-canvas"
+          <div className="graph-stage">
+            <div className="graph-canvas-wrap">
+              {visibleNodes.length > 0 ? (
+                <svg
+                  className="graph-canvas"
                 viewBox={`0 0 ${bounds.width} ${bounds.height}`}
                 role="img"
                 aria-label="Vault knowledge graph"
+                onClick={() => setSelectedId(null)}
               >
                 {visibleEdges.map((edge) => {
                   const source = positions.get(edge.source);
@@ -286,8 +310,21 @@ export function GraphModal() {
                   return (
                     <g
                       key={node.id}
-                      className={`graph-node ${isReference ? "reference" : ""}`}
-                      onClick={() => open(node)}
+                      className={`graph-node ${isReference ? "reference" : ""} ${selectedId === node.id ? "selected" : ""}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setSelectedId(node.id);
+                      }}
+                      onDoubleClick={() => open(node)}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter" && event.key !== " ") return;
+                        event.preventDefault();
+                        if (node.kind === "note") open(node);
+                        else setSelectedId(node.id);
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`${node.title}${node.kind === "note" ? ", note" : `, ${node.kind}`}`}
                     >
                       <circle
                         cx={point.x}
@@ -329,6 +366,80 @@ export function GraphModal() {
                 </button>
               </div>
             )}
+            </div>
+            {selected ? (
+              <aside className="graph-details" aria-label="Selected node">
+                <div className="graph-details-head">
+                  <span className="graph-kind">{selected.kind}</span>
+                  <button
+                    type="button"
+                    className="icon-btn sm"
+                    onClick={() => setSelectedId(null)}
+                    aria-label="Clear selection"
+                  >
+                    <X />
+                  </button>
+                </div>
+                <h3>{selected.title}</h3>
+                <p className="graph-details-path">
+                  {selected.path || "Vault root"}
+                </p>
+                <div className="graph-details-meta">
+                  {selected.kind === "note" ? (
+                    <div className="graph-detail-row">
+                      <span>Status</span>
+                      <span className="graph-detail-value">
+                        <StatusIcon
+                          status={selected.status}
+                          label={STATUS_LABEL[selected.status]}
+                        />
+                        {STATUS_LABEL[selected.status]}
+                      </span>
+                    </div>
+                  ) : null}
+                  <div className="graph-detail-row">
+                    <span>Connections</span>
+                    <strong>{selectedConnections}</strong>
+                  </div>
+                  {selected.target ? (
+                    <div className="graph-detail-row">
+                      <span>Target</span>
+                      <strong>{selected.target}</strong>
+                    </div>
+                  ) : null}
+                  {selected.flag ? (
+                    <div className="graph-detail-row">
+                      <span>Flag</span>
+                      <code className="graph-detail-flag">
+                        <Flag />
+                        {selected.flag}
+                      </code>
+                    </div>
+                  ) : null}
+                  {selected.tags.length ? (
+                    <div className="graph-detail-tags">
+                      {selected.tags.map((tag) => (
+                        <span key={tag}>#{tag}</span>
+                      ))}
+                    </div>
+                  ) : null}
+                  {selected.pinned ? (
+                    <div className="graph-detail-row">
+                      <span>Pinned</span>
+                      <strong>Yes</strong>
+                    </div>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  className="btn primary graph-detail-open"
+                  disabled={selected.kind !== "note"}
+                  onClick={() => open(selected)}
+                >
+                  Open note <ArrowUpRight />
+                </button>
+              </aside>
+            ) : null}
           </div>
         </>
       )}

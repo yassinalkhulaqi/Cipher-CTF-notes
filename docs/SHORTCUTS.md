@@ -13,6 +13,9 @@
 | `Ctrl+Shift+G` | Vault graph |
 | `Ctrl+Shift+T` | Timeline (recent vault activity) |
 | `Ctrl+Shift+Q` | Quick capture |
+| `Ctrl+Shift+I` | Flag intelligence |
+| `Ctrl+Shift+J` | Toggle the note inspector |
+| `Ctrl+Shift+B` | Collapse or expand the sidebar |
 | `Ctrl+Shift+P` | Pin or unpin the current note |
 | `Ctrl+E` | Cycle Write / Split / Preview |
 | `Ctrl+S` | Save the current note |

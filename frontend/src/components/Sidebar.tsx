@@ -9,9 +9,11 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import {
+  CalendarClock,
   ChevronRight,
   ChevronsDownUp,
   ChevronsUpDown,
+  Code2,
   Copy,
   FilePlus2,
   FileText,
@@ -19,9 +21,14 @@ import {
   Folder,
   FolderOpen,
   FolderPlus,
+  LayoutDashboard,
+  Network,
+  PanelLeftClose,
+  PanelLeftOpen,
   Pencil,
   Pin,
   Search,
+  Settings,
   Sparkles,
   Trash2,
   X,
@@ -30,6 +37,7 @@ import { Menu, type MenuEntry } from "./Menu";
 import { StatusIcon } from "./StatusIcon";
 import { useFlipList } from "../motion/useFlipList";
 import { useFloatingSelection } from "../motion/useFloatingSelection";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 import {
   allIds,
   countNotes,
@@ -249,6 +257,8 @@ export function Sidebar() {
   const renameNode = useAppStore((state) => state.renameNode);
   const trashNode = useAppStore((state) => state.trashNode);
   const loadDemo = useAppStore((state) => state.loadDemo);
+  const note = useAppStore((state) => state.note);
+  const closeNote = useAppStore((state) => state.closeNote);
 
   const openModal = useUiStore((state) => state.openModal);
   const openNewNote = useUiStore((state) => state.openNewNote);
@@ -257,6 +267,13 @@ export function Sidebar() {
   const toast = useUiStore((state) => state.toast);
   const mobileSidebarOpen = useUiStore((state) => state.mobileSidebarOpen);
   const setMobileSidebar = useUiStore((state) => state.setMobileSidebar);
+  const sidebarCollapsed = useUiStore((state) => state.sidebarCollapsed);
+  const setSidebarCollapsed = useUiStore((state) => state.setSidebarCollapsed);
+  const toggleSidebarCollapsed = useUiStore(
+    (state) => state.toggleSidebarCollapsed,
+  );
+  const mobile = useMediaQuery("(max-width: 920px)");
+  const collapsed = sidebarCollapsed && !mobile;
 
   const [context, setContext] = useState<ContextState | null>(null);
   const [draggingId, setDraggingId] = useState<number | null>(null);
@@ -285,6 +302,13 @@ export function Sidebar() {
     [nodes],
   );
   const noteTotal = useMemo(() => countNotes(tree), [tree]);
+  const flaggedCount = useMemo(
+    () =>
+      Array.from(nodes.values()).filter(
+        (node) => node.kind === "note" && !node.trashed && node.flag,
+      ).length,
+    [nodes],
+  );
   const folderIds = useMemo(
     () =>
       Array.from(nodes.values())
@@ -326,6 +350,17 @@ export function Sidebar() {
   }, []);
 
   const closeMobile = () => setMobileSidebar(false);
+
+  const goDashboard = () => {
+    closeMobile();
+    if (!note) return;
+    void closeNote().catch((error: unknown) =>
+      toast(
+        error instanceof Error ? error.message : "Could not close the note",
+        "error",
+      ),
+    );
+  };
 
   const handleSelect = (id: number) => {
     closeMobile();
@@ -631,6 +666,102 @@ export function Sidebar() {
     }
   };
 
+  if (collapsed) {
+    return (
+      <nav className="sidebar sidebar-rail" aria-label="Vault rail">
+        <button
+          type="button"
+          className="rail-brand"
+          onClick={() => setSidebarCollapsed(false)}
+          data-tooltip="Expand sidebar"
+          aria-label="Expand sidebar"
+        >
+          <PanelLeftOpen />
+        </button>
+        <div className="rail-group">
+          <button
+            type="button"
+            className={`rail-btn ${!note ? "active" : ""}`}
+            onClick={goDashboard}
+            data-tooltip="Dashboard"
+            aria-label="Dashboard"
+            aria-current={!note ? "page" : undefined}
+          >
+            <LayoutDashboard />
+          </button>
+          <button
+            type="button"
+            className="rail-btn"
+            onClick={() => {
+              closeMobile();
+              openModal("flag-intel");
+            }}
+            data-tooltip="Flag intelligence"
+            aria-label="Flag intelligence"
+          >
+            <Flag />
+          </button>
+          <button
+            type="button"
+            className="rail-btn"
+            onClick={() => {
+              closeMobile();
+              openModal("snippets");
+            }}
+            data-tooltip="Snippet library"
+            aria-label="Snippet library"
+          >
+            <Code2 />
+          </button>
+          <button
+            type="button"
+            className="rail-btn"
+            onClick={() => {
+              closeMobile();
+              openModal("graph");
+            }}
+            data-tooltip="Vault graph"
+            aria-label="Vault graph"
+          >
+            <Network />
+          </button>
+          <button
+            type="button"
+            className="rail-btn"
+            onClick={() => {
+              closeMobile();
+              openModal("timeline");
+            }}
+            data-tooltip="Recent activity"
+            aria-label="Recent activity"
+          >
+            <CalendarClock />
+          </button>
+        </div>
+        <div className="rail-group rail-bottom">
+          <button
+            type="button"
+            className="rail-btn"
+            onClick={() => openNewNote()}
+            data-tooltip="New note"
+            aria-label="New note"
+          >
+            <FilePlus2 />
+          </button>
+          <button
+            type="button"
+            className="rail-btn"
+            onClick={() => openModal("settings")}
+            data-tooltip="Settings"
+            aria-label="Settings"
+          >
+            <Settings />
+          </button>
+        </div>
+      </nav>
+    );
+  }
+
   return (
     <nav
       className="sidebar"
@@ -654,6 +785,15 @@ export function Sidebar() {
           <span className="sidebar-count">{plural(noteTotal, "note")}</span>
         </div>
         <div className="sidebar-tools">
+          <button
+            type="button"
+            className="icon-btn sm"
+            onClick={toggleSidebarCollapsed}
+            title="Collapse sidebar"
+            aria-label="Collapse sidebar"
+          >
+            <PanelLeftClose />
+          </button>
           <button
             type="button"
             className="icon-btn sm"
@@ -684,6 +824,65 @@ export function Sidebar() {
             <Trash2 />
           </button>
         </div>
+      </div>
+
+      <div className="sidebar-nav" aria-label="Workspace views">
+        <button
+          type="button"
+          className={`sidebar-nav-row ${!note ? "active" : ""}`}
+          onClick={goDashboard}
+          aria-current={!note ? "page" : undefined}
+        >
+          <LayoutDashboard />
+          <span>Dashboard</span>
+        </button>
+        <button
+          type="button"
+          className="sidebar-nav-row"
+          onClick={() => {
+            closeMobile();
+            openModal("flag-intel");
+          }}
+        >
+          <Flag />
+          <span>Flag intelligence</span>
+          {flaggedCount > 0 ? (
+            <span className="sidebar-nav-count">{flaggedCount}</span>
+          ) : null}
+        </button>
+        <button
+          type="button"
+          className="sidebar-nav-row"
+          onClick={() => {
+            closeMobile();
+            openModal("snippets");
+          }}
+        >
+          <Code2 />
+          <span>Snippet library</span>
+        </button>
+        <button
+          type="button"
+          className="sidebar-nav-row"
+          onClick={() => {
+            closeMobile();
+            openModal("graph");
+          }}
+        >
+          <Network />
+          <span>Vault graph</span>
+        </button>
+        <button
+          type="button"
+          className="sidebar-nav-row"
+          onClick={() => {
+            closeMobile();
+            openModal("timeline");
+          }}
+        >
+          <CalendarClock />
+          <span>Recent activity</span>
+        </button>
       </div>
 
       <div className="sidebar-search">

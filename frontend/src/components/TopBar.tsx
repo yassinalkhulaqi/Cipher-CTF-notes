@@ -1,7 +1,9 @@
 import {
+  ChevronRight,
   CircleHelp,
   Code2,
   Command,
+  Flag,
   HardDrive,
   LayoutDashboard,
   Menu,
@@ -11,6 +13,7 @@ import {
   Search,
   Settings,
   Sun,
+  Zap,
 } from "lucide-react";
 import { BrandMark } from "./BrandMark";
 import { startThemeTransition } from "../lib/viewTransition";
@@ -23,7 +26,8 @@ export function TopBar() {
   const setTheme = useAppStore((state) => state.setTheme);
   const closeNote = useAppStore((state) => state.closeNote);
   const boot = useAppStore((state) => state.boot);
-  const hasNote = useAppStore((state) => state.note !== null);
+  const note = useAppStore((state) => state.note);
+  const hasNote = note !== null;
   const openModal = useUiStore((state) => state.openModal);
   const openNewNote = useUiStore((state) => state.openNewNote);
   const toast = useUiStore((state) => state.toast);
@@ -83,6 +87,13 @@ export function TopBar() {
           </span>
         ) : null}
         <span className="topbar-divider desktop-only" />
+        <span
+          className="topbar-context desktop-only"
+          title={note ? note.path : "Research desk"}
+        >
+          <ChevronRight />
+          <span>{note ? note.title : "Research desk"}</span>
+        </span>
       </div>
 
       <div className="topbar-center">
@@ -107,6 +118,24 @@ export function TopBar() {
           aria-label="Full-text search"
         >
           <Search />
+        </button>
+        <button
+          className="icon-btn desktop-only"
+          type="button"
+          onClick={() => openModal("quick-capture")}
+          data-tooltip={`Quick capture (${modLabel()}+Shift+Q)`}
+          aria-label="Quick capture"
+        >
+          <Zap />
+        </button>
+        <button
+          className="icon-btn desktop-only"
+          type="button"
+          onClick={() => openModal("flag-intel")}
+          data-tooltip={`Flag intelligence (${modLabel()}+Shift+I)`}
+          aria-label="Flag intelligence"
+        >
+          <Flag />
         </button>
         <button
           className="icon-btn desktop-only"
