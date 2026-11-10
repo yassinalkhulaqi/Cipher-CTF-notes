@@ -4,6 +4,7 @@ import { useUiStore } from "../../store/useUiStore";
 import { CommandPalette } from "./CommandPalette";
 import { ConfirmModal } from "./ConfirmModal";
 import { DashboardModal } from "./DashboardModal";
+import { FlagIntelModal } from "./FlagIntelModal";
 import { GraphModal } from "./GraphModal";
 import { HelpModal } from "./HelpModal";
 import { ModalExitContext } from "./Modal";
@@ -43,6 +44,8 @@ function renderModal(name: Exclude<ModalName, null>) {
       return <GraphModal />;
     case "timeline":
       return <TimelineModal />;
+    case "flag-intel":
+      return <FlagIntelModal />;
     case "quick-capture":
       return <QuickCaptureModal />;
     case "settings":

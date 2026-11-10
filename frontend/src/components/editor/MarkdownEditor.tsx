@@ -28,6 +28,7 @@ export interface MarkdownEditorHandle {
   toggleLinePrefix: (prefix: string) => void;
   insertBlock: (block: string) => void;
   insertText: (text: string) => void;
+  revealLine: (line: number) => void;
 }
 
 interface MarkdownEditorProps {
@@ -348,6 +349,26 @@ export const MarkdownEditor = forwardRef<
     applyText(next, start + text.length, start + text.length);
   };
 
+  const revealLine = (line: number) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const allLines = value.split("\n");
+    const target = Math.min(Math.max(1, line), Math.max(1, allLines.length));
+    let offset = 0;
+    for (let index = 0; index < target - 1; index += 1) {
+      offset += (allLines[index]?.length ?? 0) + 1;
+    }
+    const end = offset + (allLines[target - 1]?.length ?? 0);
+    editor.focus();
+    editor.setSelectionRange(offset, end);
+    editor.scrollTop = Math.max(0, (target - 2) * 22);
+    if (highlightRef.current) {
+      highlightRef.current.scrollTop = editor.scrollTop;
+    }
+    updateCursor();
+    onScroll?.(editor.scrollTop, editor.scrollHeight - editor.clientHeight);
+  };
+
   useImperativeHandle(ref, () => ({
     focus: () => editorRef.current?.focus(),
     scrollToTop: () => {
@@ -358,6 +379,7 @@ export const MarkdownEditor = forwardRef<
     toggleLinePrefix,
     insertBlock,
     insertText,
+    revealLine,
   }));
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {

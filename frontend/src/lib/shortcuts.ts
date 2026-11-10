@@ -28,6 +28,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
         detail: "Recent vault activity",
       },
       { keys: ["Ctrl", "Shift", "Q"], label: "Quick capture" },
+      { keys: ["Ctrl", "Shift", "I"], label: "Flag intelligence" },
       { keys: ["F1"], label: "Keyboard shortcuts" },
     ],
   },
@@ -56,6 +57,8 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
     title: "Workspace",
     items: [
       { keys: ["Ctrl", "E"], label: "Cycle editor, split, and preview" },
+      { keys: ["Ctrl", "Shift", "J"], label: "Toggle note inspector" },
+      { keys: ["Ctrl", "Shift", "B"], label: "Collapse or expand sidebar" },
       { keys: ["Ctrl", ","], label: "Settings" },
       { keys: ["Ctrl", "Shift", "L"], label: "Toggle focus mode" },
       { keys: ["Esc"], label: "Close dialog or command palette" },

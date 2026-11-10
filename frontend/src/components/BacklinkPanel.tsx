@@ -5,7 +5,13 @@ import type { NoteLinks } from "../lib/types";
 import { useAppStore } from "../store/useAppStore";
 import { useUiStore } from "../store/useUiStore";
 
-export function BacklinkPanel({ noteId }: { noteId: number }) {
+export function BacklinkPanel({
+  noteId,
+  className = "",
+}: {
+  noteId: number;
+  className?: string;
+}) {
   const openNote = useAppStore((state) => state.openNote);
   const toast = useUiStore((state) => state.toast);
 
@@ -46,7 +52,7 @@ export function BacklinkPanel({ noteId }: { noteId: number }) {
 
   if (error) {
     return (
-      <div className="backlinks backlinks-error" role="status">
+      <div className={`backlinks backlinks-error ${className}`.trim()} role="status">
         <Unlink />
         <span>{error}</span>
       </div>
@@ -54,14 +60,14 @@ export function BacklinkPanel({ noteId }: { noteId: number }) {
   }
 
   if (!links) {
-    return <div className="backlinks" aria-busy="true" />;
+    return <div className={`backlinks ${className}`.trim()} aria-busy="true" />;
   }
 
   const total =
     links.backlinks.length + links.outlinks.length + links.unresolved.length;
   if (total === 0) {
     return (
-      <div className="backlinks" aria-label="No links for this note">
+      <div className={`backlinks ${className}`.trim()} aria-label="No links for this note">
         <span className="backlinks-hint">
           <Link2Off />
           No links yet. Use <code>[[Note Title]]</code> to connect notes.
@@ -71,7 +77,7 @@ export function BacklinkPanel({ noteId }: { noteId: number }) {
   }
 
   return (
-    <div className="backlinks" aria-label="Note links">
+    <div className={`backlinks ${className}`.trim()} aria-label="Note links">
       {links.backlinks.length > 0 ? (
         <section className="backlinks-group">
           <h3>

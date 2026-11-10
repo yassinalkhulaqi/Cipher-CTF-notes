@@ -48,6 +48,12 @@ captured flags, active and pinned notes, targets, tags, and starter templates.
 The editor renders a syntax-highlighted overlay behind a transparent textarea
 with a plain mode for composition, large notes, and accessibility.
 
+The research workbench adds a collapsible icon rail for workspace navigation, a
+note inspector for outline, links, and properties, a graph selection panel, and
+a flag intelligence view for captured values, format shape, duplicates, and
+gaps. Flag labels describe format shape only; they are not validation.
+
 Tokens live in `frontend/src/styles/tokens.css`; layout, workspace, modal, and
 feedback styles are split into focused stylesheets imported by
-`frontend/src/styles/index.css`.
+`frontend/src/styles/index.css`. The workbench additions live in
+`inspector.css`, `flag-intel.css`, and `workbench.css`.
