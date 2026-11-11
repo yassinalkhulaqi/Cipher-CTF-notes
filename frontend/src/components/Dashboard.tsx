@@ -33,13 +33,13 @@ import { copyText, modLabel, plural, relativeTime } from "../lib/utils";
 import { timeGreeting } from "../lib/ux";
 import { EmptyState } from "./EmptyState";
 import { ContinueWorking } from "./dashboard/ContinueWorking";
+import { MiniNotesPanel } from "./dashboard/MiniNotesPanel";
 import { PulseStrip } from "./dashboard/PulseStrip";
 import { useDashboardData } from "../hooks/useDashboardData";
 import { Confetti } from "../motion/Confetti";
 import { Skeleton } from "../motion/Skeleton";
 import { useAppStore } from "../store/useAppStore";
 import { useUiStore } from "../store/useUiStore";
-import { StatusIcon } from "./StatusIcon";
 
 const TEMPLATE_ICONS: Record<string, LucideIcon> = {
   blank: FileText,
@@ -365,87 +365,27 @@ export function Dashboard() {
             />
 
             <div className="dash-split">
-              <section className="dash-panel compact" data-tilt data-reveal>
-                <div className="dash-panel-head">
-                  <div>
-                    <h2>In progress</h2>
-                    <span>{active.length || "No"} active notes</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="icon-btn sm"
-                    onClick={() => setFilter("")}
-                    aria-label="View all notes"
-                    title="View all notes"
-                  >
-                    <ArrowUpRight />
-                  </button>
-                </div>
-                <div className="mini-list">
-                  {active.length ? (
-                    active.map((note) => (
-                      <button
-                        key={note.id}
-                        type="button"
-                        className="mini-row"
-                        onClick={() => open(note.id)}
-                      >
-                        <StatusIcon status={note.status} />
-                        <span>{note.title}</span>
-                        <span className="mini-time">
-                          {relativeTime(note.updated_at)}
-                        </span>
-                      </button>
-                    ))
-                  ) : (
-                    <p className="mini-empty">
-                      Nothing is marked active. Open a note and set its status
-                      to start tracking it.
-                    </p>
-                  )}
-                </div>
-              </section>
+              <MiniNotesPanel
+                title="In progress"
+                subtitle={`${active.length || "No"} active notes`}
+                notes={active}
+                emptyText="Nothing is marked active. Open a note and set its status to start tracking it."
+                actionIcon={ArrowUpRight}
+                actionLabel="View all notes"
+                onAction={() => setFilter("")}
+                onOpen={open}
+              />
 
-              <section className="dash-panel compact" data-tilt data-reveal>
-                <div className="dash-panel-head">
-                  <div>
-                    <h2>Pinned</h2>
-                    <span>Always within reach</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="icon-btn sm"
-                    onClick={() => openModal("palette")}
-                    aria-label="Open command palette"
-                    title="Jump to a note"
-                  >
-                    <Search />
-                  </button>
-                </div>
-                <div className="mini-list">
-                  {pinned.length ? (
-                    pinned.map((note) => (
-                      <button
-                        key={note.id}
-                        type="button"
-                        className="mini-row"
-                        onClick={() => open(note.id)}
-                      >
-                        <FileText />
-                        <span>{note.title}</span>
-                        <span className="mini-time">
-                          {relativeTime(note.updated_at)}
-                        </span>
-                      </button>
-                    ))
-                  ) : (
-                    <p className="mini-empty">
-                      Pin a note to keep it at the top of the sidebar and in
-                      this list.
-                    </p>
-                  )}
-                </div>
-              </section>
+              <MiniNotesPanel
+                title="Pinned"
+                subtitle="Always within reach"
+                notes={pinned}
+                emptyText="Pin a note and it will stay here, one click away."
+                actionIcon={Search}
+                actionLabel="Jump to a note"
+                onAction={() => openModal("palette")}
+                onOpen={open}
+              />
             </div>
           </div>
 
