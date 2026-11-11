@@ -25,7 +25,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { focusFilter } from "../lib/events";
-import { STATUS_LABEL } from "../lib/constants";
 import type {
   NodeSummary,
   Template,
@@ -33,6 +32,7 @@ import type {
 import { copyText, modLabel, plural, relativeTime } from "../lib/utils";
 import { timeGreeting } from "../lib/ux";
 import { EmptyState } from "./EmptyState";
+import { ContinueWorking } from "./dashboard/ContinueWorking";
 import { PulseStrip } from "./dashboard/PulseStrip";
 import { useDashboardData } from "../hooks/useDashboardData";
 import { Confetti } from "../motion/Confetti";
@@ -358,60 +358,11 @@ export function Dashboard() {
 
         <div className="desk-grid">
           <div className="desk-main">
-            <section className="dash-panel" data-tilt data-reveal>
-              <div className="dash-panel-head">
-                <div>
-                  <h2>Continue working</h2>
-                  <span>Recently updated notes</span>
-                </div>
-                <button
-                  type="button"
-                  className="link-btn"
-                  onClick={() => openModal("palette")}
-                >
-                  Jump to <ArrowUpRight />
-                </button>
-              </div>
-              <div className="work-list">
-                {recent.map((note, index) => (
-                  <button
-                    key={note.id}
-                    type="button"
-                    className="work-row"
-                    onClick={() => open(note.id)}
-                  >
-                    <span className="work-index">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span className="work-state">
-                      <StatusIcon
-                        status={note.status}
-                        label={STATUS_LABEL[note.status]}
-                      />
-                    </span>
-                    <span className="work-copy">
-                      <span className="work-title">{note.title}</span>
-                      <span className="work-meta">
-                        {note.path || "Vault root"}
-                        {note.target ? ` آ· ${note.target}` : ""}
-                      </span>
-                    </span>
-                    {note.flag ? (
-                      <span className="work-flag">
-                        <Flag />
-                      </span>
-                    ) : null}
-                    {note.pinned ? (
-                      <span className="work-pin">Pinned</span>
-                    ) : null}
-                    <span className="work-time">
-                      {relativeTime(note.updated_at)}
-                    </span>
-                    <ChevronRight className="work-arrow" />
-                  </button>
-                ))}
-              </div>
-            </section>
+            <ContinueWorking
+              notes={recent}
+              onOpen={open}
+              onJump={() => openModal("palette")}
+            />
 
             <div className="dash-split">
               <section className="dash-panel compact" data-tilt data-reveal>
