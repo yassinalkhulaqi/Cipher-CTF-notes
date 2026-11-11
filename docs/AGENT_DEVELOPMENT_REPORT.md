@@ -148,8 +148,9 @@ ConfirmModal,GraphModal,TimelineModal}.tsx`, `frontend/src/store/useUiStore.ts`,
 
 ## 03 — agent/core-features-03 (Core features & engineering)
 
-**Parent:** `agent/frontend-architecture-02` (`f6d5337`) · **Files:** 23 ·
-**Changed lines:** see Git verification (below)
+**Parent:** `agent/frontend-architecture-02` (`f6d5337`) · **Commits:**
+`a4b66cc`, `645f9f9`, `2c78ca8`, `877746b`, `ca9e063` · **Files:** 34 ·
+**Changed lines:** **1562** (1333+ / 229−)
 
 **Agents:** 3 (Core Features & Engineering) with lead review.
 
@@ -183,6 +184,13 @@ ConfirmModal,GraphModal,TimelineModal}.tsx`, `frontend/src/store/useUiStore.ts`,
   `motion.test.ts` (10), new `tags.test.ts` (8), new `tree.test.ts` (7) —
   25 passing.
 - Verified payload integrity of the rebuilt bundle.
+- Mini-panel extraction: `ContinueWorking` and shared `MiniNotesPanel`
+  (active + pinned panels were near-identical) from Dashboard.
+- `useTagSuggestions` hook dedups the vault-tag fetch previously duplicated
+  in the properties and quick-capture dialogs.
+- `NoteInspector` renders tags through `lib/tags` (normalized, deduped).
+- `CHANGELOG.md` Unreleased section records the 2026-11 pass.
+- `docs/ARCHITECTURE.md` gained a Frontend module map.
 
 ### Files changed
 
