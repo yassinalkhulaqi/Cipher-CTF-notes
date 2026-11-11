@@ -90,6 +90,7 @@ export function NoteWorkspace() {
   const renameCurrent = useAppStore((state) => state.renameCurrent);
   const duplicateNode = useAppStore((state) => state.duplicateNode);
   const trashNode = useAppStore((state) => state.trashNode);
+  const restoreNode = useAppStore((state) => state.restoreNode);
   const openNote = useAppStore((state) => state.openNote);
   const closeNote = useAppStore((state) => state.closeNote);
   const setFilter = useAppStore((state) => state.setFilter);
@@ -346,7 +347,11 @@ const compact = useMediaQuery(maxWidthQuery("xl"));
           action: async () => {
             try {
               await trashNode(note.id);
-              toast("Moved to trash");
+              toast(
+                "Moved to trash",
+                "default",
+                { label: "Undo", run: () => restoreNode(note.id) },
+              );
             } catch (error) {
               toast(
                 error instanceof Error ? error.message : "Could not move note",

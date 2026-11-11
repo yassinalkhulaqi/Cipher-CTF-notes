@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState, type KeyboardEvent } from "react";
+﻿import { useEffect, useId, useMemo, useState, type KeyboardEvent } from "react";
 import {
   Activity,
   Bug,
@@ -27,6 +27,7 @@ import {
   Settings,
   SlidersHorizontal,
   Sun,
+  Tag,
   Zap,
   type LucideIcon,
 } from "lucide-react";
@@ -137,6 +138,12 @@ export function CommandPalette() {
         icon: Code2,
         shortcut: `${modLabel()} Shift S`,
         run: () => openModal("snippets"),
+      },
+      {
+        label: "Tag explorer",
+        detail: "Browse tags and filter the vault",
+        icon: Tag,
+        run: () => openModal("tags"),
       },
       {
         label: "Dashboard",
@@ -381,7 +388,7 @@ export function CommandPalette() {
           note.target ?? "",
         );
         insertSnippet(resolved.command);
-        toast(`Inserted “${snippet.title}”`, "success");
+        toast(`Inserted â€œ${snippet.title}â€‌`, "success");
       } catch (error) {
         toast(
           error instanceof Error
@@ -393,7 +400,7 @@ export function CommandPalette() {
       return;
     }
     void copyText(snippet.command).then(
-      () => toast(`Copied “${snippet.title}”`, "success"),
+      () => toast(`Copied â€œ${snippet.title}â€‌`, "success"),
       () => toast("Could not copy the command", "error"),
     );
   };
@@ -452,11 +459,11 @@ export function CommandPalette() {
       footer={
         <>
           <span className="modal-hint">
-            <kbd>↑</kbd>
-            <kbd>↓</kbd> navigate
+            <kbd>â†‘</kbd>
+            <kbd>â†“</kbd> navigate
           </span>
           <span className="modal-hint">
-            <kbd>↵</kbd> open
+            <kbd>â†µ</kbd> open
           </span>
           <span className="modal-hint">
             <kbd>Esc</kbd> close
@@ -471,7 +478,7 @@ export function CommandPalette() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="Jump to a note or run a command…"
+          placeholder="Jump to a note or run a commandâ€¦"
           spellCheck={false}
           autoComplete="off"
           role="combobox"
@@ -596,7 +603,7 @@ export function CommandPalette() {
 
         {loading ? (
           <div className="palette-loading" role="status">
-            Loading notes and snippets…
+            Loading notes and snippetsâ€¦
           </div>
         ) : null}
 

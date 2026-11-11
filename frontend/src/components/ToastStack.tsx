@@ -30,6 +30,28 @@ export function ToastStack() {
                 <Icon />
               </span>
               <span className="toast-message">{toast.message}</span>
+              {toast.action ? (
+                <button
+                  type="button"
+                  className="toast-action"
+                  disabled={exiting}
+                  onClick={() => {
+                    dismissToast(toast.id);
+                    void Promise.resolve()
+                      .then(() => toast.action?.run())
+                      .catch((error: unknown) => {
+                        useUiStore.getState().toast(
+                          error instanceof Error
+                            ? error.message
+                            : "The action failed",
+                          "error",
+                        );
+                      });
+                  }}
+                >
+                  {toast.action.label}
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="toast-close"

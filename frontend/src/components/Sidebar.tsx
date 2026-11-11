@@ -72,6 +72,7 @@ export function Sidebar() {
   const togglePin = useAppStore((state) => state.togglePin);
   const renameNode = useAppStore((state) => state.renameNode);
   const trashNode = useAppStore((state) => state.trashNode);
+  const restoreNode = useAppStore((state) => state.restoreNode);
   const loadDemo = useAppStore((state) => state.loadDemo);
   const note = useAppStore((state) => state.note);
   const closeNote = useAppStore((state) => state.closeNote);
@@ -272,6 +273,8 @@ export function Sidebar() {
             removed > 1
               ? `Moved ${plural(removed, "item")} to trash`
               : "Moved to trash",
+            "default",
+            { label: "Undo", run: () => restoreNode(node.id) },
           );
         } catch (error) {
           toast(

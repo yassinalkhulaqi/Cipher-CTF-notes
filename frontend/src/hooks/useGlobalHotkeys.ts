@@ -184,7 +184,10 @@ export function useGlobalHotkeys(): void {
           action: async () => {
             try {
               await app.trashNode(node.id);
-              ui.toast("Moved to trash");
+              ui.toast("Moved to trash", "default", {
+                label: "Undo",
+                run: () => app.restoreNode(node.id),
+              });
             } catch (error) {
               ui.toast(
                 error instanceof Error ? error.message : "Could not move item",

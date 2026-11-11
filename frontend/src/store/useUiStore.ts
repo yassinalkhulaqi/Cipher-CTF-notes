@@ -1,4 +1,4 @@
-import { create } from "zustand";
+﻿import { create } from "zustand";
 
 export type ModalName =
   | "palette"
@@ -17,6 +17,7 @@ export type ModalName =
   | "timeline"
   | "quick-capture"
   | "flag-intel"
+  | "tags"
   | "confirm"
   | null;
 
@@ -24,10 +25,16 @@ export type FindMode = "find" | "replace";
 
 export type InspectorTab = "outline" | "links" | "properties";
 
+export interface ToastAction {
+  label: string;
+  run: () => void | Promise<void>;
+}
+
 export interface ToastItem {
   id: number;
   message: string;
   tone: "default" | "success" | "error";
+  action?: ToastAction;
 }
 
 export interface ConfirmRequest {
@@ -64,7 +71,7 @@ interface UiState {
   openSnippetForm: (id: number | null) => void;
   askConfirm: (request: ConfirmRequest) => void;
   resolveConfirm: () => void;
-  toast: (message: string, tone?: ToastItem["tone"]) => void;
+  toast: (message: string, tone?: ToastItem["tone"], action?: ToastAction) => void;
   dismissToast: (id: number) => void;
   setMobileSidebar: (open: boolean) => void;
   toggleSidebarCollapsed: () => void;
@@ -212,13 +219,13 @@ export const useUiStore = create<UiState>()((set, get) => ({
       });
   },
 
-  toast: (message, tone = "default") => {
+  toast: (message, tone = "default", action) => {
     toastId += 1;
-    const item: ToastItem = { id: toastId, message, tone };
+    const item: ToastItem = { id: toastId, message, tone, action };
     set((state) => ({ toasts: [...state.toasts.slice(-3), item] }));
     setTimeout(() => {
       get().dismissToast(item.id);
-    }, 3200);
+    }, action ? 5200 : 3200);
   },
 
   dismissToast: (id) => {

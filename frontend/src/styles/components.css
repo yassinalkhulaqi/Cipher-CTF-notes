@@ -759,3 +759,111 @@ button.chip:hover {
   position: relative;
 }
 
+
+/* Tag input (chip editor with vault-tag autocomplete) */
+
+.tag-input {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  min-height: 34px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  cursor: text;
+  transition: border-color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.tag-input:focus-within {
+  border-color: var(--accent);
+}
+
+.tag-input.is-disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  color: var(--text-soft);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.tag-chip-remove {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.tag-chip-remove:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.tag-chip-remove svg {
+  width: 11px;
+  height: 11px;
+}
+
+.tag-input-field {
+  flex: 1 1 80px;
+  min-width: 80px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+}
+
+.tag-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: var(--z-menu);
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  margin: 0;
+  list-style: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-glass-strong);
+  box-shadow: var(--elev-3);
+}
+
+.tag-suggestion {
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-soft);
+  cursor: pointer;
+}
+
+.tag-suggestion.active,
+.tag-suggestion:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.tag-input-hint {
+  font-size: 10px;
+  color: var(--faint);
+  padding: 0 4px;
+}

@@ -462,7 +462,11 @@ class Api:
 
     def backlinks(self, body: dict[str, Any]) -> dict[str, Any]:
         """Return backlinks, outlinks, and unresolved links for one note."""
-        return note_links_payload(note_links(self._vault, _require_int(body, "id")))
+        note_id = _require_int(body, "id")
+        try:
+            return note_links_payload(note_links(self._vault, note_id))
+        except ValueError as exc:
+            raise ApiError(str(exc), status=404) from exc
 
     def timeline(self, body: dict[str, Any]) -> list[dict[str, Any]]:
         """Return recent activity, optionally scoped to a folder subtree."""

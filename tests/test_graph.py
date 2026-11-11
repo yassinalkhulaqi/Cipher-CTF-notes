@@ -119,6 +119,7 @@ def test_graph_payload_serializes_vertices_and_edges(vault: Vault) -> None:
 
 
 def test_api_graph_returns_vault_graph(vault: Vault) -> None:
+    vault.create_node("Writeup")
     api = Api(vault)
     payload = api.graph({})
 

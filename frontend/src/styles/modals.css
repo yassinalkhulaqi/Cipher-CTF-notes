@@ -1779,3 +1779,112 @@
   flex-direction: column;
   gap: 6px;
 }
+
+/* Tag explorer */
+
+.tag-explorer-modal {
+  width: min(560px, 100%);
+}
+
+.tag-explorer-body {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.tag-explorer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
+.tag-explorer-search {
+  flex: 1;
+}
+
+.tag-explorer-list {
+  max-height: min(50vh, 420px);
+  overflow: auto;
+  padding: 6px;
+}
+
+.tag-explorer-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 6px 12px;
+}
+
+.tag-skeleton-row {
+  height: 26px;
+}
+
+.tag-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  color: var(--text-soft);
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.tag-row:hover,
+.tag-row:focus-visible {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.tag-hash {
+  width: 14px;
+  height: 14px;
+  color: var(--faint);
+  flex: none;
+}
+
+.tag-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.tag-count {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Toast action button (e.g. Undo) */
+
+.toast-action {
+  flex: none;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.toast-action:hover {
+  background: var(--surface-3);
+}

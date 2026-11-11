@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+﻿import { Fragment } from "react";
 import type { ModalName } from "../../store/useUiStore";
 import { useUiStore } from "../../store/useUiStore";
 import { CommandPalette } from "./CommandPalette";
@@ -17,6 +17,7 @@ import { SearchModal } from "./SearchModal";
 import { SettingsModal } from "./SettingsModal";
 import { SnippetFormModal } from "./SnippetFormModal";
 import { SnippetsModal } from "./SnippetsModal";
+import { TagExplorerModal } from "./TagExplorerModal";
 import { TimelineModal } from "./TimelineModal";
 import { TrashModal } from "./TrashModal";
 
@@ -42,6 +43,8 @@ function renderModal(name: Exclude<ModalName, null>) {
       return <DashboardModal />;
     case "graph":
       return <GraphModal />;
+    case "tags":
+      return <TagExplorerModal />;
     case "timeline":
       return <TimelineModal />;
     case "flag-intel":

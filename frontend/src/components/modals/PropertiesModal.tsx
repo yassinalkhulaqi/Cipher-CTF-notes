@@ -4,6 +4,7 @@ import { api } from "../../lib/api";
 import { DIFFICULTIES, STATUSES, STATUS_LABEL } from "../../lib/constants";
 import type { FlagPattern, Status } from "../../lib/types";
 import { formatDate } from "../../lib/utils";
+import { TagInput } from "../TagInput";
 import { useAppStore } from "../../store/useAppStore";
 import { useUiStore } from "../../store/useUiStore";
 import { Modal } from "./Modal";
@@ -27,6 +28,7 @@ export function PropertiesModal() {
   const [pinned, setPinned] = useState(note?.pinned ?? false);
   const [saving, setSaving] = useState(false);
   const [patterns, setPatterns] = useState<FlagPattern[]>([]);
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
     if (!note) return;
@@ -45,6 +47,21 @@ export function PropertiesModal() {
       .flagPatterns()
       .then((items) => {
         if (!cancelled) setPatterns(items);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .tagCounts()
+      .then((items) => {
+        if (!cancelled) {
+          setTagSuggestions(items.map((item) => item.tag));
+        }
       })
       .catch(() => undefined);
     return () => {
@@ -170,14 +187,11 @@ export function PropertiesModal() {
           </div>
           <div className="field">
             <label htmlFor="prop-tags">Tags</label>
-            <input
+            <TagInput
               id="prop-tags"
-              className="input"
               value={tags}
-              onChange={(event) => setTags(event.target.value)}
-              spellCheck={false}
-              autoComplete="off"
-              placeholder="recon, web"
+              onChange={setTags}
+              suggestions={tagSuggestions}
             />
           </div>
         </div>

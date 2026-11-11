@@ -2,6 +2,7 @@ import { Flag, ShieldCheck } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { useUiStore } from "../store/useUiStore";
 import { copyText, plural, wordCount } from "../lib/utils";
+import { readingTime } from "../lib/ux";
 
 const SAVE_LABEL: Record<string, string> = {
   idle: "Ready",
@@ -23,6 +24,7 @@ export function StatusBar() {
 
   const words = wordCount(draft);
   const characters = draft.length;
+  const readTime = note ? readingTime(draft) : null;
 
   return (
     <footer className="statusbar">
@@ -48,6 +50,11 @@ export function StatusBar() {
         <span className="status-note-stats">
           <span className="sep">·</span>
           <span>{plural(words, "word")}</span>
+          {readTime ? (
+            <span className="status-hide-xs" title="Estimated reading time">
+              · {readTime}
+            </span>
+          ) : null}
           <span className="sep status-hide-xs">·</span>
           <span className="status-hide-xs">
             {plural(characters, "character")}

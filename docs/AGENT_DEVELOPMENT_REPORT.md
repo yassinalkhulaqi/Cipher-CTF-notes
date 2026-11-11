@@ -140,3 +140,65 @@ ConfirmModal,GraphModal,TimelineModal}.tsx`, `frontend/src/store/useUiStore.ts`,
 - `NoteWorkspace.tsx` remains > 800 lines; the toolbar cluster is the next
   extraction candidate if a follow-up pass is done.
 - Prettier repo-wide failures unchanged (see branch 05).
+- Environment note: the workstation's `C:` drive is full (0 GB free). Pytest
+  `--basetemp` and the npm cache were redirected to `D:` (`.tmp-tests/`,
+  `D:\githubs\.npm-cache`); `.tmp-tests/` is gitignored.
+
+---
+
+## 03 — agent/core-features-03 (Core features & engineering)
+
+**Parent:** `agent/frontend-architecture-02` (`f6d5337`) · **Files:** 23 ·
+**Changed lines:** see Git verification (below)
+
+**Agents:** 3 (Core Features & Engineering) with lead review.
+
+### Scope and completed tasks
+
+- **Tag system.** New reusable `TagInput` (chips + vault-tag autocomplete,
+  combobox/listbox semantics, backspace-to-remove, limits) wired into the
+  properties modal; previously a bare comma-separated text field.
+  `lib/tags.ts` owns parse/normalize/serialize/limits (dedupe
+  case-insensitively, `TAG_MAX_COUNT` 24, `TAG_MAX_LENGTH` 48).
+- **Tag explorer modal.** `modals/TagExplorerModal.tsx`: live counts via
+  `tag_counts`, search filter, count/name sort, loading skeleton, empty and
+  error states, click-to-filter the sidebar tree (filter matches tags).
+  Registered as `"tags"` in the modal store and host, reachable from the
+  command palette ("Tag explorer").
+- **Undo everywhere.** Toasts gained an optional action button
+  (`ToastAction`), used for "Move to trash" in the sidebar context menu, the
+  workspace trash menu, and the Delete hotkey — all reversible via
+  `restoreNode`.
+- **Trash improvements.** "Restore all" in the trash modal (sequential
+  restore); per-row pending state.
+- **Status bar.** Reading time estimate next to the word count for open
+  notes.
+- **Test debt.** Fixed the 4 pre-existing failures from the branch-01
+  baseline: graph API test now seeds a note (the old assertion required
+  non-empty nodes from an empty vault), backlinks route converts
+  `ValueError` to `ApiError(404)`, snippet-search tests assert ranking
+  intent rather than the impossible `all()` (fuzzy search may match
+  description/tags — e.g. RustScan mentions Nmap). **218 passed, 0 failed.**
+- **Frontend tests.** `scripts/test.mjs` now bundles and runs three suites:
+  `motion.test.ts` (10), new `tags.test.ts` (8), new `tree.test.ts` (7) —
+  25 passing.
+- Verified payload integrity of the rebuilt bundle.
+
+### Files changed
+
+`frontend/src/lib/{tags.ts,api.ts? (no)}` — see commit; new files
+`TagInput.tsx`, `TagExplorerModal.tsx`, `scripts/{test.mjs,tags.test.ts,
+tree.test.ts}`; modified store/events/modals/workspace/status bar/styles;
+`src/redscribe/ui/web/api.py` (backlinks 404), `tests/{test_graph,
+test_snippet_search}.py`; rebuilt bundle.
+
+### Tests executed
+
+- `pytest --basetemp=.tmp-tests` — **218 passed** (baseline: 214 passed,
+  4 failed)
+- `npm test` — 25 passed (10 motion + 8 tags + 7 tree)
+- `npm run build` — pass
+
+### Git verification
+
+- Branch diff vs parent measured after commit; see commit history.
