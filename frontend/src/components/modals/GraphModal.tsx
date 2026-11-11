@@ -37,6 +37,7 @@ export function GraphModal() {
 
   const [graph, setGraph] = useState<VaultGraph | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const positionsRef = useRef<Map<number, Point>>(new Map());
@@ -59,6 +60,9 @@ export function GraphModal() {
         setError(
           err instanceof Error ? err.message : "Could not load the vault graph",
         );
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
@@ -278,7 +282,17 @@ export function GraphModal() {
               {danglingCount > 0 ? ` · ${danglingCount} unresolved` : ""}
             </span>
           </div>
-          <div className="graph-stage">
+          <div className="graph-stage" aria-busy={loading}>
+            {loading && !graph ? (
+              <div className="graph-loading" role="status" aria-label="Loading vault graph">
+                <div className="graph-loading-canvas skeleton" />
+                <div className="graph-loading-rows">
+                  {Array.from({ length: 5 }, (_, index) => (
+                    <div className="skeleton-line" key={index} />
+                  ))}
+                </div>
+              </div>
+            ) : (
             <div className="graph-canvas-wrap">
               {visibleNodes.length > 0 ? (
                 <svg
@@ -367,6 +381,7 @@ export function GraphModal() {
               </div>
             )}
             </div>
+            )}
             {selected ? (
               <aside className="graph-details" aria-label="Selected node">
                 <div className="graph-details-head">

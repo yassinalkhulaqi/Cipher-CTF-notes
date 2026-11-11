@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useMemo, useState, type KeyboardEvent } from "react";
 import {
   Activity,
   Bug,
@@ -354,6 +354,9 @@ export function CommandPalette() {
     [filteredCommands, notes, snippets],
   );
 
+  const listboxId = useId();
+  const optionId = (index: number) => `${listboxId}-option-${index}`;
+
   useEffect(() => {
     setSelected(0);
   }, [query]);
@@ -429,6 +432,12 @@ export function CommandPalette() {
       setSelected((current) =>
         entries.length ? (current - 1 + entries.length) % entries.length : 0,
       );
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      setSelected(0);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      setSelected(Math.max(0, entries.length - 1));
     } else if (event.key === "Enter") {
       event.preventDefault();
       execute(entries[selected]);
@@ -468,11 +477,24 @@ export function CommandPalette() {
           placeholder="Jump to a note or run a command…"
           spellCheck={false}
           autoComplete="off"
+          role="combobox"
+          aria-expanded="true"
+          aria-controls={listboxId}
+          aria-autocomplete="list"
+          aria-activedescendant={
+            entries.length > 0 ? optionId(selected) : undefined
+          }
           aria-label="Quick switch"
         />
         <kbd>Esc</kbd>
       </div>
-      <div className="palette-list">
+      <div
+        className="palette-list"
+        role="listbox"
+        id={listboxId}
+        aria-label="Quick switch results"
+        aria-busy={loading}
+      >
         {filteredCommands.length > 0 ? (
           <>
             <div className="list-label">Commands</div>
@@ -484,6 +506,9 @@ export function CommandPalette() {
                 <button
                   key={command.label}
                   type="button"
+                  id={optionId(index)}
+                  role="option"
+                  aria-selected={selected === index}
                   className={`palette-item ${selected === index ? "selected" : ""}`}
                   onMouseMove={() => setSelected(index)}
                   onClick={() => execute({ kind: "command", command })}
@@ -514,6 +539,9 @@ export function CommandPalette() {
                 <button
                   key={node.id}
                   type="button"
+                  id={optionId(index)}
+                  role="option"
+                  aria-selected={selected === index}
                   className={`palette-item ${selected === index ? "selected" : ""}`}
                   onMouseMove={() => setSelected(index)}
                   onClick={() => execute({ kind: "note", node })}
@@ -548,6 +576,9 @@ export function CommandPalette() {
                 <button
                   key={key}
                   type="button"
+                  id={optionId(index)}
+                  role="option"
+                  aria-selected={selected === index}
                   className={`palette-item ${selected === index ? "selected" : ""}`}
                   onMouseMove={() => setSelected(index)}
                   onClick={() => execute({ kind: "snippet", snippet })}
@@ -564,6 +595,12 @@ export function CommandPalette() {
               );
             })}
           </>
+        ) : null}
+
+        {loading ? (
+          <div className="palette-loading" role="status">
+            Loading notes and snippets…
+          </div>
         ) : null}
 
         {entries.length === 0 && !loading ? (

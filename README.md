@@ -130,7 +130,9 @@ rules, and the accessibility contract are documented in
 
 Architecture notes live in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md); the Aurora UI notes live in
-[docs/AURORA.md](docs/AURORA.md).
+[docs/AURORA.md](docs/AURORA.md). The design system reference — tokens,
+theming, motion, focus and contrast contracts — is
+[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md).
 
 Command-line options:
 

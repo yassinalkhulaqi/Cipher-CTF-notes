@@ -1,4 +1,4 @@
-@media (max-width: 1100px) {
+﻿@media (max-width: 1180px) {
   .cursor-glow {
     width: 520px;
     height: 520px;
@@ -92,7 +92,7 @@
 
 @media (max-width: 420px) {
   .motion-mode {
-    padding: 8px;
+    padding: var(--space-2);
   }
 
   .modal-head {

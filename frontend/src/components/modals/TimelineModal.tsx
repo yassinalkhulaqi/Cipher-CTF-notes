@@ -24,6 +24,7 @@ export function TimelineModal() {
 
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -39,6 +40,9 @@ export function TimelineModal() {
             err instanceof Error ? err.message : "Could not load the timeline",
           );
         }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
@@ -101,8 +105,14 @@ export function TimelineModal() {
               {visible.length} {visible.length === 1 ? "event" : "events"}
             </span>
           </div>
-          <div className="timeline-list">
-            {visible.length === 0 ? (
+          <div className="timeline-list" aria-busy={loading}>
+            {loading ? (
+              <div className="timeline-loading" role="status" aria-label="Loading timeline">
+                {Array.from({ length: 6 }, (_, index) => (
+                  <div className="skeleton-line timeline-skeleton-row" key={index} />
+                ))}
+              </div>
+            ) : visible.length === 0 ? (
               <div className="timeline-empty graph-empty">
                 <CalendarClock />
                 <p>

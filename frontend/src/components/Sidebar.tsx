@@ -38,6 +38,7 @@ import { StatusIcon } from "./StatusIcon";
 import { useFlipList } from "../motion/useFlipList";
 import { useFloatingSelection } from "../motion/useFloatingSelection";
 import { useMediaQuery } from "../hooks/useMediaQuery";
+import { maxWidthQuery } from "../lib/breakpoints";
 import {
   allIds,
   countNotes,
@@ -272,7 +273,7 @@ export function Sidebar() {
   const toggleSidebarCollapsed = useUiStore(
     (state) => state.toggleSidebarCollapsed,
   );
-  const mobile = useMediaQuery("(max-width: 920px)");
+  const mobile = useMediaQuery(maxWidthQuery("lg"));
   const collapsed = sidebarCollapsed && !mobile;
 
   const [context, setContext] = useState<ContextState | null>(null);
@@ -930,6 +931,10 @@ export function Sidebar() {
               <button
                 key={node.id}
                 type="button"
+                role="treeitem"
+                aria-selected={selectedId === node.id}
+                aria-level={1}
+                tabIndex={0}
                 className={`tree-row ${selectedId === node.id ? "selected" : ""}`}
                 style={{ paddingLeft: "5px" }}
                 data-node-id={node.id}

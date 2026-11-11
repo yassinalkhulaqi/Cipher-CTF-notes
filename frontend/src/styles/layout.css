@@ -1,4 +1,4 @@
-.app-shell {
+﻿.app-shell {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -73,8 +73,8 @@
   padding: 3px 6px 3px 3px;
   border-radius: var(--radius-sm);
   transition:
-    background var(--speed) var(--ease),
-    transform var(--speed-faster) var(--ease);
+    background var(--motion-duration-base) var(--motion-ease-out),
+    transform var(--motion-duration-instant) var(--motion-ease-out);
   flex: none;
 }
 
@@ -110,7 +110,7 @@
   filter: blur(6px);
   opacity: 0.45;
   z-index: -1;
-  transition: opacity var(--speed) var(--ease);
+  transition: opacity var(--motion-duration-base) var(--motion-ease-out);
 }
 
 .brand:hover .brand-mark::after {
@@ -124,7 +124,7 @@
 
 .brand-name {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: var(--text-lg);
   font-weight: 620;
   letter-spacing: -0.025em;
   white-space: nowrap;
@@ -182,10 +182,10 @@
   color: var(--text-soft);
   text-align: left;
   transition:
-    border-color var(--speed) var(--ease),
-    background var(--speed) var(--ease),
-    box-shadow var(--speed) var(--ease),
-    transform var(--speed-faster) var(--ease);
+    border-color var(--motion-duration-base) var(--motion-ease-out),
+    background var(--motion-duration-base) var(--motion-ease-out),
+    box-shadow var(--motion-duration-base) var(--motion-ease-out),
+    transform var(--motion-duration-instant) var(--motion-ease-out);
   box-shadow: var(--inset-highlight);
 }
 
@@ -222,7 +222,7 @@
 
 .command-trigger kbd {
   height: 20px;
-  font-size: 10px;
+  font-size: var(--text-xs);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
 }
@@ -267,14 +267,14 @@
 .sidebar-head-copy {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 0;
   flex: 1;
 }
 
 .sidebar-head-copy .eyebrow {
   color: var(--text-soft);
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.13em;
 }
 
@@ -310,9 +310,9 @@
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-2) 52%, transparent);
   transition:
-    border-color var(--speed) var(--ease),
-    box-shadow var(--speed) var(--ease),
-    background var(--speed) var(--ease);
+    border-color var(--motion-duration-base) var(--motion-ease-out),
+    box-shadow var(--motion-duration-base) var(--motion-ease-out),
+    background var(--motion-duration-base) var(--motion-ease-out);
 }
 
 .sidebar-search:focus-within {
@@ -382,7 +382,7 @@
 .sidebar-foot {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   padding: 7px 9px 9px;
   border-top: 1px solid var(--border);
 }
@@ -428,7 +428,7 @@
   left: 2px;
   width: 2px;
   background: transparent;
-  transition: background var(--speed) var(--ease);
+  transition: background var(--motion-duration-base) var(--motion-ease-out);
 }
 
 .sidebar-resizer:hover::after,
@@ -455,7 +455,7 @@
   position: absolute;
   inset: 0;
   background: transparent;
-  transition: background var(--speed) var(--ease);
+  transition: background var(--motion-duration-base) var(--motion-ease-out);
 }
 
 .sash:hover::after,
@@ -513,7 +513,7 @@
   flex-direction: column;
   min-height: 0;
   flex: 1;
-  animation: fade var(--speed-slow) var(--ease);
+  animation: fade var(--motion-duration-slow) var(--motion-ease-out);
 }
 
 .note-head {
@@ -533,9 +533,9 @@
 .breadcrumbs {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
-  font-size: 11px;
+  font-size: var(--text-sm);
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
@@ -544,13 +544,13 @@
 .breadcrumbs button {
   color: var(--muted);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
   transition:
-    background var(--speed-fast) var(--ease),
-    color var(--speed-fast) var(--ease);
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out);
 }
 
 .breadcrumbs button:hover {
@@ -609,8 +609,8 @@
   line-height: 1.2;
   color: var(--text);
   transition:
-    border-color var(--speed-fast) var(--ease),
-    box-shadow var(--speed-fast) var(--ease);
+    border-color var(--motion-duration-fast) var(--motion-ease-out),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-out);
 }
 
 .title-input::placeholder {
@@ -653,13 +653,13 @@
   height: 26px;
   padding: 0 10px;
   border-radius: 5px;
-  font-size: 11px;
+  font-size: var(--text-sm);
   font-weight: 540;
   color: var(--muted);
   transition:
-    background var(--speed-fast) var(--ease),
-    color var(--speed-fast) var(--ease),
-    box-shadow var(--speed-fast) var(--ease);
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-out);
   border: 0;
 }
 
@@ -689,7 +689,7 @@
   border-radius: var(--radius-md);
   background: var(--red-soft);
   color: var(--text-soft);
-  font-size: 12px;
+  font-size: var(--text-md);
   box-shadow: var(--elev-1);
 }
 
@@ -740,7 +740,7 @@
   max-width: 260px;
   color: var(--green);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .status-flag svg {
@@ -759,7 +759,7 @@
 .status-local {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   flex: none;
   white-space: nowrap;
 }
@@ -769,7 +769,7 @@
   height: 6px;
   border-radius: 50%;
   background: var(--faint);
-  transition: background var(--speed) var(--ease);
+  transition: background var(--motion-duration-base) var(--motion-ease-out);
   flex: none;
 }
 
@@ -815,7 +815,7 @@
   max-width: 300px;
   height: 19px;
   padding: 0 7px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: var(--green-soft);
   color: var(--green);
   font-family: var(--font-mono);
@@ -837,7 +837,7 @@
 .status-local {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   color: var(--faint);
   white-space: nowrap;
 }
@@ -856,7 +856,7 @@
 
 .app-shell[data-focus="true"] .topbar {
   opacity: 0.52;
-  transition: opacity var(--speed) var(--ease);
+  transition: opacity var(--motion-duration-base) var(--motion-ease-out);
 }
 
 .app-shell[data-focus="true"] .topbar:hover,
@@ -888,7 +888,7 @@
     max-width: none;
     z-index: 50;
     transform: translateX(-104%);
-    transition: transform var(--speed-slow) var(--ease);
+    transition: transform var(--motion-duration-slow) var(--motion-ease-out);
     box-shadow: var(--shadow-lg);
     background: var(--sidebar-bg);
   }
@@ -903,7 +903,7 @@
     inset: var(--topbar-h) 0 var(--statusbar-h);
     background: rgba(0, 0, 0, 0.48);
     z-index: 40;
-    animation: fade var(--speed) var(--ease);
+    animation: fade var(--motion-duration-base) var(--motion-ease-out);
   }
 
   .sidebar-resizer {
@@ -939,7 +939,7 @@
   }
 
   .note-head {
-    padding: 8px 12px;
+    padding: var(--space-2) 12px;
   }
 
   .title-input {
@@ -1016,7 +1016,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: var(--space-4);
   height: 100%;
   padding: 40px;
   text-align: center;
@@ -1055,7 +1055,7 @@
 .boot-copy p {
   margin-top: 5px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-md);
   line-height: 1.6;
   max-width: 420px;
 }

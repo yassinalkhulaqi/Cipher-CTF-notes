@@ -1,4 +1,4 @@
-.overlay {
+﻿.overlay {
   animation: mx-backdrop-in var(--motion-duration-base) var(--motion-ease-out)
     both;
 }
@@ -222,7 +222,7 @@ html[data-motion-ready="true"] .palette-list .palette-item {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: var(--space-1);
   padding: 9px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -250,7 +250,7 @@ html[data-motion-ready="true"] .palette-list .palette-item {
   place-items: center;
   width: 22px;
   height: 22px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--surface-2);
   color: var(--muted);
   transition:
@@ -269,7 +269,7 @@ html[data-motion-ready="true"] .palette-list .palette-item {
 }
 
 .motion-mode strong {
-  font-size: 11px;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text);
 }
@@ -302,7 +302,7 @@ html[data-motion-ready="true"] .palette-list .palette-item {
 .motion-demo-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .motion-demo {
@@ -322,7 +322,7 @@ html[data-motion-ready="true"] .palette-list .palette-item {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-2);
   width: 100%;
 }
 
@@ -333,7 +333,7 @@ html[data-motion-ready="true"] .palette-list .palette-item {
 }
 
 .motion-demo h3 {
-  font-size: 11px;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text);
 }
@@ -422,15 +422,15 @@ html[data-motion-ready="true"] .palette-list .palette-item {
   margin: 0;
   padding: 0 2px;
   color: var(--faint);
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.6;
 }
 
 .btn.tiny {
   height: 23px;
   padding: 0 7px;
-  font-size: 10px;
-  gap: 4px;
+  font-size: var(--text-xs);
+  gap: var(--space-1);
 }
 
 .btn.tiny svg {
@@ -438,7 +438,7 @@ html[data-motion-ready="true"] .palette-list .palette-item {
   height: 11px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 560px) {
   .motion-mode-grid,
   .motion-demo-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

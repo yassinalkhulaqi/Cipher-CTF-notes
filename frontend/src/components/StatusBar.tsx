@@ -26,8 +26,10 @@ export function StatusBar() {
 
   return (
     <footer className="statusbar">
-      <span className={`save-dot ${saveState}`} />
-      <span>{SAVE_LABEL[saveState] ?? "Ready"}</span>
+      <span className={`save-dot ${saveState}`} aria-hidden="true" />
+      <span role="status" aria-live="polite">
+        {SAVE_LABEL[saveState] ?? "Ready"}
+      </span>
       {saveState === "error" ? (
         <button
           type="button"

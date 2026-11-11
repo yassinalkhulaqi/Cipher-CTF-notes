@@ -46,6 +46,7 @@ import {
 import { api } from "../lib/api";
 import { usePreview } from "../hooks/usePreview";
 import { useMediaQuery } from "../hooks/useMediaQuery";
+import { maxWidthQuery } from "../lib/breakpoints";
 import {
   MarkdownEditor,
   type MarkdownEditorHandle,
@@ -136,8 +137,8 @@ export function NoteWorkspace() {
     null,
   );
 
-  const mobile = useMediaQuery("(max-width: 720px)");
-  const compact = useMediaQuery("(max-width: 1180px)");
+const mobile = useMediaQuery(maxWidthQuery("md"));
+const compact = useMediaQuery(maxWidthQuery("xl"));
   const effectiveView = mobile && viewMode === "split" ? "editor" : viewMode;
   const preview = usePreview(
     draft,

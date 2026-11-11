@@ -113,7 +113,31 @@ export function NoteInspector({
         </button>
       </div>
 
-      <div className="inspector-tabs" role="tablist" aria-label="Inspector sections">
+      <div
+        className="inspector-tabs"
+        role="tablist"
+        aria-label="Inspector sections"
+        onKeyDown={(event) => {
+          const current = TABS.findIndex((item) => item.id === tab);
+          if (current < 0) return;
+          let next = -1;
+          if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+            next = (current + 1) % TABS.length;
+          } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+            next = (current - 1 + TABS.length) % TABS.length;
+          } else if (event.key === "Home") {
+            next = 0;
+          } else if (event.key === "End") {
+            next = TABS.length - 1;
+          }
+          if (next < 0) return;
+          event.preventDefault();
+          setTab(TABS[next].id);
+          document
+            .getElementById(`inspector-tab-${TABS[next].id}`)
+            ?.focus();
+        }}
+      >
         {TABS.map((item) => {
           const Icon = item.icon;
           const active = tab === item.id;
@@ -125,6 +149,7 @@ export function NoteInspector({
               id={`inspector-tab-${item.id}`}
               aria-selected={active}
               aria-controls={`inspector-panel-${item.id}`}
+              tabIndex={active ? 0 : -1}
               className={active ? "active" : ""}
               onClick={() => setTab(item.id)}
             >
