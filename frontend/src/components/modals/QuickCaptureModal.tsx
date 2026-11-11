@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ClipboardPaste, Save, Zap } from "lucide-react";
+import { api } from "../../lib/api";
+import { TagInput } from "../TagInput";
 import { useAppStore } from "../../store/useAppStore";
 import { useUiStore } from "../../store/useUiStore";
 import { Modal } from "./Modal";
@@ -14,6 +16,20 @@ export function QuickCaptureModal() {
   const [tags, setTags] = useState("");
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .tagCounts()
+      .then((items) => {
+        if (!cancelled) setTagSuggestions(items.map((item) => item.tag));
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const pasteClipboard = async () => {
     try {
@@ -101,14 +117,11 @@ export function QuickCaptureModal() {
           </div>
           <div className="field">
             <label htmlFor="qc-tags">Tags</label>
-            <input
+            <TagInput
               id="qc-tags"
-              className="input"
               value={tags}
-              onChange={(event) => setTags(event.target.value)}
-              spellCheck={false}
-              autoComplete="off"
-              placeholder="recon, web"
+              onChange={setTags}
+              suggestions={tagSuggestions}
             />
           </div>
         </div>

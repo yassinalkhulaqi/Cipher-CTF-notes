@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import {
   Check,
   Clock3,
@@ -16,6 +16,7 @@ import {
 import { api } from "../lib/api";
 import { STATUS_LABEL } from "../lib/constants";
 import { flagFormat } from "../lib/flags";
+import { parseTags } from "../lib/tags";
 import { extractOutline } from "../lib/outline";
 import type { FlagPattern, NodeDetail } from "../lib/types";
 import { copyText, formatDate, plural, relativeTime, wordCount } from "../lib/utils";
@@ -212,7 +213,7 @@ export function NoteInspector({
             </div>
             <div className="prop-row">
               <span className="prop-key">Difficulty</span>
-              <span className="prop-value">{note.difficulty || "—"}</span>
+              <span className="prop-value">{note.difficulty || "â€”"}</span>
             </div>
             <div className="prop-row">
               <span className="prop-key">Target</span>
@@ -228,7 +229,7 @@ export function NoteInspector({
                     <span>{note.target}</span>
                   </button>
                 ) : (
-                  "—"
+                  "â€”"
                 )}
               </span>
             </div>
@@ -242,8 +243,8 @@ export function NoteInspector({
             <div className="prop-row">
               <span className="prop-key">Tags</span>
               <span className="prop-value prop-tags">
-                {note.tag_list.length ? (
-                  note.tag_list.map((tag) => (
+                {parseTags(note.tags).length ? (
+                  parseTags(note.tags).map((tag) => (
                     <button
                       key={tag}
                       type="button"
@@ -256,7 +257,7 @@ export function NoteInspector({
                     </button>
                   ))
                 ) : (
-                  "—"
+                  "â€”"
                 )}
               </span>
             </div>
@@ -274,7 +275,7 @@ export function NoteInspector({
                     <code>{note.flag}</code>
                   </button>
                 ) : (
-                  "—"
+                  "â€”"
                 )}
               </span>
             </div>
@@ -299,7 +300,7 @@ export function NoteInspector({
             <div className="prop-row">
               <span className="prop-key">Length</span>
               <span className="prop-value">
-                {plural(words, "word")} · {readingTime(draft)}
+                {plural(words, "word")} آ· {readingTime(draft)}
               </span>
             </div>
             <button
