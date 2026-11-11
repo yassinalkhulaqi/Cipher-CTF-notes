@@ -178,7 +178,7 @@ export function Dashboard() {
     );
   };
 
-  const filterByTarget = (value: string) => {
+  const applyVaultFilter = (value: string) => {
     setFilter(value);
     focusFilter();
   };
@@ -353,7 +353,7 @@ export function Dashboard() {
           onFilterAll={() => setFilter("")}
           onShowDashboard={() => openModal("dashboard")}
           onFlagIntel={() => openModal("flag-intel")}
-          onFilterTarget={filterByTarget}
+          onFilterTarget={applyVaultFilter}
         />
 
         <div className="desk-grid">
@@ -650,7 +650,7 @@ export function Dashboard() {
                       key={target}
                       type="button"
                       className="target-pill"
-                      onClick={() => filterByTarget(target)}
+                      onClick={() => applyVaultFilter(target)}
                       title={`Filter vault by ${target}`}
                     >
                       <span>{target}</span>
@@ -680,7 +680,7 @@ export function Dashboard() {
                       key={tag}
                       type="button"
                       className="tag-chip"
-                      onClick={() => filterByTarget(tag)}
+                      onClick={() => applyVaultFilter(tag)}
                       title={`Filter vault by #${tag}`}
                     >
                       #{tag}

@@ -5,6 +5,7 @@ import { DIFFICULTIES, STATUSES, STATUS_LABEL } from "../../lib/constants";
 import type { FlagPattern, Status } from "../../lib/types";
 import { formatDate } from "../../lib/utils";
 import { TagInput } from "../TagInput";
+import { useTagSuggestions } from "../../hooks/useTagSuggestions";
 import { useAppStore } from "../../store/useAppStore";
 import { useUiStore } from "../../store/useUiStore";
 import { Modal } from "./Modal";
@@ -28,7 +29,7 @@ export function PropertiesModal() {
   const [pinned, setPinned] = useState(note?.pinned ?? false);
   const [saving, setSaving] = useState(false);
   const [patterns, setPatterns] = useState<FlagPattern[]>([]);
-  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+  const tagSuggestions = useTagSuggestions();
 
   useEffect(() => {
     if (!note) return;
@@ -47,21 +48,6 @@ export function PropertiesModal() {
       .flagPatterns()
       .then((items) => {
         if (!cancelled) setPatterns(items);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    api
-      .tagCounts()
-      .then((items) => {
-        if (!cancelled) {
-          setTagSuggestions(items.map((item) => item.tag));
-        }
       })
       .catch(() => undefined);
     return () => {

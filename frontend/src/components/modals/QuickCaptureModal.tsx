@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+﻿import { useState } from "react";
 import { ClipboardPaste, Save, Zap } from "lucide-react";
-import { api } from "../../lib/api";
 import { TagInput } from "../TagInput";
+import { useTagSuggestions } from "../../hooks/useTagSuggestions";
 import { useAppStore } from "../../store/useAppStore";
 import { useUiStore } from "../../store/useUiStore";
 import { Modal } from "./Modal";
@@ -16,20 +16,7 @@ export function QuickCaptureModal() {
   const [tags, setTags] = useState("");
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
-  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    api
-      .tagCounts()
-      .then((items) => {
-        if (!cancelled) setTagSuggestions(items.map((item) => item.tag));
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const tagSuggestions = useTagSuggestions();
 
   const pasteClipboard = async () => {
     try {
@@ -53,7 +40,7 @@ export function QuickCaptureModal() {
     try {
       const node = await quickCapture({ title, content, target, tags });
       closeModal();
-      toast(`Captured “${node.title}”`, "success");
+      toast(`Captured â€œ${node.title}â€‌`, "success");
     } catch (error) {
       toast(
         error instanceof Error ? error.message : "Could not capture this note",
@@ -82,7 +69,7 @@ export function QuickCaptureModal() {
             onClick={() => void save()}
             disabled={saving}
           >
-            <Save /> {saving ? "Capturing…" : "Capture note"}
+            <Save /> {saving ? "Capturingâ€¦" : "Capture note"}
           </button>
         </>
       }
@@ -133,7 +120,7 @@ export function QuickCaptureModal() {
             value={content}
             onChange={(event) => setContent(event.target.value)}
             spellCheck={false}
-            placeholder="Anything worth remembering — scan output, a lead, a flag…"
+            placeholder="Anything worth remembering â€” scan output, a lead, a flagâ€¦"
           />
           <div className="capture-actions">
             <button

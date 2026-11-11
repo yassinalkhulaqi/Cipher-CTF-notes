@@ -32,6 +32,13 @@ network calls.
 - **Readable output.** Markdown editor with syntax highlighting and a split
   preview with code highlighting and optional synchronized scrolling. Export a
   note to Markdown or HTML, or export the whole vault as a browsable HTML report.
+- **Tag workflow.** Tags are first-class: a chip editor with vault-tag
+  autocomplete in note properties and quick capture, one-click chips in the
+  inspector, and a tag explorer (quick switch → "Tag explorer") with live
+  usage counts that filters the tree.
+- **Undo trash.** Move to trash from the tree, the workspace menu, or the
+  `Delete` hotkey, and undo it straight from the toast. The trash view also
+  offers "Restore all".
 - **Aurora interface.** A responsive React workspace with a real-data research
   dashboard, command palette, focused editor, find and replace, live preview,
   snippet library, and warm light or graphite dark themes. Runs in a native
