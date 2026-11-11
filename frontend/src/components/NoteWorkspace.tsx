@@ -1,4 +1,4 @@
-import {
+﻿import {
   useEffect,
   useMemo,
   useRef,
@@ -44,6 +44,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { api } from "../lib/api";
+import { onInsertSnippet } from "../lib/events";
 import { usePreview } from "../hooks/usePreview";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import { maxWidthQuery } from "../lib/breakpoints";
@@ -67,30 +68,8 @@ import {
 } from "../lib/utils";
 import { readingTime } from "../lib/ux";
 import { STATUS_LABEL } from "../lib/constants";
-
-function ToolButton({
-  icon: Icon,
-  label,
-  shortcut,
-  onClick,
-}: {
-  icon: LucideIcon;
-  label: string;
-  shortcut?: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className="tool-btn"
-      onClick={onClick}
-      title={`${label}${shortcut ? ` (${shortcut})` : ""}`}
-      aria-label={label}
-    >
-      <Icon />
-    </button>
-  );
-}
+import { Breadcrumbs } from "./workspace/Breadcrumbs";
+import { ToolButton } from "./workspace/ToolButton";
 
 export function NoteWorkspace() {
   const note = useAppStore((state) => state.note);
@@ -181,14 +160,10 @@ const compact = useMediaQuery(maxWidthQuery("xl"));
   }, [compact, setInspectorOpen]);
 
   useEffect(() => {
-    const insert = (event: Event) => {
-      const detail = (event as CustomEvent<{ text?: string }>).detail;
-      if (!detail?.text) return;
-      editorRef.current?.insertText(detail.text);
+    return onInsertSnippet((text) => {
+      editorRef.current?.insertText(text);
       toast("Snippet inserted at the cursor", "success");
-    };
-    window.addEventListener("redscribe:insert-snippet", insert);
-    return () => window.removeEventListener("redscribe:insert-snippet", insert);
+    });
   }, [toast]);
 
   if (!note) return null;
@@ -365,7 +340,7 @@ const compact = useMediaQuery(maxWidthQuery("xl"));
       onSelect: () => {
         askConfirm({
           title: "Move to trash",
-          message: `Move “${note.title}” to the trash?`,
+          message: `Move â€œ${note.title}â€‌ to the trash?`,
           confirmLabel: "Move to trash",
           danger: true,
           action: async () => {
@@ -437,25 +412,12 @@ const compact = useMediaQuery(maxWidthQuery("xl"));
       />
       <header className="note-head">
         <div className="note-topline">
-          <div className="breadcrumbs" aria-label="Breadcrumb">
-            <button type="button" onClick={close}>
-              Vault
-            </button>
-            {crumbs.map((crumb) => (
-              <span key={crumb.id} style={{ display: "contents" }}>
-                <span className="sep">/</span>
-                <button
-                  type="button"
-                  onClick={() => goTo(crumb.id)}
-                  title={crumb.title}
-                >
-                  {crumb.title}
-                </button>
-              </span>
-            ))}
-            <span className="sep">/</span>
-            <span className="current">{note.title}</span>
-          </div>
+          <Breadcrumbs
+            crumbs={crumbs}
+            current={note.title}
+            onVault={close}
+            onGoTo={goTo}
+          />
 
           <div className="note-actions">
             <button
@@ -741,7 +703,7 @@ const compact = useMediaQuery(maxWidthQuery("xl"));
               )}
             </div>
             <span className="pane-meta">
-              {plural(words, "word")} · {readingTime(draft)}
+              {plural(words, "word")} آ· {readingTime(draft)}
             </span>
             <button
               type="button"
@@ -764,7 +726,7 @@ const compact = useMediaQuery(maxWidthQuery("xl"));
             value={draft}
             onChange={setDraft}
             onScroll={syncPreview}
-            placeholder="# Start writing…"
+            placeholder="# Start writingâ€¦"
             ariaLabel="Note content"
           />
         </section>

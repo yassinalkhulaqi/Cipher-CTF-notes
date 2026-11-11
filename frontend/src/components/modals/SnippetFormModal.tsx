@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Code2, Save, Trash2 } from "lucide-react";
 import { api } from "../../lib/api";
+import { snippetsChanged } from "../../lib/events";
 import { useUiStore } from "../../store/useUiStore";
 import { Modal } from "./Modal";
 
-const SNIPPETS_CHANGED = "redscribe:snippets-changed";
 
 export function SnippetFormModal() {
   const snippetEditorId = useUiStore((state) => state.snippetEditorId);
@@ -78,7 +78,7 @@ export function SnippetFormModal() {
         });
         toast("Snippet created", "success");
       }
-      window.dispatchEvent(new Event(SNIPPETS_CHANGED));
+      snippetsChanged();
       closeModal();
     } catch (error) {
       toast(
@@ -95,13 +95,13 @@ export function SnippetFormModal() {
     const id = snippetEditorId;
     askConfirm({
       title: "Delete snippet",
-      message: `Delete “${title || "this snippet"}”? This cannot be undone.`,
+      message: `Delete â€œ${title || "this snippet"}â€‌? This cannot be undone.`,
       confirmLabel: "Delete snippet",
       danger: true,
       action: async () => {
         try {
           await api.deleteSnippet(id);
-          window.dispatchEvent(new Event(SNIPPETS_CHANGED));
+          snippetsChanged();
           toast("Snippet deleted", "success");
           closeModal();
         } catch (error) {
@@ -141,7 +141,7 @@ export function SnippetFormModal() {
             onClick={() => void save()}
             disabled={saving || loading}
           >
-            <Save /> {saving ? "Saving…" : "Save snippet"}
+            <Save /> {saving ? "Savingâ€¦" : "Save snippet"}
           </button>
         </>
       }

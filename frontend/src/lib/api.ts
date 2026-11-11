@@ -31,19 +31,34 @@ export class ApiError extends Error {
   }
 }
 
-async function call<T>(
+const DEFAULT_TIMEOUT_MS = 10_000;
+
+interface CallOptions {
+  timeout?: number;
+}
+
+async function fetchCall<T>(
   method: string,
-  body: Record<string, unknown> = {},
+  body: Record<string, unknown>,
+  timeout: number,
 ): Promise<T> {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeout);
   let response: Response;
   try {
     response = await fetch(`/api/${method}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiError(`Request timed out after ${timeout}ms`, 0);
+    }
     throw new ApiError("Cannot reach the RedScribe backend", 0);
+  } finally {
+    window.clearTimeout(timer);
   }
   let payload: Envelope<T> | null = null;
   try {
@@ -59,6 +74,28 @@ async function call<T>(
     throw new ApiError(message, response.status);
   }
   return payload.data;
+}
+
+async function call<T>(
+  method: string,
+  body: Record<string, unknown> = {},
+  options: CallOptions = {},
+): Promise<T> {
+  const timeout = options.timeout ?? DEFAULT_TIMEOUT_MS;
+  // save_content is idempotent (same id + content), so one transparent retry
+  // on a transient network failure is safe; HTTP errors are not retried.
+  if (method === "save_content") {
+    try {
+      return await fetchCall<T>(method, body, timeout);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 0) {
+        await new Promise((resolve) => window.setTimeout(resolve, 800));
+        return fetchCall<T>(method, body, timeout);
+      }
+      throw error;
+    }
+  }
+  return fetchCall<T>(method, body, timeout);
 }
 
 export const api = {
@@ -109,7 +146,6 @@ export const api = {
   search: (query: string) => call<SearchHit[]>("search", { query }),
   quickJump: (query: string) => call<NodeSummary[]>("quick_jump", { query }),
   recentNotes: (limit = 10) => call<NodeSummary[]>("recent_notes", { limit }),
-  pinnedNotes: () => call<NodeSummary[]>("pinned_notes"),
   stats: () => call<VaultStats>("stats"),
   collectedFlags: () => call<FlagHit[]>("collected_flags"),
   tagCounts: () => call<TagCount[]>("tag_counts"),

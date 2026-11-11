@@ -1,16 +1,13 @@
-import {
+﻿import {
   useEffect,
   useMemo,
   useRef,
   useState,
   type DragEvent,
   type KeyboardEvent,
-  type MouseEvent,
-  type PointerEvent as ReactPointerEvent,
 } from "react";
 import {
   CalendarClock,
-  ChevronRight,
   ChevronsDownUp,
   ChevronsUpDown,
   Code2,
@@ -18,26 +15,25 @@ import {
   FilePlus2,
   FileText,
   Flag,
-  Folder,
-  FolderOpen,
   FolderPlus,
   LayoutDashboard,
   Network,
   PanelLeftClose,
-  PanelLeftOpen,
   Pencil,
   Pin,
   Search,
-  Settings,
   Sparkles,
   Trash2,
   X,
 } from "lucide-react";
 import { Menu, type MenuEntry } from "./Menu";
+import { SidebarRail } from "./sidebar/SidebarRail";
+import { TreeRow } from "./sidebar/TreeRow";
 import { StatusIcon } from "./StatusIcon";
 import { useFlipList } from "../motion/useFlipList";
 import { useFloatingSelection } from "../motion/useFloatingSelection";
 import { useMediaQuery } from "../hooks/useMediaQuery";
+import { useSidebarResize } from "../hooks/useSidebarResize";
 import { maxWidthQuery } from "../lib/breakpoints";
 import {
   allIds,
@@ -48,6 +44,7 @@ import {
   type FlatNode,
 } from "../lib/tree";
 import type { TreeNode } from "../lib/types";
+import { onFocusFilter } from "../lib/events";
 import { modLabel, plural } from "../lib/utils";
 import { useAppStore } from "../store/useAppStore";
 import { useUiStore } from "../store/useUiStore";
@@ -58,187 +55,6 @@ interface ContextState {
   node: TreeNode;
 }
 
-interface TreeRowProps {
-  row: FlatNode;
-  selected: boolean;
-  focusable: boolean;
-  expanded: boolean;
-  dragging: boolean;
-  dropTarget: boolean;
-  renaming: boolean;
-  onToggle: (id: number) => void;
-  onSelect: (id: number) => void;
-  onRename: (id: number, title: string) => Promise<void>;
-  onRenameDone: () => void;
-  onKeyNavigate: (event: KeyboardEvent<HTMLDivElement>, row: FlatNode) => void;
-  onStartRename: (node: TreeNode) => void;
-  onContext: (event: MouseEvent<HTMLDivElement>, node: TreeNode) => void;
-  onDragStart: (event: DragEvent<HTMLDivElement>, node: TreeNode) => void;
-  onDragEnd: () => void;
-  onDragOver: (event: DragEvent<HTMLDivElement>, node: TreeNode) => void;
-  onDrop: (event: DragEvent<HTMLDivElement>, node: TreeNode) => void;
-}
-
-function TreeRow({
-  row,
-  selected,
-  focusable,
-  expanded,
-  dragging,
-  dropTarget,
-  renaming,
-  onToggle,
-  onSelect,
-  onRename,
-  onRenameDone,
-  onKeyNavigate,
-  onStartRename,
-  onContext,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDrop,
-}: TreeRowProps) {
-  const { node, depth } = row;
-  const folder = node.kind === "folder";
-  const open = folder && expanded;
-  const rowRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [title, setTitle] = useState(node.title);
-
-  useEffect(() => {
-    setTitle(node.title);
-  }, [node.title]);
-
-  useEffect(() => {
-    if (!renaming) return;
-    const timer = window.setTimeout(() => {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    }, 10);
-    return () => window.clearTimeout(timer);
-  }, [renaming]);
-
-  const activate = () => {
-    if (folder) onToggle(node.id);
-    else onSelect(node.id);
-  };
-
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (renaming) return;
-    if (event.key === "F2") {
-      event.preventDefault();
-      event.stopPropagation();
-      onStartRename(node);
-      return;
-    }
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      activate();
-      return;
-    }
-    onKeyNavigate(event, row);
-  };
-
-  const commit = () => {
-    const next = title.trim();
-    if (!next || next === node.title) {
-      onRenameDone();
-      return;
-    }
-    void onRename(node.id, next);
-  };
-
-  return (
-    <div
-      ref={rowRef}
-      className={`tree-row ${selected ? "selected" : ""} ${dragging ? "dragging" : ""} ${
-        dropTarget ? "drop-target" : ""
-      }`}
-      style={{ paddingLeft: `${5 + depth * 13}px` }}
-      data-node-id={node.id}
-      role="treeitem"
-      aria-level={depth + 1}
-      aria-selected={selected}
-      aria-expanded={folder ? open : undefined}
-      tabIndex={focusable ? 0 : -1}
-      title={renaming ? undefined : node.path || node.title}
-      draggable={!renaming}
-      onClick={() => {
-        if (!renaming) activate();
-      }}
-      onKeyDown={onKeyDown}
-      onContextMenu={(event) => onContext(event, node)}
-      onDragStart={(event) => onDragStart(event, node)}
-      onDragEnd={onDragEnd}
-      onDragOver={(event) => onDragOver(event, node)}
-      onDrop={(event) => onDrop(event, node)}
-    >
-      {folder ? (
-        <button
-          type="button"
-          className={`chevron ${open ? "open" : ""}`}
-          onClick={(event) => {
-            event.stopPropagation();
-            onToggle(node.id);
-          }}
-          tabIndex={-1}
-          aria-label={open ? "Collapse folder" : "Expand folder"}
-        >
-          <ChevronRight />
-        </button>
-      ) : (
-        <span className="chevron" />
-      )}
-      <span className={`node-icon ${folder ? "folder" : ""}`}>
-        {folder ? open ? <FolderOpen /> : <Folder /> : <FileText />}
-      </span>
-      {renaming ? (
-        <input
-          ref={inputRef}
-          className="tree-inline-input"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          onClick={(event) => event.stopPropagation()}
-          onBlur={commit}
-          onKeyDown={(event) => {
-            event.stopPropagation();
-            if (event.key === "Enter") {
-              event.preventDefault();
-              commit();
-            } else if (event.key === "Escape") {
-              event.preventDefault();
-              setTitle(node.title);
-              onRenameDone();
-            }
-          }}
-          aria-label={`Rename ${node.title}`}
-          spellCheck={false}
-        />
-      ) : (
-        <span className={`node-title ${folder ? "folder" : ""}`}>
-          {node.title}
-        </span>
-      )}
-      {!renaming && node.pinned ? (
-        <span className="row-pin" title="Pinned">
-          <Pin />
-        </span>
-      ) : null}
-      {!renaming && node.flag ? (
-        <span className="row-flag" title={node.flag}>
-          <Flag />
-        </span>
-      ) : null}
-      {!renaming && !folder ? (
-        <StatusIcon status={node.status} label={`Status: ${node.status}`} />
-      ) : null}
-      {!renaming && folder && node.children.length > 0 ? (
-        <span className="row-badge">{node.children.length}</span>
-      ) : null}
-    </div>
-  );
-}
 
 export function Sidebar() {
   const tree = useAppStore((state) => state.tree);
@@ -249,7 +65,6 @@ export function Sidebar() {
   const sidebarWidth = useAppStore((state) => state.sidebarWidth);
   const setFilter = useAppStore((state) => state.setFilter);
   const setExpanded = useAppStore((state) => state.setExpanded);
-  const setSidebarWidth = useAppStore((state) => state.setSidebarWidth);
   const toggleFolder = useAppStore((state) => state.toggleFolder);
   const openNote = useAppStore((state) => state.openNote);
   const moveNode = useAppStore((state) => state.moveNode);
@@ -280,8 +95,7 @@ export function Sidebar() {
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dropTarget, setDropTarget] = useState<number | "root" | null>(null);
   const [renamingId, setRenamingId] = useState<number | null>(null);
-  const [draggingSash, setDraggingSash] = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
+    const searchRef = useRef<HTMLInputElement>(null);
   const treeRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => filterTree(tree, filter), [tree, filter]);
@@ -340,15 +154,14 @@ export function Sidebar() {
     selectionSignature,
   );
 
-  useEffect(() => {
-    const focusFilter = () => {
-      searchRef.current?.focus();
-      searchRef.current?.select();
-    };
-    window.addEventListener("redscribe:focus-filter", focusFilter);
-    return () =>
-      window.removeEventListener("redscribe:focus-filter", focusFilter);
-  }, []);
+  useEffect(
+    () =>
+      onFocusFilter(() => {
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      }),
+    [],
+  );
 
   const closeMobile = () => setMobileSidebar(false);
 
@@ -449,7 +262,7 @@ export function Sidebar() {
   const confirmTrash = (node: TreeNode) => {
     askConfirm({
       title: "Move to trash",
-      message: `Move “${node.title}”${node.kind === "folder" ? " and everything inside it" : ""} to the trash?`,
+      message: `Move â€œ${node.title}â€‌${node.kind === "folder" ? " and everything inside it" : ""} to the trash?`,
       confirmLabel: "Move to trash",
       danger: true,
       action: async () => {
@@ -627,139 +440,33 @@ export function Sidebar() {
     });
   };
 
-  const startResize = (event: ReactPointerEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const startX = event.clientX;
-    const startWidth = sidebarWidth;
-    setDraggingSash(true);
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-    const onMove = (moveEvent: PointerEvent) => {
-      setSidebarWidth(startWidth + moveEvent.clientX - startX, false);
-    };
-    const onUp = () => {
-      setDraggingSash(false);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
-      setSidebarWidth(useAppStore.getState().sidebarWidth, true);
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-  };
-
-  const resizeKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "ArrowLeft") {
-      event.preventDefault();
-      setSidebarWidth(sidebarWidth - 16, true);
-    } else if (event.key === "ArrowRight") {
-      event.preventDefault();
-      setSidebarWidth(sidebarWidth + 16, true);
-    } else if (event.key === "Home") {
-      event.preventDefault();
-      setSidebarWidth(220, true);
-    } else if (event.key === "End") {
-      event.preventDefault();
-      setSidebarWidth(480, true);
-    }
-  };
+  const { draggingSash, startResize, resizeKey } = useSidebarResize();
 
   if (collapsed) {
     return (
-      <nav className="sidebar sidebar-rail" aria-label="Vault rail">
-        <button
-          type="button"
-          className="rail-brand"
-          onClick={() => setSidebarCollapsed(false)}
-          data-tooltip="Expand sidebar"
-          aria-label="Expand sidebar"
-        >
-          <PanelLeftOpen />
-        </button>
-        <div className="rail-group">
-          <button
-            type="button"
-            className={`rail-btn ${!note ? "active" : ""}`}
-            onClick={goDashboard}
-            data-tooltip="Dashboard"
-            aria-label="Dashboard"
-            aria-current={!note ? "page" : undefined}
-          >
-            <LayoutDashboard />
-          </button>
-          <button
-            type="button"
-            className="rail-btn"
-            onClick={() => {
-              closeMobile();
-              openModal("flag-intel");
-            }}
-            data-tooltip="Flag intelligence"
-            aria-label="Flag intelligence"
-          >
-            <Flag />
-          </button>
-          <button
-            type="button"
-            className="rail-btn"
-            onClick={() => {
-              closeMobile();
-              openModal("snippets");
-            }}
-            data-tooltip="Snippet library"
-            aria-label="Snippet library"
-          >
-            <Code2 />
-          </button>
-          <button
-            type="button"
-            className="rail-btn"
-            onClick={() => {
-              closeMobile();
-              openModal("graph");
-            }}
-            data-tooltip="Vault graph"
-            aria-label="Vault graph"
-          >
-            <Network />
-          </button>
-          <button
-            type="button"
-            className="rail-btn"
-            onClick={() => {
-              closeMobile();
-              openModal("timeline");
-            }}
-            data-tooltip="Recent activity"
-            aria-label="Recent activity"
-          >
-            <CalendarClock />
-          </button>
-        </div>
-        <div className="rail-group rail-bottom">
-          <button
-            type="button"
-            className="rail-btn"
-            onClick={() => openNewNote()}
-            data-tooltip="New note"
-            aria-label="New note"
-          >
-            <FilePlus2 />
-          </button>
-          <button
-            type="button"
-            className="rail-btn"
-            onClick={() => openModal("settings")}
-            data-tooltip="Settings"
-            aria-label="Settings"
-          >
-            <Settings />
-          </button>
-        </div>
-      </nav>
+      <SidebarRail
+        hasNote={note !== null}
+        onExpand={() => setSidebarCollapsed(false)}
+        onDashboard={goDashboard}
+        onFlagIntel={() => {
+          closeMobile();
+          openModal("flag-intel");
+        }}
+        onSnippets={() => {
+          closeMobile();
+          openModal("snippets");
+        }}
+        onGraph={() => {
+          closeMobile();
+          openModal("graph");
+        }}
+        onTimeline={() => {
+          closeMobile();
+          openModal("timeline");
+        }}
+        onNewNote={() => openNewNote()}
+        onSettings={() => openModal("settings")}
+      />
     );
   }
 
@@ -892,7 +599,7 @@ export function Sidebar() {
           ref={searchRef}
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
-          placeholder="Filter notes, tags, targets…"
+          placeholder="Filter notes, tags, targetsâ€¦"
           spellCheck={false}
           autoComplete="off"
           aria-label="Filter vault"

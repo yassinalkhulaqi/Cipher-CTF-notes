@@ -92,3 +92,51 @@ ConfirmModal,GraphModal,TimelineModal}.tsx`, `frontend/src/store/useUiStore.ts`,
   behavior and are scheduled for branch 03/04 (backend ownership).
 - `prettier --check` is red repo-wide at HEAD; will be addressed with the
   lockfile/tooling fix in branch 05.
+
+---
+
+## 02 — agent/frontend-architecture-02 (Frontend architecture & implementation)
+
+**Parent:** `agent/ui-ux-redesign-01` (`5824bdf`) · **Files:** 24 ·
+**Changed lines:** 2371 (1511+ / 860−)
+
+**Agents:** 2 (Frontend) with lead review.
+
+### Scope and completed tasks
+
+- **Component extraction.** `Sidebar.tsx` (1074 → ~760): extracted
+  `sidebar/TreeRow.tsx` (tree rows, inline rename, drag/drop/keyboard) and
+  `sidebar/SidebarRail.tsx` (collapsed icon rail); extracted
+  `hooks/useSidebarResize.ts` (pointer/keyboard sidebar resize with
+  min/max clamp — previously the store clamped but live drags were
+  unclamped). `Dashboard.tsx` (1020 → 899): extracted
+  `hooks/useDashboardData.ts` and `dashboard/PulseStrip.tsx`.
+  `NoteWorkspace.tsx` (839 → 802): extracted `workspace/ToolButton.tsx` and
+  `workspace/Breadcrumbs.tsx`.
+- **Effect-churn fix.** Dashboard's timeline/flags/insights effects now
+  depend on a stable signature (note count + latest `updated_at`) instead of
+  the `nodes` Map identity; unrelated tree refreshes no longer re-fetch.
+- **Fetch hygiene.** `lib/api.ts` wraps every call in an AbortController
+  with a 10s timeout (previously hung requests spun forever); `save_content`
+  retries once on transient network failure (idempotent by id+content).
+- **Typed event bus.** `lib/events.ts` replaces six stringly-typed
+  `window.dispatchEvent/addEventListener` sites (`SNIPPETS_CHANGED`,
+  `redscribe:insert-snippet`, `redscribe:focus-filter`) with typed
+  dispatch/subscribe helpers; all call sites migrated.
+- **Dead code removed.** `motion/Reveal.tsx`, `motion/Stagger.tsx`,
+  `motion/useInView.ts`, `motion/useMagnetic.ts`, `motion/usePresence.ts`,
+  `hooks/useDebouncedValue.ts`, `api.pinnedNotes`; `clsx` dependency dropped
+  (custom `cx` is used instead).
+- Bundle rebuilt and committed per repo convention.
+
+### Tests executed
+
+- `npm run build` (esbuild + `tsc --noEmit`) — pass (twice)
+- `npm test` — see branch-1 notes; motion suite re-run in this branch's QA pass
+- No Python changes
+
+### Notes / remaining issues
+
+- `NoteWorkspace.tsx` remains > 800 lines; the toolbar cluster is the next
+  extraction candidate if a follow-up pass is done.
+- Prettier repo-wide failures unchanged (see branch 05).

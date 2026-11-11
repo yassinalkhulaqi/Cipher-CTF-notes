@@ -31,6 +31,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { api } from "../../lib/api";
+import { insertSnippet } from "../../lib/events";
 import type { NodeSummary, Snippet } from "../../lib/types";
 import { copyText, modLabel } from "../../lib/utils";
 import { useAppStore } from "../../store/useAppStore";
@@ -379,11 +380,7 @@ export function CommandPalette() {
           snippet.command,
           note.target ?? "",
         );
-        window.dispatchEvent(
-          new CustomEvent("redscribe:insert-snippet", {
-            detail: { text: resolved.command },
-          }),
-        );
+        insertSnippet(resolved.command);
         toast(`Inserted “${snippet.title}”`, "success");
       } catch (error) {
         toast(
