@@ -4,10 +4,11 @@ Autonomous multi-agent development of RedScribe (`Cipher-CTF-notes`). The
 stacked chain starts at `main` (`e452a30`) and continues through
 `feat/workbench-overhaul` (`41521e1`), `agent/ui-ux-redesign-01` (`5824bdf`),
 `agent/frontend-architecture-02` (`f6d5337`), `agent/core-features-03`
-(`ad2025d`) and the current `agent/backend-api-04`. Line counts for committed
-branches use `git diff --shortstat <PARENT> HEAD` (insertions + deletions),
-excluding the committed minified bundle. The branch-04/QA pass is uncommitted
-at the time of writing. Nothing is merged to `main`; nothing is pushed.
+(`ad2025d`) and the current `agent/backend-api-04` (`aec1312`). Line counts for
+committed branches use `git diff --shortstat <PARENT> HEAD` (insertions +
+deletions), excluding the committed minified bundle. The branch-04/QA pass is
+committed as `aec1312`. All local branches are merged into that tip; nothing is
+merged to `main`; nothing is pushed.
 
 Baseline at `41521e1` (2026-11-11):
 
@@ -217,8 +218,7 @@ test_snippet_search}.py`; rebuilt bundle.
 
 ## 04 — agent/backend-api-04 (Backend, API & security hardening)
 
-**Parent:** `agent/core-features-03` (`ad2025d`) · **Status:** uncommitted
-integration pass.
+**Parent:** `agent/core-features-03` (`ad2025d`) · **Commit:** `aec1312`.
 
 **Agents:** 4 (Backend & API) with lead review.
 
@@ -275,7 +275,7 @@ integration pass.
 
 ## 05 — QA/Testing/Security hardening (integration pass)
 
-**Parent:** branch 04 · **Status:** uncommitted integration pass.
+**Parent:** branch 04 · **Commit:** `aec1312`.
 
 **Agents:** 5 (QA/Testing/Security) with lead review.
 
@@ -303,7 +303,7 @@ integration pass.
 
 ### Notes / remaining issues
 
-- Branch convergence is still pending: cherry-pick `b0a8aaf`, merge the stacked
-  branches in order, delete `origin/feat/aurora-ui` after the cherry-pick, and
-  verify no duplicate compatibility modules remain.
-- Nothing has been committed or pushed for branches 04/05 yet.
+- Local branch convergence is complete: `b0a8aaf` was already an ancestor, all
+  local branches are merged into `aec1312`, and the compatibility shims are
+  gone. Deleting `origin/feat/aurora-ui` would require an explicit remote push.
+- Branches 04/05 are committed as `aec1312`; nothing is pushed.
