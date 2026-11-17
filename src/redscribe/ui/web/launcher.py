@@ -19,6 +19,7 @@ from typing import Any
 from redscribe.services.demo import seed_demo
 from redscribe.storage.db import Vault
 from redscribe.ui.web.api import Api, WebOverrides
+from redscribe.ui.web.security import AuditLog, AuthRateLimiter
 from redscribe.ui.web.server import ApiServer
 
 LOGGER = logging.getLogger(__name__)
@@ -62,6 +63,8 @@ def run(
     demo: bool = False,
     port: int = 0,
     open_browser: bool = True,
+    token_ttl: float | None = None,
+    auth_limit: int = 8,
 ) -> int:
     """Start the local web server and open the frontend.
 
@@ -91,7 +94,10 @@ def run(
             ("127.0.0.1", port),
             dispatch,
             token=token,
+            token_ttl=token_ttl,
             backup=backup_bytes,
+            rate_limiter=AuthRateLimiter(limit=auth_limit),
+            audit_log=AuditLog(),
         )
         bound_port = server.bound_port
         url = f"http://127.0.0.1:{bound_port}/"
