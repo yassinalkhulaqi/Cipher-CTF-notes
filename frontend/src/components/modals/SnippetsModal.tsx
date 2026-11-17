@@ -1,4 +1,4 @@
-﻿import {
+import {
   useCallback,
   useEffect,
   useMemo,
@@ -26,7 +26,6 @@ import { copyText, plural } from "../../lib/utils";
 import { useAppStore } from "../../store/useAppStore";
 import { useUiStore } from "../../store/useUiStore";
 import { Modal } from "./Modal";
-
 
 function snippetKey(snippet: Snippet): string {
   return snippet.builtin
@@ -196,7 +195,7 @@ export function SnippetsModal() {
     const id = current.id;
     askConfirm({
       title: "Delete snippet",
-      message: `Delete â€œ${current.title}â€‌? This cannot be undone.`,
+      message: `Delete “${current.title}”? This cannot be undone.`,
       confirmLabel: "Delete snippet",
       danger: true,
       action: async () => {
@@ -231,7 +230,7 @@ export function SnippetsModal() {
               <input
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
-                placeholder="Filterâ€¦"
+                placeholder="Filter…"
                 spellCheck={false}
                 autoComplete="off"
                 aria-label="Filter snippets"

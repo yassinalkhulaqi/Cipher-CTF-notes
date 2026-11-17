@@ -104,7 +104,9 @@ def test_timeline_scopes_to_folder_subtree(vault: Vault) -> None:
     ids = {event.node_id for event in events}
     assert inside.id in ids
     assert folder.id in ids
-    assert all(event.path.startswith("Engagement") or event.title == "Engagement" for event in events)
+    assert all(
+        event.path.startswith("Engagement") or event.title == "Engagement" for event in events
+    )
 
 
 def test_timeline_rejects_missing_folder(vault: Vault) -> None:

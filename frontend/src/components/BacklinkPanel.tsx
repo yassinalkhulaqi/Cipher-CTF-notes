@@ -52,7 +52,10 @@ export function BacklinkPanel({
 
   if (error) {
     return (
-      <div className={`backlinks backlinks-error ${className}`.trim()} role="status">
+      <div
+        className={`backlinks backlinks-error ${className}`.trim()}
+        role="status"
+      >
         <Unlink />
         <span>{error}</span>
       </div>
@@ -67,7 +70,10 @@ export function BacklinkPanel({
     links.backlinks.length + links.outlinks.length + links.unresolved.length;
   if (total === 0) {
     return (
-      <div className={`backlinks ${className}`.trim()} aria-label="No links for this note">
+      <div
+        className={`backlinks ${className}`.trim()}
+        aria-label="No links for this note"
+      >
         <span className="backlinks-hint">
           <Link2Off />
           No links yet. Use <code>[[Note Title]]</code> to connect notes.

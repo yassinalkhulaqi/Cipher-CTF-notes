@@ -7,7 +7,9 @@ import json
 import logging
 import re
 import sqlite3
+import tempfile
 from collections.abc import Iterator
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TypeVar, cast
 
@@ -28,7 +30,25 @@ from redscribe.domain.utils import collapse_whitespace, slugify, truncate, utc_n
 LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
+
+_MIGRATION_3 = """
+CREATE TABLE IF NOT EXISTS nodes_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    node_id INTEGER NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
+    title TEXT NOT NULL DEFAULT '',
+    content TEXT NOT NULL DEFAULT '',
+    tags TEXT NOT NULL DEFAULT '',
+    target TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT '',
+    difficulty TEXT NOT NULL DEFAULT '',
+    flag TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_nodes_history_node
+    ON nodes_history(node_id, id DESC);
+"""
+
 
 _MIGRATION_1 = """
 CREATE TABLE IF NOT EXISTS nodes (
@@ -86,6 +106,7 @@ CREATE INDEX IF NOT EXISTS idx_snippets_title
 _MIGRATIONS: dict[int, str] = {
     1: _MIGRATION_1,
     2: _MIGRATION_2,
+    3: _MIGRATION_3,
 }
 
 _FTS_TRIGGERS = ("nodes_fts_ai", "nodes_fts_ad", "nodes_fts_au")
@@ -127,6 +148,32 @@ _ALLOWED_UPDATE_FIELDS = {
     "flag",
     "pinned",
 }
+
+
+def normalize_tags(raw: str) -> str:
+    """Normalize a comma-separated tag list.
+
+    Trims each tag, collapses internal whitespace, drops empties, and
+    de-duplicates case-insensitively (first occurrence wins). The stored
+    format stays human-readable ``a, b, c``.
+    """
+    seen: set[str] = set()
+    tags: list[str] = []
+    for piece in raw.split(","):
+        normalized = re.sub(r"\s+", " ", piece).strip()
+        if not normalized:
+            continue
+        key = normalized.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        tags.append(normalized)
+    return ", ".join(tags)
+
+
+def contains_control_characters(value: str) -> bool:
+    """Return whether a single-line field carries control characters."""
+    return any(ord(character) < 32 and character not in "\t" for character in value)
 
 
 class Vault:
@@ -308,6 +355,9 @@ class Vault:
         if difficulty not in DIFFICULTIES:
             raise ValueError(f"Unknown difficulty: {difficulty}")
         title = title.strip() or "Untitled"
+        if contains_control_characters(title):
+            raise ValueError("Title contains control characters")
+        tags = normalize_tags(tags)
         if parent_id is not None:
             parent = self.get_node(parent_id)
             if parent is None:
@@ -363,7 +413,10 @@ class Vault:
         values: dict[str, Any] = {}
         for key, value in fields.items():
             if key == "title":
-                values[key] = str(value).strip() or "Untitled"
+                title = str(value).strip() or "Untitled"
+                if contains_control_characters(title):
+                    raise ValueError("Title contains control characters")
+                values[key] = title
             elif key == "status":
                 if value not in STATUSES:
                     raise ValueError(f"Unknown status: {value}")
@@ -375,10 +428,27 @@ class Vault:
             elif key == "pinned":
                 values[key] = int(bool(value))
             elif key == "flag":
-                values[key] = str(value).strip()
+                flag = str(value).strip()
+                if contains_control_characters(flag):
+                    raise ValueError("Flag contains control characters")
+                values[key] = flag
+            elif key == "tags":
+                values[key] = normalize_tags("" if value is None else str(value))
+            elif key == "target":
+                target = str(value).strip() if value is not None else ""
+                if contains_control_characters(target):
+                    raise ValueError("Target contains control characters")
+                values[key] = target
             else:
                 values[key] = "" if value is None else str(value)
         values["updated_at"] = self._now()
+
+        # Snapshot the pre-update state for the version history. Metadata
+        # changes are small by nature, so they must never be debounced away.
+        metadata = ("title", "tags", "target", "status", "difficulty", "flag")
+        tracked = ("content", *metadata)
+        if any(key in fields for key in tracked):
+            self._snapshot(node, force=any(key in fields for key in metadata))
 
         assignments = ", ".join(f"{column} = ?" for column in values)
         parameters = [*values.values(), node_id]
@@ -477,10 +547,13 @@ class Vault:
         return hits
 
     def _search_like(self, query: str, limit: int) -> list[SearchHit]:
-        pattern = f"%{query}%"
+        # Escape LIKE wildcards so user input is matched literally.
+        escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = f"%{escaped}%"
         rows = self._connection.execute(
             "SELECT * FROM nodes WHERE deleted_at IS NULL AND kind = 'note' "
-            "AND (title LIKE ? OR content LIKE ? OR tags LIKE ?) "
+            "AND (title LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\' "
+            "OR tags LIKE ? ESCAPE '\\') "
             "ORDER BY updated_at DESC LIMIT ?",
             (pattern, pattern, pattern, limit),
         ).fetchall()
@@ -997,6 +1070,192 @@ class Vault:
         with self._connection:
             self._connection.execute("INSERT INTO nodes_fts(nodes_fts) VALUES('rebuild')")
 
+    # ------------------------------------------------------------------
+    # Version history
+    # ------------------------------------------------------------------
+
+    HISTORY_KEEP = 100
+    HISTORY_MIN_AGE_SECONDS = 120
+    HISTORY_MIN_CHAR_DELTA = 128
+    _HISTORY_METADATA = ("title", "tags", "target", "status", "difficulty", "flag")
+
+    def _snapshot(self, node: Node, *, force: bool = False) -> None:
+        row = self._connection.execute(
+            "SELECT id, title, content, tags, target, status, difficulty, flag, created_at "
+            "FROM nodes_history WHERE node_id = ? ORDER BY id DESC LIMIT 1",
+            (node.id,),
+        ).fetchone()
+        if row is not None:
+            same = (
+                row["title"] == node.title
+                and row["content"] == node.content
+                and row["tags"] == node.tags
+                and row["target"] == node.target
+                and row["status"] == node.status
+                and row["difficulty"] == node.difficulty
+                and row["flag"] == node.flag
+            )
+            if same:
+                return
+            metadata_changed = any(
+                str(row[field]) != str(getattr(node, field)) for field in self._HISTORY_METADATA
+            )
+            if not force and not metadata_changed:
+                try:
+                    raw = str(row["created_at"]).replace("Z", "+00:00")
+                    created = datetime.fromisoformat(raw)
+                    if created.tzinfo is None:
+                        created = created.replace(tzinfo=timezone.utc)
+                    age = (datetime.now(timezone.utc) - created).total_seconds()
+                except (ValueError, TypeError):
+                    age = self.HISTORY_MIN_AGE_SECONDS + 1
+                old_content = str(row["content"])
+                delta = abs(len(node.content) - len(old_content))
+                if delta == 0 and node.content != old_content:
+                    delta = self.HISTORY_MIN_CHAR_DELTA
+                if age < self.HISTORY_MIN_AGE_SECONDS and delta < self.HISTORY_MIN_CHAR_DELTA:
+                    return
+        with self._connection:
+            self._connection.execute(
+                "INSERT INTO nodes_history (node_id, title, content, tags, target, status, "
+                "difficulty, flag, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    node.id,
+                    node.title,
+                    node.content,
+                    node.tags,
+                    node.target,
+                    node.status,
+                    node.difficulty,
+                    node.flag,
+                    self._now(),
+                ),
+            )
+            self._connection.execute(
+                "DELETE FROM nodes_history WHERE node_id = ? AND id NOT IN ("
+                "  SELECT id FROM nodes_history WHERE node_id = ? ORDER BY id DESC LIMIT ?"
+                ")",
+                (node.id, node.id, self.HISTORY_KEEP),
+            )
+
+    def list_versions(self, node_id: int, *, limit: int = 100) -> list[dict[str, Any]]:
+        rows = self._connection.execute(
+            "SELECT id, created_at, title, status, length(content) AS chars "
+            "FROM nodes_history WHERE node_id = ? ORDER BY id DESC LIMIT ?",
+            (node_id, limit),
+        ).fetchall()
+        return [
+            {
+                "id": int(row["id"]),
+                "created_at": str(row["created_at"]),
+                "title": str(row["title"]),
+                "status": str(row["status"]),
+                "chars": int(row["chars"]),
+            }
+            for row in rows
+        ]
+
+    def get_version(self, version_id: int) -> dict[str, Any] | None:
+        row = self._connection.execute(
+            "SELECT id, node_id, title, content, tags, target, status, difficulty, flag, "
+            "created_at "
+            "FROM nodes_history WHERE id = ?",
+            (version_id,),
+        ).fetchone()
+        if row is None:
+            return None
+        return {
+            "id": int(row["id"]),
+            "node_id": int(row["node_id"]),
+            "title": str(row["title"]),
+            "content": str(row["content"]),
+            "tags": str(row["tags"]),
+            "target": str(row["target"]),
+            "status": str(row["status"]),
+            "difficulty": str(row["difficulty"]),
+            "flag": str(row["flag"]),
+            "created_at": str(row["created_at"]),
+        }
+
+    def restore_version(self, version_id: int) -> Node:
+        entry = self.get_version(version_id)
+        if entry is None:
+            raise ValueError("Version does not exist")
+        node = self.get_node(int(entry["node_id"]))
+        if node is None:
+            raise ValueError("Node does not exist")
+        self._snapshot(node, force=True)
+        with self._connection:
+            self._connection.execute(
+                "UPDATE nodes SET title = ?, content = ?, tags = ?, target = ?, status = ?, "
+                "difficulty = ?, flag = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL",
+                (
+                    str(entry["title"]),
+                    str(entry["content"]),
+                    normalize_tags(str(entry["tags"])),
+                    str(entry["target"]),
+                    str(entry["status"]),
+                    str(entry["difficulty"]),
+                    str(entry["flag"]),
+                    self._now(),
+                    node.id,
+                ),
+            )
+        restored = self.get_node(node.id)
+        if restored is None:
+            raise RuntimeError("Restored node could not be read back")
+        return restored
+
+    def paths_map(self, *, include_self: bool = True) -> dict[int, str]:
+        """Return ``{node_id: path}`` for every node in one pass (no per-node queries)."""
+        rows = self._connection.execute("SELECT id, parent_id, title FROM nodes").fetchall()
+        titles: dict[int, str] = {int(row["id"]): str(row["title"]) for row in rows}
+        parents: dict[int, int | None] = {
+            int(row["id"]): (int(row["parent_id"]) if row["parent_id"] is not None else None)
+            for row in rows
+        }
+        cache: dict[int, str] = {}
+
+        def path_of(node_id: int) -> str:
+            cached = cache.get(node_id)
+            if cached is not None:
+                return cached
+            chain: list[str] = []
+            current: int | None = node_id if include_self else parents.get(node_id)
+            guard = 0
+            while current is not None and guard < 100:
+                title = titles.get(current)
+                if title is None:
+                    break
+                chain.append(title)
+                current = parents.get(current)
+                guard += 1
+            result = " / ".join(reversed(chain))
+            cache[node_id] = result
+            return result
+
+        return {node_id: path_of(node_id) for node_id in titles}
+
+    def backup_to_auto(self) -> Path:
+        """Write an automatic backup next to the vault before destructive actions.
+
+        The filename carries a full ``YYYYMMDDTHHMMSSZ`` timestamp and, if that
+        already exists, a numeric suffix, so a backup is never silently
+        overwritten by a later one within the same second.
+        """
+        if self.path is None:
+            directory = Path(tempfile.gettempdir()) / "redscribe-backups"
+        else:
+            directory = Path(self.path).resolve().parent / "backups"
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        target = directory / f"vault-{stamp}.db"
+        counter = 1
+        while target.exists():
+            target = directory / f"vault-{stamp}-{counter}.db"
+            counter += 1
+        self.backup_to(target)
+        return target
+
     def backup_to(self, destination: str | Path) -> Path:
         """Write a consistent copy of the vault using SQLite's backup API."""
         target = Path(destination).expanduser()
@@ -1010,6 +1269,12 @@ class Vault:
         finally:
             destination_connection.close()
         return target
+
+    def backup_bytes(self) -> bytes:
+        """Return a consistent, binary copy of the vault for downloading."""
+        with tempfile.TemporaryDirectory(prefix="redscribe-backup-") as directory:
+            target = self.backup_to(Path(directory) / "vault.db")
+            return target.read_bytes()
 
     def iter_notes(self) -> Iterator[Node]:
         rows = self._connection.execute(

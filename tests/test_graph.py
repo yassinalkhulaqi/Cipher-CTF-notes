@@ -11,11 +11,7 @@ from redscribe.ui.web.api import Api
 
 
 def _parent_pairs(graph) -> set[tuple[int, int]]:
-    return {
-        (edge.source, edge.target)
-        for edge in graph.edges
-        if edge.kind == GRAPH_EDGE_PARENT
-    }
+    return {(edge.source, edge.target) for edge in graph.edges if edge.kind == GRAPH_EDGE_PARENT}
 
 
 def _resolved_links(graph, source: int) -> list:

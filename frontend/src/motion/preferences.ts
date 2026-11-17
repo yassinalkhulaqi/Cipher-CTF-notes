@@ -20,7 +20,12 @@ export const MOTION_MODE_DETAIL: Record<MotionMode, string> = {
 };
 
 export function normalizeMotionMode(value: unknown): MotionMode {
-  if (value === "system" || value === "full" || value === "subtle" || value === "off") {
+  if (
+    value === "system" ||
+    value === "full" ||
+    value === "subtle" ||
+    value === "off"
+  ) {
     return value;
   }
   return "system";

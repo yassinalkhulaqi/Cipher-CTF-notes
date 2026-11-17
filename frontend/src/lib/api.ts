@@ -16,6 +16,8 @@ import type {
   TrashedNode,
   TreeNode,
   VaultGraph,
+  VersionDetail,
+  VersionSummary,
   VaultStats,
 } from "./types";
 
@@ -32,6 +34,21 @@ export class ApiError extends Error {
 }
 
 const DEFAULT_TIMEOUT_MS = 10_000;
+const TOKEN_PLACEHOLDER = "__REDSCRIBE_TOKEN__";
+
+/** The per-session token injected into the SPA shell by the local server. */
+export function sessionToken(): string {
+  const token = document.body.dataset.redscribeToken;
+  return token && token !== TOKEN_PLACEHOLDER ? token : "";
+}
+
+/** Append the session token to URLs that cannot carry a custom header. */
+export function withSessionToken(path: string): string {
+  const token = sessionToken();
+  if (!token) return path;
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}token=${encodeURIComponent(token)}`;
+}
 
 interface CallOptions {
   timeout?: number;
@@ -44,11 +61,15 @@ async function fetchCall<T>(
 ): Promise<T> {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), timeout);
+  const token = sessionToken();
   let response: Response;
   try {
     response = await fetch(`/api/${method}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { "X-RedScribe-Token": token } : {}),
+      },
       body: JSON.stringify(body),
       signal: controller.signal,
     });
@@ -189,6 +210,11 @@ export const api = {
       folder_id: folderId ?? null,
       limit,
     }),
+  versions: (id: number) => call<VersionSummary[]>("list_versions", { id }),
+  version: (versionId: number) =>
+    call<VersionDetail>("get_version", { version_id: versionId }),
+  restoreVersion: (versionId: number) =>
+    call<NodeSummary>("restore_version", { version_id: versionId }),
   flagPatterns: () => call<FlagPattern[]>("flag_patterns"),
   flagInsights: () => call<FlagInsights>("flag_insights"),
   quickCapture: (body: {
@@ -199,20 +225,23 @@ export const api = {
   }) => call<NodeSummary>("quick_capture", body),
 };
 
-export function downloadNote(id: number, format: "md" | "html"): void {
+function downloadUrl(path: string): void {
   const anchor = document.createElement("a");
-  anchor.href = `/download/note/${id}/${format}`;
+  anchor.href = withSessionToken(path);
   anchor.download = "";
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
 }
 
+export function downloadNote(id: number, format: "md" | "html"): void {
+  downloadUrl(`/download/note/${id}/${format}`);
+}
+
 export function downloadVault(): void {
-  const anchor = document.createElement("a");
-  anchor.href = "/download/vault/html";
-  anchor.download = "";
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
+  downloadUrl("/download/vault/html");
+}
+
+export function downloadVaultSqlite(): void {
+  downloadUrl("/download/vault/sqlite");
 }

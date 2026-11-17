@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowDownAZ, ArrowDownWideNarrow, Hash, Search, Tag } from "lucide-react";
+import {
+  ArrowDownAZ,
+  ArrowDownWideNarrow,
+  Hash,
+  Search,
+  Tag,
+} from "lucide-react";
 import { api } from "../../lib/api";
 import { focusFilter } from "../../lib/events";
 import type { TagCount } from "../../lib/types";
@@ -36,9 +42,7 @@ export function TagExplorerModal() {
       })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Could not load tags",
-          );
+          setError(err instanceof Error ? err.message : "Could not load tags");
         }
       })
       .finally(() => {
@@ -114,8 +118,14 @@ export function TagExplorerModal() {
         <button
           type="button"
           className="icon-btn"
-          onClick={() => setSort((current) => (current === "count" ? "name" : "count"))}
-          title={sort === "count" ? "Sorted by usage; switch to A–Z" : "Sorted A–Z; switch to usage"}
+          onClick={() =>
+            setSort((current) => (current === "count" ? "name" : "count"))
+          }
+          title={
+            sort === "count"
+              ? "Sorted by usage; switch to A–Z"
+              : "Sorted A–Z; switch to usage"
+          }
           aria-label={sort === "count" ? "Sort by name" : "Sort by usage"}
         >
           {sort === "count" ? <ArrowDownAZ /> : <ArrowDownWideNarrow />}
@@ -124,7 +134,11 @@ export function TagExplorerModal() {
 
       <div className="tag-explorer-list" role="list" aria-busy={loading}>
         {loading ? (
-          <div className="tag-explorer-loading" role="status" aria-label="Loading tags">
+          <div
+            className="tag-explorer-loading"
+            role="status"
+            aria-label="Loading tags"
+          >
             {Array.from({ length: 8 }, (_, index) => (
               <div className="skeleton-line tag-skeleton-row" key={index} />
             ))}

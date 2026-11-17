@@ -1,4 +1,4 @@
-﻿import {
+import {
   useEffect,
   useMemo,
   useRef,
@@ -117,8 +117,8 @@ export function NoteWorkspace() {
     null,
   );
 
-const mobile = useMediaQuery(maxWidthQuery("md"));
-const compact = useMediaQuery(maxWidthQuery("xl"));
+  const mobile = useMediaQuery(maxWidthQuery("md"));
+  const compact = useMediaQuery(maxWidthQuery("xl"));
   const effectiveView = mobile && viewMode === "split" ? "editor" : viewMode;
   const preview = usePreview(
     draft,
@@ -341,17 +341,16 @@ const compact = useMediaQuery(maxWidthQuery("xl"));
       onSelect: () => {
         askConfirm({
           title: "Move to trash",
-          message: `Move â€œ${note.title}â€‌ to the trash?`,
+          message: `Move “${note.title}” to the trash?`,
           confirmLabel: "Move to trash",
           danger: true,
           action: async () => {
             try {
               await trashNode(note.id);
-              toast(
-                "Moved to trash",
-                "default",
-                { label: "Undo", run: () => restoreNode(note.id) },
-              );
+              toast("Moved to trash", "default", {
+                label: "Undo",
+                run: () => restoreNode(note.id),
+              });
             } catch (error) {
               toast(
                 error instanceof Error ? error.message : "Could not move note",
@@ -731,7 +730,7 @@ const compact = useMediaQuery(maxWidthQuery("xl"));
             value={draft}
             onChange={setDraft}
             onScroll={syncPreview}
-            placeholder="# Start writingâ€¦"
+            placeholder="# Start writing…"
             ariaLabel="Note content"
           />
         </section>

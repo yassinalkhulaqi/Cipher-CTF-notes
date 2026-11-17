@@ -40,12 +40,14 @@ export function ToastStack() {
                     void Promise.resolve()
                       .then(() => toast.action?.run())
                       .catch((error: unknown) => {
-                        useUiStore.getState().toast(
-                          error instanceof Error
-                            ? error.message
-                            : "The action failed",
-                          "error",
-                        );
+                        useUiStore
+                          .getState()
+                          .toast(
+                            error instanceof Error
+                              ? error.message
+                              : "The action failed",
+                            "error",
+                          );
                       });
                   }}
                 >

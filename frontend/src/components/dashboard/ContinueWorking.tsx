@@ -57,9 +57,7 @@ export function ContinueWorking({
               </span>
             ) : null}
             {note.pinned ? <span className="work-pin">Pinned</span> : null}
-            <span className="work-time">
-              {relativeTime(note.updated_at)}
-            </span>
+            <span className="work-time">{relativeTime(note.updated_at)}</span>
             <ChevronRight className="work-arrow" />
           </button>
         ))}

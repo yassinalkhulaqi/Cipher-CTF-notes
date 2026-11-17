@@ -1,4 +1,4 @@
-﻿import { useEffect, useId, useMemo, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useMemo, useState, type KeyboardEvent } from "react";
 import {
   Activity,
   Bug,
@@ -388,7 +388,7 @@ export function CommandPalette() {
           note.target ?? "",
         );
         insertSnippet(resolved.command);
-        toast(`Inserted â€œ${snippet.title}â€‌`, "success");
+        toast(`Inserted “${snippet.title}”`, "success");
       } catch (error) {
         toast(
           error instanceof Error
@@ -400,7 +400,7 @@ export function CommandPalette() {
       return;
     }
     void copyText(snippet.command).then(
-      () => toast(`Copied â€œ${snippet.title}â€‌`, "success"),
+      () => toast(`Copied “${snippet.title}”`, "success"),
       () => toast("Could not copy the command", "error"),
     );
   };
@@ -478,7 +478,7 @@ export function CommandPalette() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="Jump to a note or run a commandâ€¦"
+          placeholder="Jump to a note or run a command…"
           spellCheck={false}
           autoComplete="off"
           role="combobox"
@@ -603,7 +603,7 @@ export function CommandPalette() {
 
         {loading ? (
           <div className="palette-loading" role="status">
-            Loading notes and snippetsâ€¦
+            Loading notes and snippets…
           </div>
         ) : null}
 

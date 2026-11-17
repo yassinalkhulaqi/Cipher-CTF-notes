@@ -71,7 +71,11 @@ interface UiState {
   openSnippetForm: (id: number | null) => void;
   askConfirm: (request: ConfirmRequest) => void;
   resolveConfirm: () => void;
-  toast: (message: string, tone?: ToastItem["tone"], action?: ToastAction) => void;
+  toast: (
+    message: string,
+    tone?: ToastItem["tone"],
+    action?: ToastAction,
+  ) => void;
   dismissToast: (id: number) => void;
   setMobileSidebar: (open: boolean) => void;
   toggleSidebarCollapsed: () => void;
@@ -102,7 +106,9 @@ function modalExitDuration(): number {
     const value = raw.endsWith("ms")
       ? Number.parseFloat(raw)
       : Number.parseFloat(raw) * 1000;
-    return Number.isFinite(value) && value >= 0 ? value : MODAL_EXIT_FALLBACK_MS;
+    return Number.isFinite(value) && value >= 0
+      ? value
+      : MODAL_EXIT_FALLBACK_MS;
   } catch {
     return MODAL_EXIT_FALLBACK_MS;
   }
@@ -223,9 +229,12 @@ export const useUiStore = create<UiState>()((set, get) => ({
     toastId += 1;
     const item: ToastItem = { id: toastId, message, tone, action };
     set((state) => ({ toasts: [...state.toasts.slice(-3), item] }));
-    setTimeout(() => {
-      get().dismissToast(item.id);
-    }, action ? 5200 : 3200);
+    setTimeout(
+      () => {
+        get().dismissToast(item.id);
+      },
+      action ? 5200 : 3200,
+    );
   },
 
   dismissToast: (id) => {

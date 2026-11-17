@@ -9,6 +9,7 @@ the default browser — no extra dependencies required.
 from __future__ import annotations
 
 import logging
+import secrets
 import threading
 import webbrowser
 from concurrent.futures import Future, ThreadPoolExecutor
@@ -80,7 +81,18 @@ def run(
             future: Future[Any] = vault_executor.submit(api.handle, method, body)
             return future.result()
 
-        server = ApiServer(("127.0.0.1", port), dispatch)
+        def backup_bytes() -> bytes:
+            if vault is None:
+                raise RuntimeError("Vault is not initialized")
+            return vault_executor.submit(vault.backup_bytes).result()
+
+        token = secrets.token_urlsafe(32)
+        server = ApiServer(
+            ("127.0.0.1", port),
+            dispatch,
+            token=token,
+            backup=backup_bytes,
+        )
         bound_port = server.bound_port
         url = f"http://127.0.0.1:{bound_port}/"
         LOGGER.info("RedScribe web UI serving at %s (vault: %s)", url, vault.display_path)

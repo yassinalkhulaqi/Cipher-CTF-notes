@@ -122,6 +122,23 @@ export interface ExportPayload {
   mime: string;
 }
 
+export interface VersionSummary {
+  id: number;
+  created_at: string;
+  title: string;
+  status: string;
+  chars: number;
+}
+
+export interface VersionDetail extends VersionSummary {
+  node_id: number;
+  content: string;
+  tags: string;
+  target: string;
+  difficulty: string;
+  flag: string;
+}
+
 export interface TrashedNode extends NodeSummary {
   trashed_at?: string;
 }

@@ -165,13 +165,13 @@ export function useGlobalHotkeys(): void {
         ui.openModal("settings");
         return;
       }
+      if (isTyping(event.target)) return;
+
       if (event.key === "F2") {
         event.preventDefault();
         if (app.note) ui.openModal("properties");
         return;
       }
-
-      if (isTyping(event.target)) return;
 
       if (event.key === "Delete" && app.selectedId !== null) {
         const node = app.nodes.get(app.selectedId);

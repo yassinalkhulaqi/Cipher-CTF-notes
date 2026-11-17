@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowUpRight,
   BookOpen,
@@ -25,10 +25,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { focusFilter } from "../lib/events";
-import type {
-  NodeSummary,
-  Template,
-} from "../lib/types";
+import type { NodeSummary, Template } from "../lib/types";
 import { copyText, modLabel, plural, relativeTime } from "../lib/utils";
 import { timeGreeting } from "../lib/ux";
 import { EmptyState } from "./EmptyState";
@@ -137,7 +134,7 @@ export function Dashboard() {
     setBusy(true);
     void quickNote()
       .then(
-        (node) => toast(`Created â€œ${node.title}â€‌`, "success"),
+        (node) => toast(`Created “${node.title}”`, "success"),
         (error: unknown) =>
           toast(
             error instanceof Error ? error.message : "Could not create note",
@@ -303,8 +300,8 @@ export function Dashboard() {
 
           <footer className="dash-foot">
             <ShieldCheck />
-            SQLite vault آ· {boot?.vault_path ?? "local storage"} آ· no accounts,
-            no telemetry
+            SQLite vault آ· {boot?.vault_path ?? "local storage"} آ· no
+            accounts, no telemetry
           </footer>
         </div>
       </section>

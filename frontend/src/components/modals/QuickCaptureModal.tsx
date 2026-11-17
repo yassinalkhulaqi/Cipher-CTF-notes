@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { ClipboardPaste, Save, Zap } from "lucide-react";
 import { TagInput } from "../TagInput";
 import { useTagSuggestions } from "../../hooks/useTagSuggestions";
@@ -40,7 +40,7 @@ export function QuickCaptureModal() {
     try {
       const node = await quickCapture({ title, content, target, tags });
       closeModal();
-      toast(`Captured â€œ${node.title}â€‌`, "success");
+      toast(`Captured “${node.title}”`, "success");
     } catch (error) {
       toast(
         error instanceof Error ? error.message : "Could not capture this note",
@@ -69,7 +69,7 @@ export function QuickCaptureModal() {
             onClick={() => void save()}
             disabled={saving}
           >
-            <Save /> {saving ? "Capturingâ€¦" : "Capture note"}
+            <Save /> {saving ? "Capturing…" : "Capture note"}
           </button>
         </>
       }
@@ -120,7 +120,7 @@ export function QuickCaptureModal() {
             value={content}
             onChange={(event) => setContent(event.target.value)}
             spellCheck={false}
-            placeholder="Anything worth remembering â€” scan output, a lead, a flagâ€¦"
+            placeholder="Anything worth remembering — scan output, a lead, a flag…"
           />
           <div className="capture-actions">
             <button

@@ -1,4 +1,4 @@
-﻿import {
+import {
   useEffect,
   useMemo,
   useRef,
@@ -55,7 +55,6 @@ interface ContextState {
   node: TreeNode;
 }
 
-
 export function Sidebar() {
   const tree = useAppStore((state) => state.tree);
   const nodes = useAppStore((state) => state.nodes);
@@ -96,7 +95,7 @@ export function Sidebar() {
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dropTarget, setDropTarget] = useState<number | "root" | null>(null);
   const [renamingId, setRenamingId] = useState<number | null>(null);
-    const searchRef = useRef<HTMLInputElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const treeRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => filterTree(tree, filter), [tree, filter]);
@@ -263,7 +262,7 @@ export function Sidebar() {
   const confirmTrash = (node: TreeNode) => {
     askConfirm({
       title: "Move to trash",
-      message: `Move â€œ${node.title}â€‌${node.kind === "folder" ? " and everything inside it" : ""} to the trash?`,
+      message: `Move “${node.title}”${node.kind === "folder" ? " and everything inside it" : ""} to the trash?`,
       confirmLabel: "Move to trash",
       danger: true,
       action: async () => {
@@ -602,7 +601,7 @@ export function Sidebar() {
           ref={searchRef}
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
-          placeholder="Filter notes, tags, targetsâ€¦"
+          placeholder="Filter notes, tags, targets…"
           spellCheck={false}
           autoComplete="off"
           aria-label="Filter vault"

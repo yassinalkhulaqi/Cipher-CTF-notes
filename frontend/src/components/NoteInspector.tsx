@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Check,
   Clock3,
@@ -19,7 +19,13 @@ import { flagFormat } from "../lib/flags";
 import { parseTags } from "../lib/tags";
 import { extractOutline } from "../lib/outline";
 import type { FlagPattern, NodeDetail } from "../lib/types";
-import { copyText, formatDate, plural, relativeTime, wordCount } from "../lib/utils";
+import {
+  copyText,
+  formatDate,
+  plural,
+  relativeTime,
+  wordCount,
+} from "../lib/utils";
 import { readingTime } from "../lib/ux";
 import { useAppStore } from "../store/useAppStore";
 import { useUiStore, type InspectorTab } from "../store/useUiStore";
@@ -134,9 +140,7 @@ export function NoteInspector({
           if (next < 0) return;
           event.preventDefault();
           setTab(TABS[next].id);
-          document
-            .getElementById(`inspector-tab-${TABS[next].id}`)
-            ?.focus();
+          document.getElementById(`inspector-tab-${TABS[next].id}`)?.focus();
         }}
       >
         {TABS.map((item) => {
@@ -213,7 +217,7 @@ export function NoteInspector({
             </div>
             <div className="prop-row">
               <span className="prop-key">Difficulty</span>
-              <span className="prop-value">{note.difficulty || "â€”"}</span>
+              <span className="prop-value">{note.difficulty || "—"}</span>
             </div>
             <div className="prop-row">
               <span className="prop-key">Target</span>
@@ -229,7 +233,7 @@ export function NoteInspector({
                     <span>{note.target}</span>
                   </button>
                 ) : (
-                  "â€”"
+                  "—"
                 )}
               </span>
             </div>
@@ -243,22 +247,20 @@ export function NoteInspector({
             <div className="prop-row">
               <span className="prop-key">Tags</span>
               <span className="prop-value prop-tags">
-                {parseTags(note.tags).length ? (
-                  parseTags(note.tags).map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      className="chip tag"
-                      onClick={() => filterByTag(tag)}
-                      title={`Filter vault by #${tag}`}
-                    >
-                      <Tag />
-                      {tag}
-                    </button>
-                  ))
-                ) : (
-                  "â€”"
-                )}
+                {parseTags(note.tags).length
+                  ? parseTags(note.tags).map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        className="chip tag"
+                        onClick={() => filterByTag(tag)}
+                        title={`Filter vault by #${tag}`}
+                      >
+                        <Tag />
+                        {tag}
+                      </button>
+                    ))
+                  : "—"}
               </span>
             </div>
             <div className="prop-row">
@@ -275,7 +277,7 @@ export function NoteInspector({
                     <code>{note.flag}</code>
                   </button>
                 ) : (
-                  "â€”"
+                  "—"
                 )}
               </span>
             </div>
@@ -288,7 +290,9 @@ export function NoteInspector({
             </div>
             <div className="prop-row">
               <span className="prop-key">Created</span>
-              <span className="prop-value">{formatDate(note.created_at, true)}</span>
+              <span className="prop-value">
+                {formatDate(note.created_at, true)}
+              </span>
             </div>
             <div className="prop-row">
               <span className="prop-key">Updated</span>

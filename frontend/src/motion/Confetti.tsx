@@ -122,5 +122,7 @@ export function Confetti({ fire, origin }: ConfettiProps) {
     };
   }, [fire, enabled, origin, scale]);
 
-  return <canvas ref={canvasRef} className="confetti-canvas" aria-hidden="true" />;
+  return (
+    <canvas ref={canvasRef} className="confetti-canvas" aria-hidden="true" />
+  );
 }

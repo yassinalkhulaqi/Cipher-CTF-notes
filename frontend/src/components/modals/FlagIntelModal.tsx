@@ -78,7 +78,9 @@ export function FlagIntelModal() {
       .catch((err: unknown) => {
         if (cancelled) return;
         setError(
-          err instanceof Error ? err.message : "Could not load flag intelligence",
+          err instanceof Error
+            ? err.message
+            : "Could not load flag intelligence",
         );
         setLoading(false);
       });
@@ -214,7 +216,9 @@ export function FlagIntelModal() {
           <div className="flag-intel-stats">
             <div className="flag-intel-stat">
               <span>Unique flags</span>
-              <strong>{loading ? "—" : insights?.unique_flags ?? records.length}</strong>
+              <strong>
+                {loading ? "—" : (insights?.unique_flags ?? records.length)}
+              </strong>
             </div>
             <div className="flag-intel-stat">
               <span>Known formats</span>
@@ -229,7 +233,7 @@ export function FlagIntelModal() {
             <div className="flag-intel-stat">
               <span>Without a detected flag</span>
               <strong className={insights?.missing_flag_notes ? "red" : ""}>
-                {loading ? "—" : insights?.missing_flag_notes ?? 0}
+                {loading ? "—" : (insights?.missing_flag_notes ?? 0)}
               </strong>
             </div>
           </div>
@@ -397,8 +401,8 @@ export function FlagIntelModal() {
                         without any detected flag.
                       </span>
                       <span>
-                        {plural(insights?.duplicates.length ?? 0, "duplicate")} on
-                        record.
+                        {plural(insights?.duplicates.length ?? 0, "duplicate")}{" "}
+                        on record.
                       </span>
                     </div>
                     {doneWithoutFlag.length ? (
@@ -422,8 +426,8 @@ export function FlagIntelModal() {
                           </button>
                         ))}
                         <p className="flag-intel-caveat">
-                          Flags found only in note content still count toward the
-                          total above.
+                          Flags found only in note content still count toward
+                          the total above.
                         </p>
                       </div>
                     ) : (

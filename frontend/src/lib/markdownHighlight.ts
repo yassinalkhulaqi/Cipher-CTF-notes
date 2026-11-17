@@ -75,7 +75,9 @@ export function highlightMarkdown(source: string): MdLine[] {
       inline(heading[3] ?? "", tokens);
       return {
         tokens: tokens.map((token) =>
-          token.kind === "text" ? { ...token, kind: "heading" as const } : token,
+          token.kind === "text"
+            ? { ...token, kind: "heading" as const }
+            : token,
         ),
       };
     }
@@ -93,8 +95,9 @@ export function highlightMarkdown(source: string): MdLine[] {
       return { tokens };
     }
 
-    const list =
-      /^(\s*)([-+*]|\d{1,9}[.)])(\s+)(\[[ xX]\]\s+)?(.*)$/.exec(line);
+    const list = /^(\s*)([-+*]|\d{1,9}[.)])(\s+)(\[[ xX]\]\s+)?(.*)$/.exec(
+      line,
+    );
     if (list) {
       tokens.push({ text: list[1] ?? "", kind: "text" });
       tokens.push({ text: list[2] ?? "-", kind: "syntax" });

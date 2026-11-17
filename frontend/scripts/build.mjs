@@ -53,10 +53,14 @@ async function run() {
     await ctx.watch();
     console.log(`[redscribe] watching ${path.relative(root, outDir)}`);
     watch(path.join(root, "public"), { persistent: true }, () => {
-      copyStatic().catch((error) => console.error("[redscribe] copy failed", error));
+      copyStatic().catch((error) =>
+        console.error("[redscribe] copy failed", error),
+      );
     });
     watch(path.join(root, "index.html"), { persistent: true }, () => {
-      copyStatic().catch((error) => console.error("[redscribe] copy failed", error));
+      copyStatic().catch((error) =>
+        console.error("[redscribe] copy failed", error),
+      );
     });
   } else {
     await ctx.rebuild();

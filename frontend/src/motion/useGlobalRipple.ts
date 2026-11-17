@@ -46,11 +46,14 @@ export function useGlobalRipple(): void {
 
       if (getComputedStyle(host).position === "static") {
         host.classList.add("motion-ripple-host");
-        window.setTimeout(() => {
-          if (!host.querySelector(".motion-ripple")) {
-            host.classList.remove("motion-ripple-host");
-          }
-        }, motionDuration(DURATION.slower) + 80);
+        window.setTimeout(
+          () => {
+            if (!host.querySelector(".motion-ripple")) {
+              host.classList.remove("motion-ripple-host");
+            }
+          },
+          motionDuration(DURATION.slower) + 80,
+        );
       }
 
       host.appendChild(ripple);

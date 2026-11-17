@@ -39,9 +39,7 @@ export function onSnippetsChanged(handler: () => void): () => void {
   return () => window.removeEventListener(APP_EVENTS.snippetsChanged, handler);
 }
 
-export function onInsertSnippet(
-  handler: (text: string) => void,
-): () => void {
+export function onInsertSnippet(handler: (text: string) => void): () => void {
   const listener = (event: Event) => {
     const detail = (event as CustomEvent<InsertSnippetDetail>).detail;
     if (detail && typeof detail.text === "string") handler(detail.text);

@@ -53,9 +53,7 @@ export function MiniNotesPanel({
             >
               <StatusIcon status={note.status} />
               <span>{note.title}</span>
-              <span className="mini-time">
-                {relativeTime(note.updated_at)}
-              </span>
+              <span className="mini-time">{relativeTime(note.updated_at)}</span>
             </button>
           ))
         ) : (

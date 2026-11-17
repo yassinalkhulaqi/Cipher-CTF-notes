@@ -1,11 +1,13 @@
 # Agent development report
 
-Autonomous multi-agent development of RedScribe (`Cipher-CTF-notes`). Each
-branch below is a stacked branch off `main`'s current tip (`feat/workbench-
-overhaul`, base commit `41521e1`). Line counts are measured with
-`git diff --shortstat <PARENT> HEAD` (insertions + deletions), excluding the
-committed minified bundle, and verified after the fact. Nothing is merged to
-`main`; nothing is pushed.
+Autonomous multi-agent development of RedScribe (`Cipher-CTF-notes`). The
+stacked chain starts at `main` (`e452a30`) and continues through
+`feat/workbench-overhaul` (`41521e1`), `agent/ui-ux-redesign-01` (`5824bdf`),
+`agent/frontend-architecture-02` (`f6d5337`), `agent/core-features-03`
+(`ad2025d`) and the current `agent/backend-api-04`. Line counts for committed
+branches use `git diff --shortstat <PARENT> HEAD` (insertions + deletions),
+excluding the committed minified bundle. The branch-04/QA pass is uncommitted
+at the time of writing. Nothing is merged to `main`; nothing is pushed.
 
 Baseline at `41521e1` (2026-11-11):
 
@@ -149,7 +151,7 @@ ConfirmModal,GraphModal,TimelineModal}.tsx`, `frontend/src/store/useUiStore.ts`,
 ## 03 — agent/core-features-03 (Core features & engineering)
 
 **Parent:** `agent/frontend-architecture-02` (`f6d5337`) · **Commits:**
-`a4b66cc`, `645f9f9`, `2c78ca8`, `877746b`, `ca9e063` · **Files:** 34 ·
+`a4b66cc`, `645f9f9`, `2c78ca8`, `877746b`, `ad2025d` · **Files:** 34 ·
 **Changed lines:** **1562** (1333+ / 229−)
 
 **Agents:** 3 (Core Features & Engineering) with lead review.
@@ -210,3 +212,98 @@ test_snippet_search}.py`; rebuilt bundle.
 ### Git verification
 
 - Branch diff vs parent measured after commit; see commit history.
+
+---
+
+## 04 — agent/backend-api-04 (Backend, API & security hardening)
+
+**Parent:** `agent/core-features-03` (`ad2025d`) · **Status:** uncommitted
+integration pass.
+
+**Agents:** 4 (Backend & API) with lead review.
+
+### Scope and completed tasks
+
+- **Session token auth.** `launcher.run()` generates a 43-character
+  `secrets.token_urlsafe(32)` token. `ApiServer` injects it into the served
+  `index.html` via `data-redscribe-token`, accepts it as `X-RedScribe-Token`
+  on fetch calls and as `?token=` for `sendBeacon` and download links, and
+  compares with `hmac.compare_digest` on UTF-8 bytes. Host checking, CSP,
+  `no-store`, `Referrer-Policy: no-referrer` and `X-Content-Type-Options:
+  nosniff` are enforced on served pages/API responses.
+- **Downloads.** `/download/note/<id>/<md|html>` now maps `md` to
+  `export_note_markdown` (the old `export_note_md` route did not exist) and
+  `/download/vault/sqlite` streams a real `Vault.backup_bytes()` snapshot with
+  proper `Content-Disposition`, `Content-Length`, and filename encoding.
+- **Backup safety.** Added `Vault.backup_bytes()`; `backup_to_auto()` now uses
+  a full UTC timestamp (`YYYYmmddTHHMMSSZ`) and never overwrites an existing
+  file. Database work is serialized through the launcher's vault executor.
+- **Version history.** Metadata changes (`title`, `tags`, `target`, `status`,
+  `difficulty`, `flag`) force an immediate snapshot; same-length content
+  changes count as deltas; naive timestamps are normalized to UTC.
+- **Encoding cleanup.** Removed the UTF-8 BOM from `storage/db.py`, replaced
+  mojibake in FTS snippets/excerpts and 22 frontend files, and canonicalized
+  tag storage to `", "` to match the frontend serializer and DB docstring.
+- **API validation.** Added uniform string/int/bool checks and caps for
+  titles, tags, targets, flags, content, templates and snippet fields.
+  Exposed `list_versions`, `get_version`, `restore_version`,
+  `rebuild_search_index` and `backup_vault` over `Api.handle`.
+- **Cleanup.** Fixed graph lint warnings, removed unused imports and deleted
+  12 unused root-level compatibility shims (`redscribe.db`, `redscribe.models`,
+  etc.) that duplicated real modules and skewed coverage.
+
+### Tests executed
+
+- `pytest --cov=redscribe --cov-report=term-missing --cov-fail-under=85` —
+  **253 passed**, coverage **88.53%** with UI modules included (coverage omit
+  removed)
+- `ruff check .`, `ruff format --check .`, `mypy src scripts/smoke_web.py` —
+  clean
+- `npm test`, `npm run format:check`, `npm run build` — 25 frontend tests pass,
+  formatting clean, bundle rebuilt and committed to the working tree
+
+### New tests
+
+- `tests/test_web_server.py`: live HTTP checks for token injection, API token
+  rejection, query-token beacon path, host guard, nosniff downloads and
+  SQLite backup download.
+- `tests/test_web_api.py`: broad happy-path coverage of API routes plus
+  parametrized validation/error cases.
+- `tests/test_db.py`: backup collision safety and immediate metadata snapshots.
+
+---
+
+## 05 — QA/Testing/Security hardening (integration pass)
+
+**Parent:** branch 04 · **Status:** uncommitted integration pass.
+
+**Agents:** 5 (QA/Testing/Security) with lead review.
+
+### Scope and completed tasks
+
+- **Tooling.** Added `frontend/package-lock.json`, pinned Prettier, applied
+  `npm run format` repo-wide, and changed CI from `npm install` to
+  `npm ci --prefix frontend --no-audit --no-fund`.
+- **CI gates.** `.github/workflows/ci.yml` now runs `npm run format:check`,
+  `npm test`, `npm run build`, a `git diff --exit-code` check for the committed
+  bundle, and `npm audit --audit-level=high --omit=dev`.
+- **Live smoke test.** Added `scripts/smoke_web.py`, which starts the real
+  `ApiServer` on an ephemeral localhost port, verifies token injection and
+  authenticated `/api/boot`, and confirms unauthenticated calls are rejected.
+  The packaged-wheel job runs it with the installed wheel.
+- **Coverage.** Removed `omit = ["*/redscribe/ui/*"]` and added enough API/HTTP
+  tests to keep the 85% gate green at 88.53%.
+- **Docs.** This report now records branches 04 and 05 and the actual branch
+  chain/tip commits.
+
+### Tests executed
+
+- Same Python and frontend gates as branch 04, plus `python scripts/smoke_web.py`
+  against the local source tree.
+
+### Notes / remaining issues
+
+- Branch convergence is still pending: cherry-pick `b0a8aaf`, merge the stacked
+  branches in order, delete `origin/feat/aurora-ui` after the cherry-pick, and
+  verify no duplicate compatibility modules remain.
+- Nothing has been committed or pushed for branches 04/05 yet.

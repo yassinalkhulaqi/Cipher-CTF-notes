@@ -18,7 +18,12 @@ export function ConfirmModal() {
       footer={
         <>
           <span className="grow" />
-          <button type="button" className="btn ghost" onClick={closeModal} autoFocus>
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={closeModal}
+            autoFocus
+          >
             Cancel
           </button>
           <button

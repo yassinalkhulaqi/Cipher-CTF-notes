@@ -38,11 +38,7 @@ export function PulseStrip({
           <CircleDot /> {activeCount} active
         </span>
       </button>
-      <button
-        type="button"
-        className="pulse-cell"
-        onClick={onShowDashboard}
-      >
+      <button type="button" className="pulse-cell" onClick={onShowDashboard}>
         <span className="pulse-label">Active challenges</span>
         <strong>
           <AnimatedNumber value={activeCount} />

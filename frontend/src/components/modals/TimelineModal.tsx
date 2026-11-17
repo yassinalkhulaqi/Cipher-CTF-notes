@@ -107,9 +107,16 @@ export function TimelineModal() {
           </div>
           <div className="timeline-list" aria-busy={loading}>
             {loading ? (
-              <div className="timeline-loading" role="status" aria-label="Loading timeline">
+              <div
+                className="timeline-loading"
+                role="status"
+                aria-label="Loading timeline"
+              >
                 {Array.from({ length: 6 }, (_, index) => (
-                  <div className="skeleton-line timeline-skeleton-row" key={index} />
+                  <div
+                    className="skeleton-line timeline-skeleton-row"
+                    key={index}
+                  />
                 ))}
               </div>
             ) : visible.length === 0 ? (

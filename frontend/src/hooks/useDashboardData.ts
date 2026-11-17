@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "../lib/api";
 import type {
   FlagHit,
@@ -20,7 +20,7 @@ export interface DashboardData {
 /**
  * Loads dashboard backing data (templates, recent activity, captured flags,
  * flag insights). Effects key off a stable signature derived from the note
- * list (count + most recent update) â€” not the `nodes` Map identity â€” so
+ * list (count + most recent update) — not the `nodes` Map identity — so
  * unrelated tree refreshes (rename, pin, move) no longer re-fetch everything.
  */
 export function useDashboardData(notes: NodeSummary[]): DashboardData {
@@ -34,8 +34,7 @@ export function useDashboardData(notes: NodeSummary[]): DashboardData {
   const signature = useMemo(() => {
     const count = notes.length;
     const latest = notes.reduce(
-      (max, note) =>
-        note.updated_at > max ? note.updated_at : max,
+      (max, note) => (note.updated_at > max ? note.updated_at : max),
       "",
     );
     return `${count}:${latest}`;

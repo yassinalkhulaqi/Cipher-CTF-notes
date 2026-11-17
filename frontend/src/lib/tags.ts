@@ -42,7 +42,9 @@ export function canAddTag(raw: string, tag: string): boolean {
   if (normalized.length > TAG_MAX_LENGTH) return false;
   const existing = parseTags(raw);
   if (existing.length >= TAG_MAX_COUNT) return false;
-  return !existing.some((item) => item.toLowerCase() === normalized.toLowerCase());
+  return !existing.some(
+    (item) => item.toLowerCase() === normalized.toLowerCase(),
+  );
 }
 
 /** Add a tag to a raw list; returns the serialized result (unchanged on refusal). */
@@ -54,7 +56,9 @@ export function addTag(raw: string, tag: string): string {
 /** Remove a tag (case-insensitive) from a raw list. */
 export function removeTag(raw: string, tag: string): string {
   const needle = normalizeTag(tag).toLowerCase();
-  return serializeTags(parseTags(raw).filter((item) => item.toLowerCase() !== needle));
+  return serializeTags(
+    parseTags(raw).filter((item) => item.toLowerCase() !== needle),
+  );
 }
 
 /** Toggle a tag; convenience for chip-style UIs. */

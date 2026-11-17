@@ -1056,7 +1056,11 @@
 .md-link {
   color: var(--editor-link);
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--editor-link) 35%, transparent);
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--editor-link) 35%,
+    transparent
+  );
   text-underline-offset: 2px;
 }
 

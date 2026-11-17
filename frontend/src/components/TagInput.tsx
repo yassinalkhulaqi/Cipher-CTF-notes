@@ -1,4 +1,4 @@
-﻿import {
+import {
   useEffect,
   useId,
   useMemo,
@@ -150,9 +150,7 @@ export function TagInput({
         className="tag-input-field"
         value={draft}
         disabled={disabled}
-        placeholder={
-          selected.length === 0 ? "recon, web, privescâ€¦" : ""
-        }
+        placeholder={selected.length === 0 ? "recon, web, privesc…" : ""}
         spellCheck={false}
         autoComplete="off"
         role="combobox"

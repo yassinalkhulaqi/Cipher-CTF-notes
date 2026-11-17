@@ -1,10 +1,9 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Code2, Save, Trash2 } from "lucide-react";
 import { api } from "../../lib/api";
 import { snippetsChanged } from "../../lib/events";
 import { useUiStore } from "../../store/useUiStore";
 import { Modal } from "./Modal";
-
 
 export function SnippetFormModal() {
   const snippetEditorId = useUiStore((state) => state.snippetEditorId);
@@ -95,7 +94,7 @@ export function SnippetFormModal() {
     const id = snippetEditorId;
     askConfirm({
       title: "Delete snippet",
-      message: `Delete â€œ${title || "this snippet"}â€‌? This cannot be undone.`,
+      message: `Delete “${title || "this snippet"}”? This cannot be undone.`,
       confirmLabel: "Delete snippet",
       danger: true,
       action: async () => {
@@ -141,7 +140,7 @@ export function SnippetFormModal() {
             onClick={() => void save()}
             disabled={saving || loading}
           >
-            <Save /> {saving ? "Savingâ€¦" : "Save snippet"}
+            <Save /> {saving ? "Saving…" : "Save snippet"}
           </button>
         </>
       }

@@ -28,32 +28,29 @@ export function useSpringValue(
     setActive(true);
   }, [target]);
 
-  useRaf(
-    (delta) => {
-      const current = simulation.current;
-      const next = springStep(
-        current.value,
-        current.velocity,
-        current.target,
-        config,
-        delta,
-      );
-      simulation.current = {
-        value: next.value,
-        velocity: next.velocity,
-        target: current.target,
-      };
-      if (springSettled(next.value, next.velocity, current.target, epsilon)) {
-        simulation.current.value = current.target;
-        simulation.current.velocity = 0;
-        setDisplay(current.target);
-        setActive(false);
-        return;
-      }
-      setDisplay(next.value);
-    },
-    active,
-  );
+  useRaf((delta) => {
+    const current = simulation.current;
+    const next = springStep(
+      current.value,
+      current.velocity,
+      current.target,
+      config,
+      delta,
+    );
+    simulation.current = {
+      value: next.value,
+      velocity: next.velocity,
+      target: current.target,
+    };
+    if (springSettled(next.value, next.velocity, current.target, epsilon)) {
+      simulation.current.value = current.target;
+      simulation.current.velocity = 0;
+      setDisplay(current.target);
+      setActive(false);
+      return;
+    }
+    setDisplay(next.value);
+  }, active);
 
   return display;
 }

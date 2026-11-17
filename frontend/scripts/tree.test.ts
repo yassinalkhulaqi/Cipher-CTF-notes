@@ -10,7 +10,11 @@ import {
 } from "../src/lib/tree";
 import type { TreeNode } from "../src/lib/types";
 
-function note(id: number, title: string, extras: Partial<TreeNode> = {}): TreeNode {
+function note(
+  id: number,
+  title: string,
+  extras: Partial<TreeNode> = {},
+): TreeNode {
   return {
     id,
     parent_id: null,
@@ -61,30 +65,57 @@ test("countNotes counts notes, not folders", () => {
 test("flattenVisible walks expanded folders only", () => {
   assert.deepEqual(allIds(tree), [1, 2, 3, 4, 5]);
   const collapsed = flattenVisible(tree, new Set());
-  assert.deepEqual(collapsed.map((row) => row.node.id), [1, 5]);
+  assert.deepEqual(
+    collapsed.map((row) => row.node.id),
+    [1, 5],
+  );
   const expanded = flattenVisible(tree, new Set([1, 3]));
-  assert.deepEqual(expanded.map((row) => row.node.id), [1, 2, 3, 4, 5]);
-  assert.deepEqual(expanded.map((row) => row.depth), [0, 1, 1, 2, 0]);
+  assert.deepEqual(
+    expanded.map((row) => row.node.id),
+    [1, 2, 3, 4, 5],
+  );
+  assert.deepEqual(
+    expanded.map((row) => row.depth),
+    [0, 1, 1, 2, 0],
+  );
 });
 
 test("filterTree keeps a matched parent and its matching children", () => {
   const filtered = filterTree(tree, "htb");
-  assert.deepEqual(filtered.map((node) => node.id), [1]);
+  assert.deepEqual(
+    filtered.map((node) => node.id),
+    [1],
+  );
   // Only the children that themselves match are retained.
-  assert.deepEqual(filtered[0].children.map((node) => node.id), [2]);
+  assert.deepEqual(
+    filtered[0].children.map((node) => node.id),
+    [2],
+  );
 });
 
 test("filterTree keeps folders that contain matching descendants", () => {
   const filtered = filterTree(tree, "nmap");
-  assert.deepEqual(filtered.map((node) => node.id), [1]);
+  assert.deepEqual(
+    filtered.map((node) => node.id),
+    [1],
+  );
   const recon = filtered[0].children.find((node) => node.id === 3);
   assert.ok(recon);
-  assert.deepEqual(recon.children.map((node) => node.id), [4]);
+  assert.deepEqual(
+    recon.children.map((node) => node.id),
+    [4],
+  );
 });
 
 test("filterTree matches tags and targets", () => {
-  assert.deepEqual(filterTree(tree, "minecraft").map((node) => node.id), [1]);
-  assert.deepEqual(filterTree(tree, "10.10.10.10").map((node) => node.id), [1]);
+  assert.deepEqual(
+    filterTree(tree, "minecraft").map((node) => node.id),
+    [1],
+  );
+  assert.deepEqual(
+    filterTree(tree, "10.10.10.10").map((node) => node.id),
+    [1],
+  );
 });
 
 test("filterTree with an empty needle returns the tree untouched", () => {

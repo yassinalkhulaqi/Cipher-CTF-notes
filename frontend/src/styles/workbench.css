@@ -447,7 +447,9 @@
 .graph-node.selected .graph-disc {
   stroke: var(--accent-hover);
   stroke-width: 2.5;
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent));
+  filter: drop-shadow(
+    0 0 6px color-mix(in srgb, var(--accent) 55%, transparent)
+  );
 }
 
 .graph-node:focus-visible {

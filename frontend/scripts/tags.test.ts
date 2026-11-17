@@ -39,7 +39,9 @@ test("addTag appends new tags and refuses duplicates", () => {
 });
 
 test("addTag enforces count and length limits", () => {
-  const many = Array.from({ length: TAG_MAX_COUNT }, (_, i) => `t${i}`).join(",");
+  const many = Array.from({ length: TAG_MAX_COUNT }, (_, i) => `t${i}`).join(
+    ",",
+  );
   const refused = addTag(many, "overflow");
   assert.deepEqual(parseTags(refused), parseTags(many));
   assert.equal(canAddTag(many, "overflow"), false);

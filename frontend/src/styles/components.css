@@ -534,7 +534,7 @@ button.chip:hover {
   height: 32px;
   margin-bottom: 10px;
   color: var(--faint);
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .tree-empty kbd {
@@ -758,7 +758,6 @@ button.chip:hover {
 .tooltip-body {
   position: relative;
 }
-
 
 /* Tag input (chip editor with vault-tag autocomplete) */
 
