@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   DEFAULT_READING_PREFS,
   buildReadingOutline,
+  formatReadingTime,
   normalizeReadingPrefs,
   readingExcerpt,
   readingStats,
@@ -66,6 +67,11 @@ test("reading excerpt keeps short prose intact and truncates long prose", () => 
   assert.equal(readingExcerpt("one two three four five", 3), "one two…");
   assert.equal(readingExcerpt("one two", 5), "one two");
   assert.equal(readingExcerpt("", 5), "");
+});
+
+test("formatReadingTime renders minutes and seconds", () => {
+  assert.equal(formatReadingTime(45), "45s read");
+  assert.equal(formatReadingTime(125), "2 min 5s read");
 });
 
 test("reading styles ship theme tokens and measure controls", () => {

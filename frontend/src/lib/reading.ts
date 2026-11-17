@@ -125,6 +125,13 @@ export function buildReadingOutline(
   return anchors;
 }
 
+export function formatReadingTime(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  if (minutes <= 0) return `${rest}s read`;
+  return `${minutes} min ${rest}s read`;
+}
+
 export function readingExcerpt(markdown: string, maxWords = 40): string {
   const prose = markdown
     .replace(/```[\s\S]*?```/g, " ")

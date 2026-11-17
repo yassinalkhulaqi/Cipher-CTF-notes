@@ -7,6 +7,7 @@ import {
   type ReadingTheme,
   buildReadingOutline,
   normalizeReadingPrefs,
+  formatReadingTime,
   readingExcerpt,
   readingStats,
 } from "../lib/reading";
@@ -18,7 +19,6 @@ export interface ReadingViewProps {
 }
 
 const LINE_LENGTHS = [45, 55, 68, 80, 100];
-const SECONDS_PER_MINUTE = 60;
 
 export function ReadingView({ html, source, prefs }: ReadingViewProps) {
   const articleRef = useRef<HTMLDivElement>(null);
@@ -63,9 +63,6 @@ export function ReadingView({ html, source, prefs }: ReadingViewProps) {
     });
   const toggleTheme = () =>
     setTheme((value) => (value === "paper" ? "graphite" : "paper"));
-
-  const statsMinutes = Math.floor(stats.readingSeconds / SECONDS_PER_MINUTE);
-  const statsSeconds = stats.readingSeconds % SECONDS_PER_MINUTE;
 
   return (
     <div className="reading-view" data-reading-theme={theme}>
@@ -169,10 +166,7 @@ export function ReadingView({ html, source, prefs }: ReadingViewProps) {
           <span>{stats.words} words</span>
           <span>{stats.paragraphs} paragraphs</span>
           <span>{stats.headings} headings</span>
-          <span>
-            {statsMinutes > 0 ? `${statsMinutes} min ` : ""}
-            {statsSeconds}s read
-          </span>
+          <span>{formatReadingTime(stats.readingSeconds)}</span>
         </div>
         {outline.length > 0 ? (
           <nav className="reading-outline" aria-label="Reading outline">
