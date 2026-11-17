@@ -397,7 +397,9 @@ neighbor.
 
 ### 4.5 Branch and commit policy
 
-- Branch names: `feat/v2-00-platform-kernel` through `feat/v2-11-performance-offline`.
+- Branch names: `dev/v2-00-platform-kernel` through `dev/v2-11-performance-offline`.
+- Remote enforcement: this repository only accepts `dev/*` branch pushes, so all
+  v2 branches use the `dev/` prefix; `feat/*` is local-only unless policy changes.
 - Bases: each branch starts from `main` after its dependencies are merged.
 - Merge order: numeric branch order; parallel wave branches rebase before merge.
 - Never push or commit directly to `main`; merge through PRs with the full gate.
@@ -415,18 +417,18 @@ neighbor.
 
 | # | Branch | Theme | Depends on | Schema | Merge slot |
 | --- | --- | --- | --- | --- | --- |
-| 00 | `feat/v2-00-platform-kernel` | Rescue, foundation, API v2, UI shell | baseline | v4 | 1 |
-| 01 | `feat/v2-01-engagement-core` | Engagement/target/finding model | 00 | v5 | 2 |
-| 02 | `feat/v2-02-evidence-vault` | Attachments, blobs, evidence, annotations | 01 | v6 | 3 |
-| 03 | `feat/v2-03-block-editor` | Block document model and editor | 00 | v7 | 4 |
-| 04 | `feat/v2-04-search-commands` | Query language, facets, saved searches, command system | 01, 03 | v8 | 5 |
-| 05 | `feat/v2-05-playbooks-snippets` | Variables, playbooks, runbooks, safe copy | 01 | v9 | 6 |
-| 06 | `feat/v2-06-graph-intel` | Entity graph, suggestions, duplicates, orphans | 01, 02, 04 | v10 | 7 |
-| 07 | `feat/v2-07-reporting-studio` | Report builder, redaction, HTML/print/JSON/MD | 01, 02, 05 | v11 | 8 |
-| 08 | `feat/v2-08-sync-portability` | Bundles, merge/conflict, import/export, CLI | 01, 02 | v12 | 9 |
-| 09 | `feat/v2-09-security-privacy` | Secrets, redaction, encryption, audit UI | 02, 08 | v13 | 10 |
-| 10 | `feat/v2-10-a11y-i18n-themes` | i18n/RTL, keybindings, theme studio, WCAG 2.2 | 01–09 UI | v14 | 11 |
-| 11 | `feat/v2-11-performance-offline` | Virtualization, workers, PWA, desktop polish, release | 00–10 | v15 | 12 |
+| 00 | `dev/v2-00-platform-kernel` | Rescue, foundation, API v2, UI shell | baseline | v4 | 1 |
+| 01 | `dev/v2-01-engagement-core` | Engagement/target/finding model | 00 | v5 | 2 |
+| 02 | `dev/v2-02-evidence-vault` | Attachments, blobs, evidence, annotations | 01 | v6 | 3 |
+| 03 | `dev/v2-03-block-editor` | Block document model and editor | 00 | v7 | 4 |
+| 04 | `dev/v2-04-search-commands` | Query language, facets, saved searches, command system | 01, 03 | v8 | 5 |
+| 05 | `dev/v2-05-playbooks-snippets` | Variables, playbooks, runbooks, safe copy | 01 | v9 | 6 |
+| 06 | `dev/v2-06-graph-intel` | Entity graph, suggestions, duplicates, orphans | 01, 02, 04 | v10 | 7 |
+| 07 | `dev/v2-07-reporting-studio` | Report builder, redaction, HTML/print/JSON/MD | 01, 02, 05 | v11 | 8 |
+| 08 | `dev/v2-08-sync-portability` | Bundles, merge/conflict, import/export, CLI | 01, 02 | v12 | 9 |
+| 09 | `dev/v2-09-security-privacy` | Secrets, redaction, encryption, audit UI | 02, 08 | v13 | 10 |
+| 10 | `dev/v2-10-a11y-i18n-themes` | i18n/RTL, keybindings, theme studio, WCAG 2.2 | 01–09 UI | v14 | 11 |
+| 11 | `dev/v2-11-performance-offline` | Virtualization, workers, PWA, desktop polish, release | 00–10 | v15 | 12 |
 
 ### 5.2 Waves
 
@@ -480,7 +482,7 @@ Legend: **BE** = Python production, **FE** = TypeScript/TSX/CSS production,
 **T** = Python + frontend tests. Docs are additional and required. All totals
 exceed the 4,000-line floor.
 
-### B00 — `feat/v2-00-platform-kernel`
+### B00 — `dev/v2-00-platform-kernel`
 
 **Mission:** make the repository safe to build on for ten more branches. Rescue
 the dirty work, synchronize with `origin/main`, establish API v2, routing, design
@@ -525,7 +527,7 @@ triage completed.
 
 ---
 
-### B01 — `feat/v2-01-engagement-core`
+### B01 — `dev/v2-01-engagement-core`
 
 **Mission:** make engagements, scope, targets, assets, services, credentials, and
 findings first-class records, with notes as the narrative layer.
@@ -567,7 +569,7 @@ credentials, file a finding, link a note, and see accurate dashboard rollups.
 
 ---
 
-### B02 — `feat/v2-02-evidence-vault`
+### B02 — `dev/v2-02-evidence-vault`
 
 **Mission:** store, deduplicate, preview, annotate, redact, and link evidence
 without bloating the SQLite file.
@@ -606,7 +608,7 @@ retrieve a byte-identical file with verified hash; GC leaves live data intact.
 
 ---
 
-### B03 — `feat/v2-03-block-editor`
+### B03 — `dev/v2-03-block-editor`
 
 **Mission:** introduce a structured block document model and editor while keeping
 Markdown as the portable source of truth.
@@ -647,7 +649,7 @@ diagram fallback without a rendering dependency.
 
 ---
 
-### B04 — `feat/v2-04-search-commands`
+### B04 — `dev/v2-04-search-commands`
 
 **Mission:** make search and command execution feel like a precise instrument:
 operators, facets, saved searches, frecency, and a unified command registry.
@@ -688,7 +690,7 @@ discoverable and keyboard-operable.
 
 ---
 
-### B05 — `feat/v2-05-playbooks-snippets`
+### B05 — `dev/v2-05-playbooks-snippets`
 
 **Mission:** turn snippets into safe, reusable playbooks with variables,
 checklists, usage history, and engagement-aware runs.
@@ -728,7 +730,7 @@ correctly, warns on dangerous steps, and exports a reproducible run log.
 
 ---
 
-### B06 — `feat/v2-06-graph-intel`
+### B06 — `dev/v2-06-graph-intel`
 
 **Mission:** reason over the whole vault: typed entity graph, link intelligence,
 similarity, duplicates, orphans, and actionable insights.
@@ -767,7 +769,7 @@ every graph action has a keyboard-accessible non-canvas equivalent.
 
 ---
 
-### B07 — `feat/v2-07-reporting-studio`
+### B07 — `dev/v2-07-reporting-studio`
 
 **Mission:** produce client-ready reports from findings and evidence, with
 redaction, templates, print/HTML/PDF-via-print, Markdown, and JSON.
@@ -806,7 +808,7 @@ vault state.
 
 ---
 
-### B08 — `feat/v2-08-sync-portability`
+### B08 — `dev/v2-08-sync-portability`
 
 **Mission:** make vaults safely portable: export/import bundles, merge with
 conflict policy, verify integrity, and operate from the CLI.
@@ -845,7 +847,7 @@ sync journal compaction.
 
 ---
 
-### B09 — `feat/v2-09-security-privacy`
+### B09 — `dev/v2-09-security-privacy`
 
 **Mission:** make RedScribe trustworthy for sensitive engagements: secret
 detection, redaction, optional encryption, stronger local auth, and an audit UI.
@@ -886,7 +888,7 @@ core install remains dependency-free.
 
 ---
 
-### B10 — `feat/v2-10-a11y-i18n-themes`
+### B10 — `dev/v2-10-a11y-i18n-themes`
 
 **Mission:** make every surface accessible, localizable, RTL-ready, themed, and
 keyboard-remappable without compromising the Aurora identity.
@@ -925,7 +927,7 @@ control labels.
 
 ---
 
-### B11 — `feat/v2-11-performance-offline`
+### B11 — `dev/v2-11-performance-offline`
 
 **Mission:** make the workbench fast at scale, offline-capable, and polished as a
 desktop application, then cut the v2 release.
@@ -1032,7 +1034,7 @@ v2 ships only when:
    virtualenv: `pip install -e ".[dev]"`, then the full Python and frontend gates.
 3. Triage the branch list (§5.3): salvage, then delete stale `aurora-*`/`auto-*`
    branches.
-4. Open `feat/v2-00-platform-kernel`; implement the migration framework, API v2
+4. Open `dev/v2-00-platform-kernel`; implement the migration framework, API v2
    router, app shell/router, design primitives, LOC gate, and CI updates.
 5. Land B00 through a PR; do not start feature branches on red gates.
 6. Start Wave 1 in parallel after B00: B01, B03, and the reversible initial part
@@ -1094,7 +1096,7 @@ git switch main
 git merge --ff-only origin/main
 
 # Create the foundation branch
-git switch -c feat/v2-00-platform-kernel
+git switch -c dev/v2-00-platform-kernel
 ```
 
 Do not push `main`, force-push shared branches, or merge a feature branch whose
