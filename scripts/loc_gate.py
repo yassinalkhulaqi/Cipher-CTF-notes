@@ -120,6 +120,11 @@ def resolve_base(base: str) -> str:
     return _git("merge-base", base, "HEAD").strip()
 
 
+def is_base_only(base_commit: str) -> bool:
+    head_commit = _git("rev-parse", "HEAD").strip()
+    return head_commit == base_commit
+
+
 def collect(base: str) -> list[FileChange]:
     base_commit = resolve_base(base)
     changes = parse_numstat(_git("diff", "--numstat", base_commit, "--"))
@@ -163,10 +168,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="Emit a JSON summary.")
     args = parser.parse_args(argv)
 
-    changes = collect(args.base)
+    base_commit = resolve_base(args.base)
+    base_only = is_base_only(base_commit)
+    changes = [] if base_only else collect(args.base)
     summary = summarize(changes)
-    failures = evaluate(summary, args.min_added, args.min_tests)
-    summary["base"] = resolve_base(args.base)
+    failures = [] if base_only else evaluate(summary, args.min_added, args.min_tests)
+    summary["base"] = base_commit
     summary["ok"] = not failures
     summary["failures"] = failures
 

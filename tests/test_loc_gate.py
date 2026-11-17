@@ -61,3 +61,8 @@ def test_evaluate_reports_each_shortfall() -> None:
     assert "3999" in failures[0]
     assert "100" in failures[1]
     assert loc_gate.evaluate({"added": 4000, "tests_added": 500}, 4000, 500) == []
+
+
+def test_is_base_only_detects_main_checked_out_at_base(monkeypatch) -> None:
+    monkeypatch.setattr(loc_gate, "_git", lambda *args: "1e27a7c24003d59f7b49ec634351444ee3f1fcba\n")
+    assert loc_gate.is_base_only("1e27a7c24003d59f7b49ec634351444ee3f1fcba")
