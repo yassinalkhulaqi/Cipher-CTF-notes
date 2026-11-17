@@ -7,7 +7,14 @@ import { mkdir } from "node:fs/promises";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cache = path.join(root, "node_modules", ".cache");
 
-const unitTests = ["motion.test.ts", "tags.test.ts", "tree.test.ts"];
+const unitTests = [
+  "motion.test.ts",
+  "tags.test.ts",
+  "tree.test.ts",
+  "router.test.ts",
+  "commands.test.ts",
+  "apiClient.test.ts",
+];
 
 async function typecheck() {
   const result = spawnSync(

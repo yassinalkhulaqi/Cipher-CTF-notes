@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "dev/**"]
   pull_request:
 
 permissions:
@@ -47,6 +47,44 @@ jobs:
         run: python -m mypy src
       - name: Test
         run: python -m pytest --cov=redscribe --cov-report=term-missing --cov-fail-under=85
+
+  contracts:
+    name: v2 contract suites
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+      - name: Contract tests
+        run: >-
+          python -m pytest -q
+          tests/test_api_v2.py
+          tests/test_migrations.py
+          tests/test_events.py
+          tests/test_idempotency.py
+          tests/test_loc_gate.py
+
+  gates:
+    name: Branch gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+      - name: LOC gate
+        run: python scripts/loc_gate.py --base origin/main --min-added 4000 --min-tests 500
+      - name: Branch report
+        run: python scripts/branch_report.py --base origin/main
 
   frontend:
     name: Frontend format, test, and build
