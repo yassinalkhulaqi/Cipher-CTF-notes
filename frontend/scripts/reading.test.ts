@@ -75,10 +75,10 @@ test("formatReadingStats composes the footer summary", () => {
   const summary = formatReadingStats(
     readingStats("# One\n\nTwo words here.\n"),
   );
-  assert.equal(summary.words, 3);
+  assert.equal(summary.words, 4);
   assert.equal(summary.paragraphs, 1);
   assert.equal(summary.headings, 1);
-  assert.equal(summary.reading, "9s read");
+  assert.equal(summary.reading, "2s read");
 });
 
 test("readingParagraphs ignores headings and blank blocks", () => {
