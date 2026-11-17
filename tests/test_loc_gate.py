@@ -61,3 +61,8 @@ def test_evaluate_reports_each_shortfall() -> None:
     assert "3999" in failures[0]
     assert "100" in failures[1]
     assert loc_gate.evaluate({"added": 4000, "tests_added": 500}, 4000, 500) == []
+
+
+def test_branch_gate_job_skips_main_pushes() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    assert "  gates:\n    name: Branch gates\n    runs-on: ubuntu-latest\n    if: github.ref != 'refs/heads/main'" in workflow
