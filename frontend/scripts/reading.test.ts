@@ -8,6 +8,7 @@ import {
   formatReadingTime,
   normalizeReadingPrefs,
   readingExcerpt,
+  readingParagraphs,
   readingStats,
 } from "../src/lib/reading";
 
@@ -67,6 +68,15 @@ test("reading excerpt keeps short prose intact and truncates long prose", () => 
   assert.equal(readingExcerpt("one two three four five", 3), "one two…");
   assert.equal(readingExcerpt("one two", 5), "one two");
   assert.equal(readingExcerpt("", 5), "");
+});
+
+test("readingParagraphs ignores headings and blank blocks", () => {
+  const blocks = readingParagraphs(
+    "# Title\n\nOne two.\n\n## Sub\n\nThree four.\n",
+  );
+  assert.equal(blocks.length, 2);
+  assert.equal(blocks[0], "One two.");
+  assert.equal(blocks[1], "Three four.");
 });
 
 test("formatReadingTime renders minutes and seconds", () => {

@@ -69,6 +69,13 @@ export interface ReadingStats {
   readingSeconds: number;
 }
 
+export function readingParagraphs(markdown: string): string[] {
+  return markdown
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter((block) => block.length > 0 && !block.startsWith("#"));
+}
+
 export function readingStats(
   markdown: string,
   wordsPerMinute = 200,
@@ -80,10 +87,7 @@ export function readingStats(
   const words = prose.split(/\s+/).filter((word) => word.length > 0).length;
   const characters = prose.replace(/\s+/g, "").length;
   const sentences = markdown.match(/[.!?]+(\s|$)/g) ?? [];
-  const paragraphs = markdown
-    .split(/\n\s*\n/)
-    .map((block) => block.trim())
-    .filter((block) => block.length > 0 && !block.startsWith("#")).length;
+  const paragraphs = readingParagraphs(markdown).length;
   const headings = (markdown.match(/^#{1,6}\s+.*$/gm) ?? []).length;
   const readingSeconds = Math.max(
     1,
