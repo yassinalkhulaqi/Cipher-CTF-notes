@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import random
+from dataclasses import dataclass
+
+from redscribe.domain.utils import slug_hash, slugify
 from redscribe.storage.db import Vault
 
 _HTB = r"""# HTB — Corporate
@@ -263,19 +267,54 @@ nmap -sn <TARGET>/24
 """
 
 
-def seed_demo(vault: Vault) -> int:
-    """Populate an empty vault with demo notes and return the note count."""
-    stats = vault.basic_stats()
-    if stats.notes or stats.folders:
-        return 0
+@dataclass(frozen=True, slots=True)
+class DemoNote:
+    """A deterministic note fixture."""
 
-    ctf = vault.create_node("CTF Challenges", kind="folder")
-    engagements = vault.create_node("Engagements", kind="folder")
-    cheatsheets = vault.create_node("Cheatsheets", kind="folder")
+    slug: str
+    title: str
+    folder: str
+    content: str
+    tags: str
+    target: str = ""
+    status: str = "todo"
+    difficulty: str = ""
+    flag: str = ""
+    pinned: bool = False
 
-    vault.create_node(
-        "HTB — Corporate",
-        ctf.id,
+
+@dataclass(frozen=True, slots=True)
+class DemoSnippet:
+    """A deterministic snippet fixture."""
+
+    title: str
+    command: str
+    description: str
+    tags: str
+
+
+@dataclass(frozen=True, slots=True)
+class DemoManifest:
+    """Stable metadata describing the bundled demo fixtures."""
+
+    fingerprint: str
+    slugs: tuple[str, ...]
+    titles: tuple[str, ...]
+    profiles: dict[str, tuple[str, ...]]
+    snippet_count: int
+
+
+FOLDER_TITLES: dict[str, str] = {
+    "ctf": "CTF Challenges",
+    "engagements": "Engagements",
+    "cheatsheets": "Cheatsheets",
+}
+
+DEMO_NOTES: tuple[DemoNote, ...] = (
+    DemoNote(
+        slug="htb-corporate",
+        title="HTB — Corporate",
+        folder="ctf",
         content=_HTB,
         tags="htb,windows,smb,privesc",
         target="10.10.10.42",
@@ -283,54 +322,175 @@ def seed_demo(vault: Vault) -> int:
         difficulty="medium",
         flag="HTB{th1s_1s_4_d3m0_fl4g}",
         pinned=True,
-    )
-    vault.create_node(
-        "picoCTF — buffer overflow 1",
-        ctf.id,
+    ),
+    DemoNote(
+        slug="picoctf-buffer-overflow-1",
+        title="picoCTF — buffer overflow 1",
+        folder="ctf",
         content=_PICO,
         tags="picoctf,pwn,linux",
         target="./vuln",
         status="active",
         difficulty="easy",
         flag="picoCTF{demo_buffer_overflow}",
-    )
-    vault.create_node(
-        "ACME external — week 1",
-        engagements.id,
+    ),
+    DemoNote(
+        slug="acme-external-week-1",
+        title="ACME external — week 1",
+        folder="engagements",
         content=_ENGAGEMENT,
         tags="engagement,web,report",
         target="app.acme.test",
         status="active",
-        difficulty="",
-    )
-    vault.create_node(
-        "ACME — app.acme.test",
-        engagements.id,
+    ),
+    DemoNote(
+        slug="acme-app-acme-test",
+        title="ACME — app.acme.test",
+        folder="engagements",
         content=_ACME_HOST,
         tags="web,host,api",
         target="app.acme.test",
         status="done",
         difficulty="medium",
-    )
-    vault.create_node(
-        "Linux privilege escalation",
-        cheatsheets.id,
+    ),
+    DemoNote(
+        slug="linux-privilege-escalation",
+        title="Linux privilege escalation",
+        folder="cheatsheets",
         content=_LINUX_PRIVESC,
         tags="linux,privesc,cheatsheet",
         status="todo",
         pinned=True,
-    )
-    vault.create_node(
-        "Nmap quick reference",
-        cheatsheets.id,
+    ),
+    DemoNote(
+        slug="nmap-quick-reference",
+        title="Nmap quick reference",
+        folder="cheatsheets",
         content=_NMAP,
         tags="recon,nmap,cheatsheet",
         status="todo",
+    ),
+)
+
+DEMO_SNIPPETS: tuple[DemoSnippet, ...] = (
+    DemoSnippet(
+        title="Local listener",
+        command="nc -lvnp 4444",
+        description="Catch a reverse shell during an authorized assessment.",
+        tags="shell,listener",
+    ),
+)
+
+DEMO_PROFILES: dict[str, tuple[str, ...]] = {
+    "full": tuple(FOLDER_TITLES),
+    "ctf": ("ctf",),
+    "engagement": ("engagements",),
+    "cheatsheets": ("cheatsheets",),
+}
+
+_ADJECTIVES = ("alpha", "bravo", "charlie", "delta", "echo", "foxtrot")
+_SUBJECTS = ("recon", "exploit", "report", "triage", "pivot", "loot")
+_SEED_STATUSES = ("todo", "active", "done")
+_SEED_DIFFICULTIES = ("easy", "medium", "hard")
+
+
+def demo_fingerprint(notes: tuple[DemoNote, ...] = DEMO_NOTES) -> str:
+    """Return a stable digest of the fixture titles, slugs, and tags."""
+    material = "|".join(f"{note.slug}:{note.title}:{note.tags}" for note in notes)
+    return slug_hash(material, length=16)
+
+
+def demo_manifest() -> DemoManifest:
+    """Return deterministic metadata for the bundled fixtures."""
+    return DemoManifest(
+        fingerprint=demo_fingerprint(),
+        slugs=tuple(note.slug for note in DEMO_NOTES),
+        titles=tuple(note.title for note in DEMO_NOTES),
+        profiles={
+            name: tuple(key for key in FOLDER_TITLES if key in folders)
+            for name, folders in DEMO_PROFILES.items()
+        },
+        snippet_count=len(DEMO_SNIPPETS),
     )
-    vault.create_snippet(
-        "Local listener",
-        "nc -lvnp 4444",
-        "Catch a reverse shell during an authorized assessment.",
-        "shell,listener",
-    )
-    return 6
+
+
+def seeded_notes(seed: int, count: int = 3, *, folder: str = "ctf") -> tuple[DemoNote, ...]:
+    """Build reproducible extra fixtures from an integer seed."""
+    if count < 0:
+        raise ValueError("Fixture count cannot be negative")
+    if folder not in FOLDER_TITLES:
+        raise ValueError(f"Unknown demo folder: {folder}")
+    generator = random.Random(seed)
+    octet = (abs(seed) % 200) + 10
+    notes: list[DemoNote] = []
+    for index in range(count):
+        adjective = generator.choice(_ADJECTIVES)
+        subject = generator.choice(_SUBJECTS)
+        position = index + 1
+        title = f"Seeded {adjective} {subject} {position:02d}"
+        token = slug_hash(f"{seed}:{index}", length=8)
+        target = f"10.10.{octet}.{position}"
+        status = generator.choice(_SEED_STATUSES)
+        difficulty = generator.choice(_SEED_DIFFICULTIES)
+        content = (
+            f"# {title}\n\n"
+            f"Generated fixture `{token}` derived from seed `{seed}`.\n\n"
+            f"- Target: `{target}`\n"
+            f"- Status: {status}\n"
+            f"- Difficulty: {difficulty}\n"
+        )
+        notes.append(
+            DemoNote(
+                slug=slugify(title),
+                title=title,
+                folder=folder,
+                content=content,
+                tags=f"seed,fixture,{adjective}",
+                target=target,
+                status=status,
+                difficulty=difficulty,
+            )
+        )
+    return tuple(notes)
+
+
+def _fixtures_for(profile: str, seed: int | None) -> tuple[tuple[str, ...], tuple[DemoNote, ...]]:
+    folders = DEMO_PROFILES.get(profile)
+    if folders is None:
+        raise ValueError(f"Unknown demo profile: {profile}")
+    notes = tuple(note for note in DEMO_NOTES if note.folder in folders)
+    if seed is not None:
+        notes = (*notes, *seeded_notes(seed, folder=folders[0]))
+    return folders, notes
+
+
+def seed_demo(vault: Vault, *, profile: str = "full", seed: int | None = None) -> int:
+    """Populate an empty vault with demo notes and return the note count."""
+    stats = vault.basic_stats()
+    if stats.notes or stats.folders:
+        return 0
+
+    folders, notes = _fixtures_for(profile, seed)
+    folder_ids = {
+        folder: vault.create_node(FOLDER_TITLES[folder], kind="folder").id for folder in folders
+    }
+    for note in notes:
+        vault.create_node(
+            note.title,
+            folder_ids[note.folder],
+            content=note.content,
+            tags=note.tags,
+            target=note.target,
+            status=note.status,
+            difficulty=note.difficulty,
+            flag=note.flag,
+            pinned=note.pinned,
+        )
+    for snippet in DEMO_SNIPPETS:
+        vault.create_snippet(
+            snippet.title,
+            snippet.command,
+            snippet.description,
+            snippet.tags,
+        )
+    return len(notes)
