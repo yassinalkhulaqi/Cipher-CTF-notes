@@ -45,6 +45,13 @@ from redscribe.ui.web.security import (
     safe_static_path,
     security_headers,
 )
+from redscribe.ui.web.v2.contracts import (
+    MAX_IDEMPOTENCY_KEY_LENGTH,
+    MAX_REQUEST_ID_LENGTH,
+    V2Error,
+    V2ErrorCode,
+    error_envelope,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +61,9 @@ _TOKEN_PARAM = "token"
 _HOST_RE = re.compile(r"^(127\.0\.0\.1|localhost)(:\d{1,5})?$", re.IGNORECASE)
 _TOKEN_PLACEHOLDER = b"__REDSCRIBE_TOKEN__"
 _NOTE_DOWNLOAD_RE = re.compile(r"/download/note/(\d+)/(md|html)")
+_V2_PREFIX = "/api/v2/"
+_REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9._:-]+$")
+_IDEMPOTENCY_KEY_RE = re.compile(r"^[A-Za-z0-9._:-]+$")
 _CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
     ".css": "text/css; charset=utf-8",
@@ -255,6 +265,9 @@ class _RequestHandler(BaseHTTPRequestHandler):
         if not self._authenticate(SESSION_PURPOSE):
             return
         parsed = urlsplit(self.path)
+        if parsed.path.startswith(_V2_PREFIX):
+            self._do_post_v2(parsed.path)
+            return
         method = parsed.path.removeprefix("/api/") if parsed.path.startswith("/api/") else ""
         if not method or "/" in method:
             self._send_json({"ok": False, "error": "Not found"}, status=404)
@@ -280,6 +293,129 @@ class _RequestHandler(BaseHTTPRequestHandler):
             self._send_json({"ok": False, "error": "Internal server error"}, status=500)
             return
         self._send_json({"ok": True, "data": payload})
+
+    def _do_post_v2(self, path: str) -> None:
+        request_id = self._request_id()
+        try:
+            segments = path.removeprefix(_V2_PREFIX).split("/")
+            if len(segments) != 2 or any(not segment for segment in segments):
+                raise V2Error(
+                    404,
+                    V2ErrorCode.UNKNOWN_ROUTE,
+                    "Unknown API v2 route",
+                )
+            route = f"{segments[0]}.{segments[1]}"
+            content_type = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+            if content_type != "application/json":
+                raise V2Error(
+                    415,
+                    V2ErrorCode.UNSUPPORTED_MEDIA_TYPE,
+                    "Content-Type must be application/json",
+                )
+            body, error = self._read_json_body()
+            if error is not None:
+                raise self._v2_body_error(error)
+            payload = self._call_dispatch_v2(
+                route,
+                body,
+                request_id=request_id,
+                idempotency_key=self._idempotency_key(),
+            )
+        except V2Error as exc:
+            self._send_v2_payload(error_envelope(exc, request_id=request_id), request_id)
+            return
+        except ApiError as exc:
+            failure = V2Error(exc.status, V2ErrorCode.INVALID_REQUEST, exc.message)
+            self._send_v2_payload(error_envelope(failure, request_id=request_id), request_id)
+            return
+        except Exception:
+            LOGGER.exception("API v2 route %s failed", path)
+            failure = V2Error(
+                500,
+                V2ErrorCode.INTERNAL,
+                "Internal server error",
+                retryable=True,
+            )
+            self._send_v2_payload(error_envelope(failure, request_id=request_id), request_id)
+            return
+        self._send_v2_payload(payload, request_id)
+
+    @staticmethod
+    def _v2_body_error(message: str) -> V2Error:
+        if "too large" in message:
+            return V2Error(413, V2ErrorCode.PAYLOAD_TOO_LARGE, message)
+        if "Invalid JSON" in message or "must be an object" in message:
+            return V2Error(400, V2ErrorCode.INVALID_JSON, message)
+        return V2Error(400, V2ErrorCode.INVALID_REQUEST, message)
+
+    def _call_dispatch_v2(
+        self,
+        route: str,
+        body: dict[str, Any],
+        *,
+        request_id: str,
+        idempotency_key: str | None,
+    ) -> Any:
+        target = getattr(self.app.dispatch, "handle_v2", None)
+        if callable(target):
+            return target(
+                route,
+                body,
+                request_id=request_id,
+                idempotency_key=idempotency_key,
+            )
+        enriched = dict(body)
+        enriched["__v2_request_id"] = request_id
+        enriched["__v2_idempotency_key"] = idempotency_key
+        return self._call_dispatch(f"v2:{route}", enriched)
+
+    def _request_id(self) -> str:
+        raw = (self.headers.get("X-Request-ID") or "").strip()
+        if raw:
+            candidate = raw[:MAX_REQUEST_ID_LENGTH]
+            if _REQUEST_ID_RE.fullmatch(candidate):
+                return candidate
+        return f"req_{secrets.token_urlsafe(16)}"
+
+    def _idempotency_key(self) -> str | None:
+        raw = (self.headers.get("Idempotency-Key") or "").strip()
+        if not raw:
+            return None
+        candidate = raw[:MAX_IDEMPOTENCY_KEY_LENGTH]
+        if _IDEMPOTENCY_KEY_RE.fullmatch(candidate):
+            return candidate
+        return None
+
+    def _send_v2_payload(self, payload: Any, request_id: str) -> None:
+        status = getattr(payload, "status", 200)
+        etag = getattr(payload, "etag", None)
+        extra_headers = getattr(payload, "headers", None)
+        if etag is None and isinstance(payload, dict):
+            meta = payload.get("meta")
+            if isinstance(meta, dict):
+                raw_etag = meta.get("etag")
+                if isinstance(raw_etag, str):
+                    etag = raw_etag
+        if not isinstance(payload, dict):
+            status = 500
+            payload = error_envelope(
+                V2Error(500, V2ErrorCode.INTERNAL, "Internal server error"),
+                request_id=request_id,
+            )
+        body = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+        self.send_response(int(status))
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        for header, value in security_headers():
+            self.send_header(header, value)
+        self.send_header("X-Request-ID", request_id)
+        if etag is not None:
+            self.send_header("ETag", str(etag))
+        if isinstance(extra_headers, dict):
+            for header, value in extra_headers.items():
+                self.send_header(str(header), str(value))
+        self.end_headers()
+        self.wfile.write(body)
 
     def _route_page(self, path: str) -> None:
         if path in ("/", "/index.html"):

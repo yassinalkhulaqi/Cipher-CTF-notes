@@ -535,7 +535,7 @@ def test_legacy_schema_is_migrated_in_place(tmp_path: Path) -> None:
         vault.connection.commit()
 
     with Vault(path) as upgraded:
-        assert upgraded.schema_version == 3
+        assert upgraded.schema_version == SCHEMA_VERSION
         indexes = {
             str(row["name"])
             for row in upgraded.connection.execute(

@@ -12,7 +12,7 @@ from __future__ import annotations
 import dataclasses
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from redscribe import __version__
 from redscribe.content.markdown import render_html, render_markdown_body
@@ -53,6 +53,9 @@ from redscribe.ui.web.api_contract import (
     describe_api,
     validate_call,
 )
+
+if TYPE_CHECKING:
+    from redscribe.ui.web.v2.router import V2Router
 
 _SETTING_KEYS = (
     "theme",
@@ -185,6 +188,7 @@ class Api:
     def __init__(self, vault: Vault, overrides: WebOverrides | None = None) -> None:
         self._vault = vault
         self._overrides = overrides or WebOverrides()
+        self._v2_router: V2Router | None = None
         self._routes: dict[str, Any] = {
             "boot": self.boot,
             "tree": self.tree,
@@ -241,6 +245,16 @@ class Api:
 
     def handle(self, method: str, body: dict[str, Any]) -> Any:
         """Dispatch one API call through its contract, converting errors."""
+        if method.startswith("v2:"):
+            payload = dict(body)
+            request_id = payload.pop("__v2_request_id", "")
+            idempotency_key = payload.pop("__v2_idempotency_key", None)
+            return self.handle_v2(
+                method,
+                payload,
+                request_id=str(request_id or ""),
+                idempotency_key=(idempotency_key if isinstance(idempotency_key, str) else None),
+            )
         route = self._routes.get(method)
         if route is None:
             raise ApiError(
@@ -255,6 +269,28 @@ class Api:
             raise ApiError(exc.message, status=exc.status, code=exc.code) from exc
         except (ValueError, TypeError) as exc:
             raise ApiError(str(exc), code=ApiErrorCode.INTERNAL) from exc
+
+    def handle_v2(
+        self,
+        method: str,
+        body: dict[str, Any],
+        *,
+        request_id: str,
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Dispatch one versioned API v2 call and return its envelope."""
+        router = self._v2_router
+        if router is None:
+            from redscribe.ui.web.v2.router import V2Router
+
+            router = V2Router(self._vault)
+            self._v2_router = router
+        return router.dispatch(
+            method,
+            body,
+            request_id=request_id,
+            idempotency_key=idempotency_key,
+        )
 
     # ------------------------------------------------------------------
     # Serialization helpers

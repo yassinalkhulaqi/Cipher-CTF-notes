@@ -26,6 +26,8 @@ from redscribe.domain.models import (
     VaultStats,
 )
 from redscribe.domain.utils import collapse_whitespace, slugify, truncate, utc_now
+from redscribe.storage import events as storage_events
+from redscribe.storage import idempotency as storage_idempotency
 from redscribe.storage.integrity import (
     FTS_TRIGGERS,
     IndexDrift,
@@ -35,6 +37,12 @@ from redscribe.storage.integrity import (
     index_drift,
     normalize_tags,
     scan_integrity,
+)
+from redscribe.storage.migrations import (
+    MIGRATIONS,
+    SCHEMA_VERSION,
+    migrations_through,
+    validate_migration_chain,
 )
 from redscribe.storage.retention import (
     CheckpointResult,
@@ -46,84 +54,7 @@ from redscribe.storage.retention import (
 LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
 
-SCHEMA_VERSION = 3
-
-_MIGRATION_3 = """
-CREATE TABLE IF NOT EXISTS nodes_history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    node_id INTEGER NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
-    title TEXT NOT NULL DEFAULT '',
-    content TEXT NOT NULL DEFAULT '',
-    tags TEXT NOT NULL DEFAULT '',
-    target TEXT NOT NULL DEFAULT '',
-    status TEXT NOT NULL DEFAULT '',
-    difficulty TEXT NOT NULL DEFAULT '',
-    flag TEXT NOT NULL DEFAULT '',
-    created_at TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_nodes_history_node
-    ON nodes_history(node_id, id DESC);
-"""
-
-
-_MIGRATION_1 = """
-CREATE TABLE IF NOT EXISTS nodes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    parent_id INTEGER REFERENCES nodes(id) ON DELETE CASCADE,
-    title TEXT NOT NULL,
-    kind TEXT NOT NULL DEFAULT 'note' CHECK (kind IN ('folder', 'note')),
-    content TEXT NOT NULL DEFAULT '',
-    tags TEXT NOT NULL DEFAULT '',
-    target TEXT NOT NULL DEFAULT '',
-    status TEXT NOT NULL DEFAULT 'todo',
-    difficulty TEXT NOT NULL DEFAULT '',
-    flag TEXT NOT NULL DEFAULT '',
-    pinned INTEGER NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1)),
-    sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    deleted_at TEXT
-);
-
-CREATE INDEX IF NOT EXISTS idx_nodes_parent
-    ON nodes(parent_id, deleted_at, sort_order);
-CREATE INDEX IF NOT EXISTS idx_nodes_deleted ON nodes(deleted_at);
-CREATE INDEX IF NOT EXISTS idx_nodes_updated ON nodes(updated_at DESC);
-
-CREATE TABLE IF NOT EXISTS snippets (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    command TEXT NOT NULL,
-    description TEXT NOT NULL DEFAULT '',
-    tags TEXT NOT NULL DEFAULT '',
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS settings (
-    key TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-) WITHOUT ROWID;
-"""
-
-_MIGRATION_2 = """
-CREATE INDEX IF NOT EXISTS idx_nodes_kind
-    ON nodes(kind, deleted_at, updated_at DESC);
-CREATE INDEX IF NOT EXISTS idx_nodes_target
-    ON nodes(target)
-    WHERE deleted_at IS NULL AND target <> '';
-CREATE INDEX IF NOT EXISTS idx_nodes_pinned
-    ON nodes(updated_at DESC)
-    WHERE deleted_at IS NULL AND pinned = 1;
-CREATE INDEX IF NOT EXISTS idx_snippets_title
-    ON snippets(title COLLATE NOCASE);
-"""
-
-_MIGRATIONS: dict[int, str] = {
-    1: _MIGRATION_1,
-    2: _MIGRATION_2,
-    3: _MIGRATION_3,
-}
+_MIGRATIONS: dict[int, str] = {migration.version: migration.sql for migration in MIGRATIONS}
 
 _FTS_TRIGGERS = FTS_TRIGGERS
 
@@ -241,18 +172,35 @@ class Vault:
                 f"Vault schema {version} is newer than this RedScribe build "
                 f"({SCHEMA_VERSION}). Upgrade RedScribe to open it."
             )
-        for target in range(version + 1, SCHEMA_VERSION + 1):
-            script = _MIGRATIONS.get(target)
-            if script is None:
-                raise RuntimeError(f"Missing SQLite migration {target}")
+        validate_migration_chain()
+        for migration in migrations_through(SCHEMA_VERSION):
+            if migration.version <= version:
+                continue
             try:
                 self._connection.executescript(
-                    f"BEGIN IMMEDIATE;\n{script}\nPRAGMA user_version = {target};\nCOMMIT;"
+                    f"BEGIN IMMEDIATE;\n{migration.sql}\n"
+                    f"PRAGMA user_version = {migration.version};\nCOMMIT;"
                 )
             except sqlite3.DatabaseError:
                 with contextlib.suppress(sqlite3.DatabaseError):
                     self._connection.execute("ROLLBACK")
                 raise
+        self._record_migration_history()
+
+    def _record_migration_history(self) -> None:
+        exists = self._connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations'"
+        ).fetchone()
+        if exists is None:
+            return
+        applied_at = self._now()
+        with self._connection:
+            for migration in migrations_through(SCHEMA_VERSION):
+                self._connection.execute(
+                    "INSERT OR IGNORE INTO schema_migrations(version, name, applied_at) "
+                    "VALUES (?, ?, ?)",
+                    (migration.version, migration.name, applied_at),
+                )
 
     def _init_fts(self) -> None:
         exists = (
@@ -1059,6 +1007,101 @@ class Vault:
             return
         with self._connection:
             self._connection.execute("INSERT INTO nodes_fts(nodes_fts) VALUES('rebuild')")
+
+    # ------------------------------------------------------------------
+    # Platform events, audit, and idempotency
+    # ------------------------------------------------------------------
+
+    def record_event(
+        self,
+        *,
+        kind: str,
+        entity_type: str,
+        entity_id: int | None = None,
+        action: str,
+        payload: object | None = None,
+        request_id: str = "",
+        now: str | datetime | None = None,
+    ) -> storage_events.EntityEvent:
+        return storage_events.record_event(
+            self._connection,
+            kind=kind,
+            entity_type=entity_type,
+            entity_id=entity_id,
+            action=action,
+            payload=payload,
+            request_id=request_id,
+            now=now,
+        )
+
+    def list_events(
+        self,
+        *,
+        since_id: int | None = None,
+        entity_type: str | None = None,
+        entity_id: int | None = None,
+        limit: int = 100,
+    ) -> list[storage_events.EntityEvent]:
+        return storage_events.list_events(
+            self._connection,
+            since_id=since_id,
+            entity_type=entity_type,
+            entity_id=entity_id,
+            limit=limit,
+        )
+
+    def record_request(
+        self,
+        *,
+        request_id: str,
+        method: str,
+        path: str,
+        outcome: str,
+        duration_ms: float = 0.0,
+        client: str = "",
+        now: str | datetime | None = None,
+    ) -> None:
+        storage_events.record_request_audit(
+            self._connection,
+            request_id=request_id,
+            method=method,
+            path=path,
+            outcome=outcome,
+            duration_ms=duration_ms,
+            client=client,
+            now=now,
+        )
+
+    def list_request_audit(self, *, limit: int = 100) -> list[dict[str, object]]:
+        return storage_events.list_request_audit(self._connection, limit=limit)
+
+    def idempotency_get(self, key: str) -> storage_idempotency.IdempotencyRecord | None:
+        return storage_idempotency.get_record(self._connection, key)
+
+    def idempotency_put(
+        self,
+        *,
+        key: str,
+        method: str,
+        request_hash: str,
+        status: int,
+        response: dict[str, object],
+        ttl_seconds: int = 86400,
+        now: str | datetime | None = None,
+    ) -> storage_idempotency.IdempotencyRecord:
+        return storage_idempotency.put_record(
+            self._connection,
+            key=key,
+            method=method,
+            request_hash=request_hash,
+            status=status,
+            response=response,
+            ttl_seconds=ttl_seconds,
+            now=now,
+        )
+
+    def idempotency_prune(self, *, now: str | datetime | None = None) -> int:
+        return storage_idempotency.prune_expired(self._connection, now=now)
 
     def integrity_report(self, *, json_keys: Iterable[str] = ()) -> IntegrityReport:
         """Return a deterministic, sorted snapshot of vault health issues."""

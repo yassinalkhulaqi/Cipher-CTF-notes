@@ -8,6 +8,16 @@ All notable changes to RedScribe are documented here. The format follows
 
 ### Added
 
+- V2 platform kernel: schema v4 migration registry, entity event journal,
+  idempotency key store, and request audit trail.
+- Versioned API v2 with stable envelopes, error codes, request IDs, opaque
+  cursors, ETags, canonical idempotent replay, and v1 compatibility dispatch.
+- Additive frontend foundation: hash router, route registry, app shell, v2 API
+  client, command registry, UI primitives including Toast, and `ui.css`.
+- `scripts/loc_gate.py` and `scripts/branch_report.py` with CI jobs for LOC,
+  test-line, v2 contract, and branch-mix gates.
+- V2 architecture, API, branch playbook, and quality-gates documentation.
+
 - Dependency-free motion system with System, Full, Subtle, and Off modes,
   persisted locally and exposed through the Motion lab.
 - Spring page transitions, FLIP tree reordering, a sliding tree selection
