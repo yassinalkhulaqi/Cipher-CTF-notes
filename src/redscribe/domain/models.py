@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Literal
 
 STATUSES: tuple[str, ...] = ("todo", "active", "done", "blocked")
 STATUS_LABELS: dict[str, str] = {
@@ -159,3 +160,51 @@ class NodeTree:
     node: Node
     children: list[NodeTree] = field(default_factory=list)
     depth: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class ValidationIssue:
+    """A single machine-readable validation finding."""
+
+    code: str
+    message: str
+    severity: Literal["error", "warning"] = "error"
+
+
+@dataclass(frozen=True, slots=True)
+class FlagCandidate:
+    """A flag value paired with the note or field that supplied it."""
+
+    value: str
+    source: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class SnippetEdge:
+    """A directed ``caller -> dependency`` edge in a snippet graph."""
+
+    caller: str
+    dependency: str
+    variable: str = ""
+    resolved: bool = True
+
+
+@dataclass(frozen=True, slots=True)
+class TemplateField:
+    """A field a caller must supply for strict template rendering."""
+
+    name: str
+    required: bool = True
+    description: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class PlaceholderToken:
+    """A parsed span of placeholder text."""
+
+    kind: Literal["text", "placeholder"]
+    raw: str
+    name: str
+    expression: str
+    filters: tuple[str, ...]
+    position: int

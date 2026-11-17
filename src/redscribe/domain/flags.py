@@ -89,3 +89,42 @@ def merge_flags(*values: str) -> list[str]:
                 seen.add(flag)
                 results.append(flag)
     return results
+
+
+def clean_flag(value: str) -> str:
+    """Return a flag value without surrounding quotes or whitespace."""
+    return value.strip().strip("\"'").strip()
+
+
+def flag_prefix(value: str) -> str:
+    """Return the prefix before the first brace, or an empty string."""
+    cleaned = clean_flag(value)
+    return cleaned.split("{", 1)[0] if "{" in cleaned else ""
+
+
+def flag_body(value: str) -> str:
+    """Return the payload inside a balanced ``prefix{body}`` pair."""
+    cleaned = clean_flag(value)
+    if "{" not in cleaned or not cleaned.endswith("}"):
+        return ""
+    body = cleaned.split("{", 1)[1][:-1]
+    if "{" in body or "}" in body:
+        return ""
+    return body
+
+
+def flag_fingerprint(value: str) -> str:
+    """Return a deduplication key that normalizes the prefix only."""
+    cleaned = clean_flag(value)
+    prefix, body = flag_prefix(cleaned), flag_body(cleaned)
+    if prefix and body:
+        return f"{prefix.lower()}{{{body}}}"
+    return cleaned.casefold()
+
+
+def flags_by_prefix(text: str) -> dict[str, list[str]]:
+    """Group every detected flag by its lowercased prefix."""
+    grouped: dict[str, list[str]] = {}
+    for flag in find_flags(text):
+        grouped.setdefault(flag_prefix(flag).lower(), []).append(flag)
+    return grouped

@@ -4,7 +4,12 @@ import pytest
 
 from redscribe.domain.flags import (
     FLAG_PREFIXES,
+    clean_flag,
     find_flags,
+    flag_body,
+    flag_fingerprint,
+    flag_prefix,
+    flags_by_prefix,
     has_flag,
     merge_flags,
     primary_flag,
@@ -54,3 +59,29 @@ def test_supports_at_least_forty_event_prefixes() -> None:
 def test_each_registered_prefix_is_detected(prefix: str) -> None:
     value = f"{prefix}{{sample_value}}"
     assert find_flags(f"prefix: {value}") == [value]
+
+
+def test_clean_flag_removes_quotes_and_whitespace() -> None:
+    assert clean_flag('  "HTB{abc}"  ') == "HTB{abc}"
+    assert clean_flag("") == ""
+
+
+def test_flag_prefix_and_body_handle_balanced_values() -> None:
+    assert flag_prefix("HTB{demo_value}") == "HTB"
+    assert flag_body("HTB{demo_value}") == "demo_value"
+    assert flag_prefix("no-braces") == ""
+    assert flag_body("flag{unterminated") == ""
+    assert flag_body("flag{a}b}") == ""
+
+
+def test_flag_fingerprint_normalizes_prefix_but_not_payload() -> None:
+    assert flag_fingerprint("HTB{demo}") == flag_fingerprint("htb{demo}")
+    assert flag_fingerprint("HTB{demo}") != flag_fingerprint("HTB{DEMO}")
+    assert flag_fingerprint("loose text") == "loose text"
+
+
+def test_flags_by_prefix_groups_in_first_use_order() -> None:
+    grouped = flags_by_prefix("HTB{one} flag{two} htb{three} HTB{four}")
+    assert list(grouped) == ["htb", "flag"]
+    assert grouped["htb"] == ["HTB{one}", "htb{three}", "HTB{four}"]
+    assert grouped["flag"] == ["flag{two}"]

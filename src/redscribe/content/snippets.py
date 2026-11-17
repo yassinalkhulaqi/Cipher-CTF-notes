@@ -2,10 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+import re
+from collections import deque
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 
-from redscribe.content.placeholders import interpolate, placeholder_names, target_values
-from redscribe.domain.models import Snippet
+from redscribe.content.placeholders import (
+    base_name,
+    interpolate,
+    parse_placeholders,
+    placeholder_names,
+    target_values,
+)
+from redscribe.domain.models import Snippet, SnippetEdge, ValidationIssue
 from redscribe.domain.utils import slugify
 
 
@@ -487,3 +496,220 @@ def resolve_command(
 def snippet_placeholders(command: str) -> list[str]:
     """Return the unique placeholders used by a command."""
     return placeholder_names(command)
+
+
+_SNIPPET_REF_RE = re.compile(r"\{\{\s*snippet:([A-Za-z0-9_-]+)\s*\}\}")
+
+KNOWN_VARIABLES: frozenset[str] = frozenset(
+    name for snippet in BUILTIN_SNIPPETS for name in snippet_placeholders(snippet.command)
+)
+
+
+@dataclass(frozen=True, slots=True)
+class ComposeResult:
+    """The outcome of expanding and resolving composed snippets."""
+
+    command: str
+    order: tuple[str, ...]
+    cycles: tuple[tuple[str, ...], ...]
+    issues: tuple[ValidationIssue, ...]
+
+    @property
+    def ok(self) -> bool:
+        return not self.cycles and not any(issue.severity == "error" for issue in self.issues)
+
+
+def snippet_refs(command: str) -> list[str]:
+    """Return unique snippet keys referenced by ``{{snippet:key}}``."""
+    results: list[str] = []
+    seen: set[str] = set()
+    for match in _SNIPPET_REF_RE.finditer(command):
+        key = match.group(1)
+        if key not in seen:
+            seen.add(key)
+            results.append(key)
+    return results
+
+
+def snippet_key(snippet: Snippet) -> str:
+    """Return the stable graph identifier for a snippet."""
+    if snippet.builtin_key:
+        return snippet.builtin_key
+    if snippet.id is not None:
+        return f"snippet-{snippet.id}"
+    return slugify(snippet.title)
+
+
+def build_snippet_graph(snippets: Iterable[Snippet]) -> tuple[SnippetEdge, ...]:
+    """Build directed edges from snippet references found in commands."""
+    items = tuple(snippets)
+    catalog = {snippet_key(item): item for item in items}
+    edges: list[SnippetEdge] = []
+    for item in items:
+        caller = snippet_key(item)
+        for ref in snippet_refs(item.command):
+            edges.append(
+                SnippetEdge(caller=caller, dependency=ref, variable=ref, resolved=ref in catalog)
+            )
+    return tuple(edges)
+
+
+def dependency_roots(edges: Iterable[SnippetEdge]) -> tuple[str, ...]:
+    """Return graph nodes that no other node depends on."""
+    items = tuple(edges)
+    callers = {edge.caller for edge in items}
+    dependencies = {edge.dependency for edge in items}
+    return tuple(sorted(callers - dependencies))
+
+
+def _canonical_cycle(cycle: tuple[str, ...]) -> tuple[str, ...]:
+    inner = list(cycle[:-1])
+    rotations: list[tuple[str, ...]] = []
+    for variant in (inner, list(reversed(inner))):
+        for index in range(len(variant)):
+            rotations.append(tuple(variant[index:] + variant[:index]))
+    return min(rotations)
+
+
+def detect_snippet_cycles(edges: Iterable[SnippetEdge]) -> tuple[tuple[str, ...], ...]:
+    """Return every distinct dependency cycle as a closed node path."""
+    adjacency: dict[str, list[str]] = {}
+    for edge in edges:
+        adjacency.setdefault(edge.caller, []).append(edge.dependency)
+        adjacency.setdefault(edge.dependency, [])
+    color: dict[str, int] = {}
+    stack: list[str] = []
+    cycles: list[tuple[str, ...]] = []
+    seen: set[tuple[str, ...]] = set()
+
+    def visit(node: str) -> None:
+        color[node] = 1
+        stack.append(node)
+        for next_node in sorted(adjacency.get(node, ())):
+            state = color.get(next_node, 0)
+            if state == 0:
+                visit(next_node)
+            elif state == 1:
+                cycle = (*stack[stack.index(next_node) :], next_node)
+                canonical = _canonical_cycle(cycle)
+                if canonical not in seen:
+                    seen.add(canonical)
+                    cycles.append(cycle)
+        stack.pop()
+        color[node] = 2
+
+    for node in sorted(adjacency):
+        if color.get(node, 0) == 0:
+            visit(node)
+    return tuple(cycles)
+
+
+def topological_order(
+    edges: Iterable[SnippetEdge], *, nodes: Iterable[str] | None = None
+) -> tuple[str, ...]:
+    """Return a stable topological order with callers before dependencies."""
+    items = tuple(edges)
+    all_nodes = (
+        list(nodes)
+        if nodes is not None
+        else sorted({edge.caller for edge in items} | {edge.dependency for edge in items})
+    )
+    adjacency: dict[str, list[str]] = {node: [] for node in all_nodes}
+    indegree: dict[str, int] = dict.fromkeys(all_nodes, 0)
+    for edge in items:
+        adjacency.setdefault(edge.caller, []).append(edge.dependency)
+        indegree.setdefault(edge.caller, 0)
+        indegree[edge.dependency] = indegree.get(edge.dependency, 0) + 1
+    queue = deque(node for node in all_nodes if indegree[node] == 0)
+    order: list[str] = []
+    while queue:
+        node = queue.popleft()
+        order.append(node)
+        for next_node in adjacency.get(node, ()):
+            indegree[next_node] -= 1
+            if indegree[next_node] == 0:
+                queue.append(next_node)
+    return tuple(order)
+
+
+def validate_snippet(
+    command: str, *, allowed: Iterable[str] | None = None
+) -> tuple[ValidationIssue, ...]:
+    """Validate a command's variables against a known variable vocabulary."""
+    vocabulary = set(KNOWN_VARIABLES if allowed is None else allowed)
+    issues: list[ValidationIssue] = []
+    if not command.strip():
+        issues.append(ValidationIssue("empty-command", "Snippet command is empty."))
+    for token in parse_placeholders(command):
+        if token.kind != "placeholder" or not token.name:
+            continue
+        root = base_name(token.name)
+        if root not in vocabulary:
+            issues.append(
+                ValidationIssue(
+                    code="unknown-variable",
+                    message=f"Unknown snippet variable: {root}",
+                    severity="warning",
+                )
+            )
+    return tuple(issues)
+
+
+def compose(
+    *snippets: Snippet,
+    values: Mapping[str, str] | None = None,
+    target: str = "",
+) -> ComposeResult:
+    """Expand referenced snippets and resolve every placeholder once."""
+    items = tuple(snippets)
+    catalog = {snippet_key(item): item for item in items}
+    edges = build_snippet_graph(items)
+    cycles = detect_snippet_cycles(edges)
+    order = topological_order(edges, nodes=tuple(catalog))
+    issues: list[ValidationIssue] = []
+    for item in items:
+        issues.extend(validate_snippet(item.command))
+    for edge in edges:
+        if not edge.resolved:
+            issues.append(
+                ValidationIssue(
+                    code="missing-dependency",
+                    message=f"Referenced snippet is not in the composition: {edge.dependency}",
+                )
+            )
+    if cycles:
+        issues.append(
+            ValidationIssue("cyclic-dependency", "Snippet dependency graph contains a cycle.")
+        )
+
+    memo: dict[str, str] = {}
+
+    def expand(key: str, active: frozenset[str]) -> str:
+        if key in memo:
+            return memo[key]
+        item = catalog.get(key)
+        if item is None:
+            return ""
+        if key in active:
+            return item.command
+
+        def replace(match: re.Match[str]) -> str:
+            ref = match.group(1)
+            if ref in active or ref not in catalog:
+                return match.group(0)
+            return expand(ref, active | {key})
+
+        text = _SNIPPET_REF_RE.sub(replace, item.command)
+        memo[key] = text
+        return text
+
+    dependencies = {edge.dependency for edge in edges}
+    roots = tuple(key for key in order if key not in dependencies)
+    expanded = "" if cycles else "\n".join(expand(key, frozenset()) for key in roots)
+    command = resolve_command(expanded, target=target, values=values) if expanded else ""
+    return ComposeResult(
+        command=command,
+        order=order,
+        cycles=cycles,
+        issues=tuple(issues),
+    )

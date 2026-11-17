@@ -1,13 +1,37 @@
 from __future__ import annotations
 
 from redscribe.domain.flags import FLAG_PREFIXES
+from redscribe.domain.models import FlagCandidate
+from redscribe.domain.registry import (
+    FLAG_FORMATS,
+    FORMATS_BY_KEY,
+    assess_flag,
+    best_candidate,
+    confidence_band,
+    infer_category,
+    rank_candidates,
+    score_confidence,
+)
+from redscribe.domain.validation import (
+    check_uniqueness,
+    find_duplicate_groups,
+    prefix_distribution,
+    screen_candidates,
+    unique_flags,
+    validate_flag_format,
+)
 from redscribe.services.flag_intel import (
     KNOWN_FLAG_PATTERNS,
     PATTERNS_BY_PREFIX,
     build_flag_insights,
+    build_flag_intel_report,
     check_flag,
+    flag_assessment_rows,
     flag_insights_payload,
+    flag_intel_report_payload,
     flag_patterns_payload,
+    rank_collected_flags,
+    screen_vault_flags,
 )
 from redscribe.storage.db import Vault
 from redscribe.ui.web.api import Api
@@ -141,3 +165,140 @@ def test_api_flag_endpoints(vault: Vault) -> None:
         "duplicates",
         "missing_flag_notes",
     }
+
+
+def test_domain_registry_covers_every_prefix_with_weights() -> None:
+    assert set(FORMATS_BY_KEY) == set(FLAG_PREFIXES)
+    assert len(FLAG_FORMATS) == len(FLAG_PREFIXES)
+    assert FORMATS_BY_KEY["htb"].confidence > FORMATS_BY_KEY["flag"].confidence
+    assert FORMATS_BY_KEY["hacktoday"].category == "ctf"
+
+
+def test_infer_category_prefers_payload_keywords_over_prefix() -> None:
+    assert infer_category("picoCTF{demo_buffer_overflow}") == "pwn"
+    assert infer_category("HTB{rsa_key_recovered}") == "crypto"
+    assert infer_category("HTB{plain_value}") == "htb"
+    assert infer_category("random{value}") == "generic"
+
+
+def test_confidence_scoring_and_bands() -> None:
+    assert score_confidence("HTB{demo_value}") == 0.98
+    assert score_confidence("flag{abc}") == 0.56
+    assert score_confidence("not a flag") == 0.0
+    assert confidence_band(0.0) == "invalid"
+    assert confidence_band(0.56) == "low"
+    assert confidence_band(0.70) == "medium"
+    assert confidence_band(0.98) == "high"
+
+
+def test_assess_flag_reports_reasons_and_rank_orders_results() -> None:
+    assessment = assess_flag("HTB{demo_value}")
+    assert assessment.known_prefix is True
+    assert assessment.band == "high"
+    assert assessment.category == "htb"
+    assert "known prefix: HTB" in assessment.reasons
+
+    ranked = rank_candidates(["flag{abc}", "HTB{demo_value}"])
+    assert ranked[0].value == "HTB{demo_value}"
+    assert best_candidate([]) is None
+    best = best_candidate(["flag{abc}"])
+    assert best is not None
+    assert best.value == "flag{abc}"
+
+
+def test_validate_flag_format_reports_specific_issues() -> None:
+    valid = validate_flag_format("HTB{demo_value}")
+    assert valid.ok is True
+    assert valid.prefix == "HTB"
+    assert valid.body == "demo_value"
+
+    malformed = validate_flag_format("flag{a}b}")
+    assert malformed.ok is False
+    assert [issue.code for issue in malformed.issues] == ["shape"]
+
+    unknown = validate_flag_format("unknownctf{demo_value}")
+    assert unknown.ok is True
+    assert [issue.severity for issue in unknown.issues] == ["warning"]
+
+    blank = validate_flag_format("flag{}")
+    assert blank.ok is False
+    assert "body-empty" in [issue.code for issue in blank.issues]
+
+
+def test_uniqueness_helpers_normalize_prefixes() -> None:
+    values = ["HTB{one}", "htb{one}", "HTB{two}", "flag{one}"]
+    assert unique_flags(values) == ["HTB{one}", "HTB{two}", "flag{one}"]
+    assert unique_flags(values, case_sensitive=False)[0] == "HTB{one}"
+
+    groups = find_duplicate_groups(values)
+    assert len(groups) == 1
+    assert set(groups[0][1]) == {"HTB{one}", "htb{one}"}
+
+    report = check_uniqueness(values)
+    assert report.total == 4
+    assert report.unique == 3
+    assert report.duplicate_count == 1
+    assert prefix_distribution(values)[0] == ("htb", 3)
+
+
+def test_screen_candidates_combines_validation_and_confidence() -> None:
+    screened = screen_candidates(
+        [FlagCandidate("HTB{demo_value}", "note:1"), FlagCandidate("bad value", "note:2")]
+    )
+    assert screened[0].ok is True
+    assert screened[0].confidence == 0.98
+    assert screened[0].source == "note:1"
+    assert screened[1].ok is False
+    assert screened[1].confidence == 0.0
+    assert screened[1].issues[0].code == "shape"
+
+
+def _seed_confidence(vault: Vault) -> None:
+    vault.create_node("HTB box", content="HTB{demo_value}", flag="HTB{demo_value}", status="done")
+    vault.create_node("Weak flag", content="flag{abc}", status="todo")
+    vault.create_node("Pwned", content="picoCTF{demo_buffer_overflow}", status="done")
+
+
+def test_confidence_report_over_vault(vault: Vault) -> None:
+    _seed_confidence(vault)
+
+    rows = rank_collected_flags(vault)
+    assert [row.flag for row in rows] == [
+        "HTB{demo_value}",
+        "picoCTF{demo_buffer_overflow}",
+        "flag{abc}",
+    ]
+    assert all(row.confidence > 0 for row in rows)
+
+    report = build_flag_intel_report(vault)
+    assert report.total == 3
+    assert report.high_confidence == 2
+    assert report.medium_confidence == 0
+    assert report.low_confidence == 1
+    assert report.weak_flags == ("flag{abc}",)
+    assert [(item.category, item.count) for item in report.categories] == [
+        ("generic", 1),
+        ("htb", 1),
+        ("pwn", 1),
+    ]
+    assert report.uniqueness.unique == 3
+
+    payload = flag_intel_report_payload(report)
+    assert set(payload) == {
+        "total",
+        "high_confidence",
+        "medium_confidence",
+        "low_confidence",
+        "weak_flags",
+        "categories",
+        "uniqueness",
+    }
+    assert payload["weak_flags"] == ["flag{abc}"]
+
+
+def test_flag_hit_rows_and_screening_are_pure(vault: Vault) -> None:
+    hits = vault.collected_flags()
+    rows = flag_assessment_rows(hits)
+    assert len(rows) == len(hits)
+    assert all(row.node_id > 0 for row in rows)
+    assert all(item.ok for item in screen_vault_flags(vault))

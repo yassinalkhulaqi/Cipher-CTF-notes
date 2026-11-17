@@ -2,7 +2,28 @@ from __future__ import annotations
 
 import re
 
-from redscribe.content.templates import TEMPLATE_MAP, TEMPLATES, get_template, render_template
+import pytest
+
+from redscribe.content.templates import (
+    REQUIRED_FIELDS,
+    TEMPLATE_CHANGELOG,
+    TEMPLATE_MAP,
+    TEMPLATE_VERSIONS,
+    TEMPLATES,
+    TemplateRenderError,
+    get_template,
+    render_template,
+    render_template_checked,
+    render_template_strict,
+    required_fields,
+    template_changelog,
+    template_manifest,
+    template_placeholders,
+    template_version,
+    validate_template,
+    validate_template_registry,
+)
+from redscribe.domain.models import Template
 
 
 def test_every_template_key_is_unique_and_reachable() -> None:
@@ -75,3 +96,76 @@ def test_render_template_never_leaves_known_placeholders() -> None:
 
 def test_blank_template_is_empty() -> None:
     assert render_template(get_template("blank"), "Untitled") == ""
+
+
+def test_template_versions_and_changelogs_are_registered() -> None:
+    assert set(TEMPLATE_VERSIONS) == set(TEMPLATE_MAP)
+    assert all(re.fullmatch(r"\d+\.\d+\.\d+", version) for version in TEMPLATE_VERSIONS.values())
+    assert template_version("ctf") == "2.0.0"
+    assert template_version("missing") == "0.0.0"
+    assert template_changelog("ctf")[0].startswith("2.0.0:")
+    assert template_changelog("missing") == ()
+    assert "ctf" in TEMPLATE_CHANGELOG
+
+
+def test_required_fields_registry_is_consistent() -> None:
+    assert set(REQUIRED_FIELDS) == set(TEMPLATE_MAP)
+    assert required_fields("blank") == ()
+    assert [field.name for field in required_fields("host")] == ["title", "target"]
+    assert required_fields(get_template("ctf")) == required_fields("ctf")
+    assert all(field.required for field in required_fields("web"))
+
+
+def test_registry_validation_and_placeholder_inventory() -> None:
+    assert validate_template_registry() == ()
+    names = set(template_placeholders(get_template("host")))
+    assert {"title", "target", "slug", "date"} <= names
+    assert template_placeholders(get_template("blank")) == ()
+
+
+def test_validate_template_reports_metadata_problems() -> None:
+    issues = validate_template(Template("", "", "", "# {{value}}"))
+    assert [issue.code for issue in issues] == [
+        "missing-key",
+        "missing-name",
+        "unversioned-template",
+    ]
+    duplicate = Template("ctf", "Other", "Other", "# {{title}}")
+    assert validate_template(duplicate) == ()
+
+
+def test_strict_render_reports_missing_required_fields() -> None:
+    result = render_template_strict(get_template("host"), {"title": "ACME"})
+    assert result.ok is False
+    assert result.missing == ("target",)
+    assert result.version == "2.0.0"
+    assert result.template_key == "host"
+    assert any(issue.code == "missing-field" for issue in result.issues)
+
+
+def test_strict_render_succeeds_with_all_fields() -> None:
+    result = render_template_strict(
+        get_template("host"), {"title": "ACME", "target": "app.acme.test"}
+    )
+    assert result.ok is True
+    assert result.missing == ()
+    assert "app.acme.test" in result.content
+    assert "# ACME" in result.content
+    assert all(issue.severity != "error" for issue in result.issues)
+
+
+def test_render_template_checked_raises_on_missing_fields() -> None:
+    with pytest.raises(TemplateRenderError):
+        render_template_checked(get_template("web"), {"title": "ACME"})
+    content = render_template_checked(
+        get_template("web"), {"title": "ACME", "target": "app.acme.test"}
+    )
+    assert "# ACME" in content
+
+
+def test_template_manifest_exposes_versioned_metadata() -> None:
+    manifest = template_manifest()
+    assert len(manifest) == len(TEMPLATES)
+    assert set(manifest[0]) == {"key", "name", "version", "required", "changelog"}
+    host = next(item for item in manifest if item["key"] == "host")
+    assert host["required"] == ["title", "target"]
