@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 import unicodedata
+from collections.abc import Iterable
 from datetime import datetime, timezone
 
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
@@ -113,3 +115,86 @@ def pluralize(count: int, singular: str, plural: str | None = None) -> str:
 
 def format_number(value: int) -> str:
     return f"{value:,}"
+
+
+def iso_z(moment: datetime) -> str:
+    """Format a datetime as a UTC ISO 8601 string with a ``Z`` suffix."""
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=timezone.utc)
+    return moment.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def relative_time(value: str, *, now: datetime | None = None, long: bool = False) -> str:
+    """Render a timestamp as ``3m ago`` or ``in 3 minutes``.
+
+    Unlike :func:`humanize_delta`, future timestamps are described instead of
+    being collapsed to ``just now``. Invalid input still yields an empty string.
+    """
+    parsed = parse_timestamp(value)
+    if parsed is None:
+        return ""
+    current = now or datetime.now(timezone.utc)
+    seconds = int((current - parsed).total_seconds())
+    if abs(seconds) < 45:
+        return "just now"
+    units: tuple[tuple[int, str, str], ...] = (
+        (31_536_000, "year", "y"),
+        (2_592_000, "month", "mo"),
+        (604_800, "week", "w"),
+        (86_400, "day", "d"),
+        (3_600, "hour", "h"),
+        (60, "minute", "m"),
+    )
+    amount = 1
+    unit_name = "second"
+    short = "s"
+    for unit_seconds, candidate_name, candidate_short in units:
+        if abs(seconds) >= unit_seconds:
+            amount = abs(seconds) // unit_seconds
+            unit_name = candidate_name
+            short = candidate_short
+            break
+    if long:
+        noun = f"{unit_name}{'' if amount == 1 else 's'}"
+        return f"{amount} {noun} ago" if seconds > 0 else f"in {amount} {noun}"
+    label = f"{amount}{short}"
+    return f"{label} ago" if seconds > 0 else f"in {label}"
+
+
+def format_duration(milliseconds: float) -> str:
+    """Format an elapsed duration for human-readable CLI reports."""
+    if milliseconds < 10:
+        return f"{milliseconds:.1f}ms"
+    if milliseconds < 1_000:
+        return f"{milliseconds:.0f}ms"
+    if milliseconds < 60_000:
+        return f"{milliseconds / 1_000:.2f}s"
+    return f"{milliseconds / 60_000:.1f}m"
+
+
+def unique_slug(
+    text: str,
+    existing: Iterable[str],
+    *,
+    fallback: str = "note",
+    max_length: int = 60,
+) -> str:
+    """Return a slug not present in ``existing``, adding a numeric suffix."""
+    base = slugify(text, fallback=fallback, max_length=max_length)
+    taken = set(existing)
+    if base not in taken:
+        return base
+    counter = 2
+    while True:
+        suffix = f"-{counter}"
+        room = max_length - len(suffix)
+        candidate = f"{base[:room].rstrip('-')}{suffix}" if room > 0 else suffix[:max_length]
+        if candidate not in taken:
+            return candidate
+        counter += 1
+
+
+def slug_hash(text: str, *, length: int = 8) -> str:
+    """Return a stable short hexadecimal digest for fixture identifiers."""
+    size = max(1, min(64, length))
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:size]

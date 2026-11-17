@@ -36,6 +36,9 @@ dev = [
   "ruff>=0.5.0",
 ]
 
+[project.scripts]
+redscribe-cli = "redscribe.app:main"
+
 [project.gui-scripts]
 redscribe = "redscribe.app:main"
 

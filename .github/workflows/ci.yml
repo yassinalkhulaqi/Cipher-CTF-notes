@@ -32,6 +32,13 @@ jobs:
           cache: pip
       - name: Install
         run: python -m pip install -e ".[dev]"
+      - name: CLI smoke test
+        run: |
+          python -m redscribe --version
+          python -m redscribe doctor --vault "${{ runner.temp }}/redscribe-cli.db" --json
+          python -m redscribe stats --vault "${{ runner.temp }}/redscribe-cli.db" --json
+          python -m redscribe migrate --vault "${{ runner.temp }}/redscribe-cli.db" --json
+          python -m redscribe backup --vault "${{ runner.temp }}/redscribe-cli.db" --destination "${{ runner.temp }}/redscribe-cli-backup.db" --json
       - name: Lint
         run: python -m ruff check .
       - name: Format
@@ -83,6 +90,7 @@ jobs:
           /tmp/smoke/bin/python -m pip install dist/*.whl
           /tmp/smoke/bin/python -c "import redscribe; print(redscribe.__version__)"
           /tmp/smoke/bin/redscribe --version
+          /tmp/smoke/bin/redscribe-cli doctor --vault /tmp/smoke/cli.db --json
           /tmp/smoke/bin/python scripts/smoke_web.py
       - uses: actions/upload-artifact@v4
         with:
