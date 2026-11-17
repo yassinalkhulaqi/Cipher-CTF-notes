@@ -5,14 +5,20 @@ from pathlib import Path
 
 import pytest
 
+from redscribe.domain import __all__ as domain_exports
 from redscribe.domain.models import (
+    FlagCandidate,
     FlagHit,
     Node,
     NodeTree,
+    PlaceholderToken,
     SearchHit,
     Snippet,
+    SnippetEdge,
     TagCount,
     Template,
+    TemplateField,
+    ValidationIssue,
     VaultStats,
 )
 from redscribe.domain.utils import utc_now
@@ -102,6 +108,44 @@ def test_node_tree_keeps_mutable_children() -> None:
     child = NodeTree(_node(id=2), depth=1)
     tree.children.append(child)
     assert tree.children == [child]
+
+
+def test_supporting_records_are_frozen_and_defaulted() -> None:
+    issue = ValidationIssue("missing-field", "target is required")
+    assert issue.severity == "error"
+    assert issue.message == "target is required"
+    with pytest.raises(FrozenInstanceError):
+        issue.code = "changed"  # type: ignore[misc]
+
+    candidate = FlagCandidate("HTB{demo}", "note:1")
+    assert candidate.source == "note:1"
+    assert SnippetEdge("a", "b", "b").resolved is True
+    assert SnippetEdge("a", "b", "b", resolved=False).resolved is False
+
+    field = TemplateField("target", required=True, description="Host")
+    assert field.name == "target"
+    assert field.description == "Host"
+
+    token = PlaceholderToken("text", "hello", "", "", (), 0)
+    assert token.kind == "text"
+    assert token.filters == ()
+    with pytest.raises(FrozenInstanceError):
+        token.name = "changed"  # type: ignore[misc]
+
+
+def test_domain_exports_include_additive_helpers() -> None:
+    expected = {
+        "FlagCandidate",
+        "PlaceholderToken",
+        "SnippetEdge",
+        "TemplateField",
+        "ValidationIssue",
+        "assess_flag",
+        "rank_candidates",
+        "screen_candidates",
+        "validate_flag_format",
+    }
+    assert expected <= set(domain_exports)
 
 
 def test_domain_sources_do_not_import_ui_or_storage() -> None:

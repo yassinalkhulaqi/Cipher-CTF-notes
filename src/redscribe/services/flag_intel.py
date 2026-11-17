@@ -5,8 +5,23 @@ from __future__ import annotations
 import dataclasses
 import re
 from collections import Counter
+from collections.abc import Iterable
 
 from redscribe.domain.flags import FLAG_PREFIXES, find_flags
+from redscribe.domain.models import FlagCandidate, FlagHit
+from redscribe.domain.registry import (
+    HIGH_BAND,
+    LOW_BAND,
+    MEDIUM_BAND,
+    assess_flag,
+    confidence_band,
+)
+from redscribe.domain.validation import (
+    ScreenedFlag,
+    UniquenessReport,
+    check_uniqueness,
+    screen_candidates,
+)
 from redscribe.storage.db import Vault
 
 CURATED_DISPLAY: dict[str, str] = {
@@ -303,4 +318,108 @@ def flag_insights_payload(insights: FlagInsights) -> dict[str, object]:
         "by_source": [dataclasses.asdict(item) for item in insights.by_source],
         "duplicates": [dataclasses.asdict(item) for item in insights.duplicates],
         "missing_flag_notes": insights.missing_flag_notes,
+    }
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class FlagAssessmentRow:
+    """A collected flag annotated with registry confidence and category."""
+
+    flag: str
+    node_id: int
+    title: str
+    confidence: float
+    band: str
+    category: str
+    known_prefix: bool
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class FlagCategoryCount:
+    """How many collected flags resolved to one inferred category."""
+
+    category: str
+    count: int
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class FlagIntelReport:
+    """Confidence and quality metrics over every collected flag."""
+
+    total: int
+    high_confidence: int
+    medium_confidence: int
+    low_confidence: int
+    weak_flags: tuple[str, ...]
+    categories: tuple[FlagCategoryCount, ...]
+    uniqueness: UniquenessReport
+
+
+def flag_assessment_rows(hits: Iterable[FlagHit]) -> tuple[FlagAssessmentRow, ...]:
+    """Score collected flag hits using the domain registry."""
+    rows: list[FlagAssessmentRow] = []
+    for hit in hits:
+        assessment = assess_flag(hit.flag)
+        rows.append(
+            FlagAssessmentRow(
+                flag=assessment.value,
+                node_id=hit.node_id,
+                title=hit.title,
+                confidence=assessment.confidence,
+                band=assessment.band,
+                category=assessment.category,
+                known_prefix=assessment.known_prefix,
+            )
+        )
+    return tuple(sorted(rows, key=lambda row: (-row.confidence, row.flag)))
+
+
+def rank_collected_flags(vault: Vault) -> tuple[FlagAssessmentRow, ...]:
+    """Return the vault's flags ordered by descending confidence."""
+    return flag_assessment_rows(vault.collected_flags())
+
+
+def build_flag_intel_report(vault: Vault) -> FlagIntelReport:
+    """Build a confidence report with category and uniqueness metrics."""
+    rows = rank_collected_flags(vault)
+    counts = Counter(row.category for row in rows)
+    categories = tuple(
+        FlagCategoryCount(category=category, count=count)
+        for category, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    )
+    return FlagIntelReport(
+        total=len(rows),
+        high_confidence=sum(1 for row in rows if row.band == HIGH_BAND),
+        medium_confidence=sum(1 for row in rows if row.band == MEDIUM_BAND),
+        low_confidence=sum(1 for row in rows if row.band == LOW_BAND),
+        weak_flags=tuple(row.flag for row in rows if confidence_band(row.confidence) == LOW_BAND),
+        categories=categories,
+        uniqueness=check_uniqueness(row.flag for row in rows),
+    )
+
+
+def screen_vault_flags(vault: Vault) -> tuple[ScreenedFlag, ...]:
+    """Validate every collected flag and report per-flag diagnostics."""
+    candidates = [
+        FlagCandidate(value=hit.flag, source=f"note:{hit.node_id}")
+        for hit in vault.collected_flags()
+    ]
+    return tuple(screen_candidates(candidates))
+
+
+def flag_intel_report_payload(report: FlagIntelReport) -> dict[str, object]:
+    """Return the JSON-serializable flag confidence report."""
+    return {
+        "total": report.total,
+        "high_confidence": report.high_confidence,
+        "medium_confidence": report.medium_confidence,
+        "low_confidence": report.low_confidence,
+        "weak_flags": list(report.weak_flags),
+        "categories": [dataclasses.asdict(item) for item in report.categories],
+        "uniqueness": {
+            "total": report.uniqueness.total,
+            "unique": report.uniqueness.unique,
+            "duplicate_count": report.uniqueness.duplicate_count,
+            "groups": [[key, list(values)] for key, values in report.uniqueness.groups],
+        },
     }
