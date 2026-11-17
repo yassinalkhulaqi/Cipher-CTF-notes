@@ -165,13 +165,13 @@ export function useGlobalHotkeys(): void {
         ui.openModal("settings");
         return;
       }
+      if (isTyping(event.target)) return;
+
       if (event.key === "F2") {
         event.preventDefault();
         if (app.note) ui.openModal("properties");
         return;
       }
-
-      if (isTyping(event.target)) return;
 
       if (event.key === "Delete" && app.selectedId !== null) {
         const node = app.nodes.get(app.selectedId);
@@ -184,7 +184,10 @@ export function useGlobalHotkeys(): void {
           action: async () => {
             try {
               await app.trashNode(node.id);
-              ui.toast("Moved to trash");
+              ui.toast("Moved to trash", "default", {
+                label: "Undo",
+                run: () => app.restoreNode(node.id),
+              });
             } catch (error) {
               ui.toast(
                 error instanceof Error ? error.message : "Could not move item",

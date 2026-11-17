@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { withSessionToken } from "../lib/api";
 import { useAppStore } from "../store/useAppStore";
 
 export function useAutosaveLifecycle(): void {
@@ -8,7 +9,7 @@ export function useAutosaveLifecycle(): void {
       if (!note || !dirty) return;
       const body = JSON.stringify({ id: note.id, content: draft });
       navigator.sendBeacon?.(
-        "/api/save_content",
+        withSessionToken("/api/save_content"),
         new Blob([body], { type: "application/json" }),
       );
     };

@@ -225,7 +225,7 @@ html[data-motion-ready="true"] .motion-stagger > * {
 .skeleton {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 6px 0;
 }
 

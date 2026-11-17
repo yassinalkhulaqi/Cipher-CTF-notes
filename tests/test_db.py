@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from pathlib import Path
 
@@ -79,7 +80,7 @@ def test_update_node_fields_and_validation(vault: Vault) -> None:
     )
     assert updated.title == "New title"
     assert updated.content == "new"
-    assert updated.tags == "a,b"
+    assert updated.tags == "a, b"
     assert updated.target == "10.10.10.10"
     assert updated.status == "done"
     assert updated.difficulty == "easy"
@@ -463,6 +464,28 @@ def test_backup_creates_usable_copy(tmp_path: Path, vault: Vault) -> None:
         vault.backup_to(vault.path)  # type: ignore[arg-type]
 
 
+def test_backup_to_auto_does_not_overwrite(tmp_path: Path) -> None:
+    with Vault(tmp_path / "vault.db") as vault:
+        first = vault.backup_to_auto()
+        second = vault.backup_to_auto()
+    assert first != second
+    assert first.exists()
+    assert second.exists()
+    assert re.fullmatch(r"vault-\d{8}T\d{6}Z(?:-\d+)?\.db", first.name)
+
+
+def test_metadata_changes_get_a_version_immediately(vault: Vault) -> None:
+    note = vault.create_node("Original", content="body")
+    vault.update_node(note.id, status="done")
+    vault.update_node(note.id, flag="flag{new}")
+    versions = vault.list_versions(note.id)
+    assert len(versions) >= 2
+    snapshot = vault.get_version(versions[0]["id"])
+    assert snapshot is not None
+    assert snapshot["status"] == "done"
+    assert snapshot["flag"] == ""
+
+
 def test_node_filename(vault: Vault) -> None:
     note = vault.create_node("HTB — Corporate!")
     assert vault.node_filename(note.id) == "htb-corporate.md"
@@ -501,7 +524,7 @@ def test_legacy_schema_is_migrated_in_place(tmp_path: Path) -> None:
         vault.connection.commit()
 
     with Vault(path) as upgraded:
-        assert upgraded.schema_version == 2
+        assert upgraded.schema_version == 3
         indexes = {
             str(row["name"])
             for row in upgraded.connection.execute(
@@ -509,6 +532,12 @@ def test_legacy_schema_is_migrated_in_place(tmp_path: Path) -> None:
             )
         }
         assert {"idx_nodes_kind", "idx_nodes_target", "idx_nodes_pinned"} <= indexes
+        assert any(
+            str(row["name"]) == "nodes_history"
+            for row in upgraded.connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        )
         assert upgraded.create_node("Migrated").title == "Migrated"
 
 

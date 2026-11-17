@@ -6,6 +6,16 @@ export function TooltipHost() {
   const { tip, show, hide } = useTooltip();
 
   useEffect(() => {
+    const showFor = (target: HTMLElement) => {
+      const label = target.dataset.tooltip ?? "";
+      if (!label) {
+        hide();
+        return;
+      }
+      const rect = target.getBoundingClientRect();
+      show(label, rect.left + rect.width / 2, rect.top);
+    };
+
     const onMouseOver = (event: MouseEvent) => {
       const target = (event.target as HTMLElement).closest<HTMLElement>(
         "[data-tooltip]",
@@ -14,15 +24,7 @@ export function TooltipHost() {
         hide();
         return;
       }
-      const label = target.dataset.tooltip ?? "";
-      if (!label) {
-        hide();
-        return;
-      }
-      const rect = target.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top;
-      show(label, x, y);
+      showFor(target);
     };
 
     const onMouseOut = (event: MouseEvent) => {
@@ -32,15 +34,39 @@ export function TooltipHost() {
       if (target) hide();
     };
 
+    const onFocusIn = (event: FocusEvent) => {
+      const target = (event.target as HTMLElement).closest?.<HTMLElement>(
+        "[data-tooltip]",
+      );
+      if (target) showFor(target);
+    };
+
+    const onFocusOut = (event: FocusEvent) => {
+      const target = (event.target as HTMLElement).closest?.<HTMLElement>(
+        "[data-tooltip]",
+      );
+      if (target) hide();
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") hide();
+    };
+
     const onScroll = () => hide();
 
     document.addEventListener("mouseover", onMouseOver);
     document.addEventListener("mouseout", onMouseOut);
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("focusout", onFocusOut);
+    document.addEventListener("keydown", onKeyDown);
     document.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
       document.removeEventListener("mouseover", onMouseOver);
       document.removeEventListener("mouseout", onMouseOut);
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("focusout", onFocusOut);
+      document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("scroll", onScroll);
     };
   }, [show, hide]);

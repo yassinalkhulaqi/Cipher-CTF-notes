@@ -6,7 +6,6 @@ import {
   Bug,
   Check,
   ChevronRight,
-  CircleDot,
   Code2,
   Copy,
   Crosshair,
@@ -25,24 +24,19 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import { api } from "../lib/api";
-import { STATUS_LABEL } from "../lib/constants";
-import type {
-  FlagHit,
-  FlagInsights,
-  NodeSummary,
-  Template,
-  TimelineEvent,
-} from "../lib/types";
+import { focusFilter } from "../lib/events";
+import type { NodeSummary, Template } from "../lib/types";
 import { copyText, modLabel, plural, relativeTime } from "../lib/utils";
 import { timeGreeting } from "../lib/ux";
 import { EmptyState } from "./EmptyState";
-import { AnimatedNumber } from "../motion/AnimatedNumber";
+import { ContinueWorking } from "./dashboard/ContinueWorking";
+import { MiniNotesPanel } from "./dashboard/MiniNotesPanel";
+import { PulseStrip } from "./dashboard/PulseStrip";
+import { useDashboardData } from "../hooks/useDashboardData";
 import { Confetti } from "../motion/Confetti";
 import { Skeleton } from "../motion/Skeleton";
 import { useAppStore } from "../store/useAppStore";
 import { useUiStore } from "../store/useUiStore";
-import { StatusIcon } from "./StatusIcon";
 
 const TEMPLATE_ICONS: Record<string, LucideIcon> = {
   blank: FileText,
@@ -71,15 +65,9 @@ export function Dashboard() {
   const askConfirm = useUiStore((state) => state.askConfirm);
   const toast = useUiStore((state) => state.toast);
 
-  const [flags, setFlags] = useState<FlagHit[]>([]);
-  const [insights, setInsights] = useState<FlagInsights | null>(null);
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [events, setEvents] = useState<TimelineEvent[]>([]);
-  const [activityLoading, setActivityLoading] = useState(true);
   const [copiedFlag, setCopiedFlag] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [burst, setBurst] = useState(0);
-  const [flagsLoading, setFlagsLoading] = useState(true);
 
   const notes = useMemo(
     () =>
@@ -124,80 +112,8 @@ export function Dashboard() {
     .slice(0, 4);
   const pinned = notes.filter((note) => note.pinned).slice(0, 4);
 
-  useEffect(() => {
-    let cancelled = false;
-    api
-      .templates()
-      .then((items) => {
-        if (!cancelled) setTemplates(items);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    setActivityLoading(true);
-    api
-      .timeline(null, 7)
-      .then((items) => {
-        if (cancelled) return;
-        setEvents(items);
-        setActivityLoading(false);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setEvents([]);
-        setActivityLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [nodes]);
-
-  useEffect(() => {
-    if (stats.notes === 0) {
-      setFlags([]);
-      setFlagsLoading(false);
-      return;
-    }
-    let cancelled = false;
-    setFlagsLoading(true);
-    api
-      .collectedFlags()
-      .then((items) => {
-        if (cancelled) return;
-        setFlags(items);
-        setFlagsLoading(false);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setFlags([]);
-        setFlagsLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [stats.notes, nodes]);
-
-  useEffect(() => {
-    if (stats.notes === 0) {
-      setInsights(null);
-      return;
-    }
-    let cancelled = false;
-    api
-      .flagInsights()
-      .then((items) => {
-        if (!cancelled) setInsights(items);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [stats.notes, nodes]);
+  const { templates, events, activityLoading, flags, flagsLoading, insights } =
+    useDashboardData(notes);
 
   useEffect(() => {
     if (copiedFlag === null) return;
@@ -259,9 +175,9 @@ export function Dashboard() {
     );
   };
 
-  const filterByTarget = (value: string) => {
+  const applyVaultFilter = (value: string) => {
     setFilter(value);
-    window.dispatchEvent(new CustomEvent("redscribe:focus-filter"));
+    focusFilter();
   };
 
   const lastTouched = recent[0] ? relativeTime(recent[0].updated_at) : null;
@@ -384,8 +300,8 @@ export function Dashboard() {
 
           <footer className="dash-foot">
             <ShieldCheck />
-            SQLite vault · {boot?.vault_path ?? "local storage"} · no accounts,
-            no telemetry
+            SQLite vault آ· {boot?.vault_path ?? "local storage"} آ· no
+            accounts, no telemetry
           </footer>
         </div>
       </section>
@@ -401,7 +317,7 @@ export function Dashboard() {
             <h1>{timeGreeting()}.</h1>
             <p>
               {plural(stats.notes, "note")} in the vault
-              {lastTouched ? ` · last touched ${lastTouched}` : ""}
+              {lastTouched ? ` آ· last touched ${lastTouched}` : ""}
             </p>
           </div>
           <div className="dash-actions">
@@ -424,203 +340,49 @@ export function Dashboard() {
           </div>
         </header>
 
-        <div className="pulse-strip" aria-label="Vault statistics" data-reveal>
-          <button
-            type="button"
-            className="pulse-cell"
-            onClick={() => setFilter("")}
-          >
-            <span className="pulse-label">Total notes</span>
-            <strong>
-              <AnimatedNumber value={stats.notes} />
-            </strong>
-            <span className="pulse-note">
-              <CircleDot /> {stats.statuses.active} active
-            </span>
-          </button>
-          <button
-            type="button"
-            className="pulse-cell"
-            onClick={() => openModal("dashboard")}
-          >
-            <span className="pulse-label">Active challenges</span>
-            <strong>
-              <AnimatedNumber value={stats.statuses.active} />
-            </strong>
-            <span className="pulse-note">
-              <CircleDot /> {stats.statuses.done} completed
-            </span>
-          </button>
-          <button
-            type="button"
-            className="pulse-cell"
-            onClick={() => openModal("flag-intel")}
-          >
-            <span className="pulse-label">Captured flags</span>
-            <strong className="green">
-              <AnimatedNumber value={flags.length} />
-            </strong>
-            <span className="pulse-note">
-              <Flag /> {stats.flagged} manual
-            </span>
-          </button>
-          <button
-            type="button"
-            className="pulse-cell"
-            onClick={() => {
-              const target = stats.targets[0]?.[0];
-              if (target) filterByTarget(target);
-            }}
-          >
-            <span className="pulse-label">Targets</span>
-            <strong>
-              <AnimatedNumber value={stats.targets.length} />
-            </strong>
-            <span className="pulse-note">
-              <Target /> {stats.targets[0]?.[0] ?? "none yet"}
-            </span>
-          </button>
-        </div>
+        <PulseStrip
+          noteCount={stats.notes}
+          activeCount={stats.statuses.active}
+          doneCount={stats.statuses.done}
+          flaggedCount={stats.flagged}
+          targets={stats.targets}
+          flagTotal={flags.length}
+          onFilterAll={() => setFilter("")}
+          onShowDashboard={() => openModal("dashboard")}
+          onFlagIntel={() => openModal("flag-intel")}
+          onFilterTarget={applyVaultFilter}
+        />
 
         <div className="desk-grid">
           <div className="desk-main">
-            <section className="dash-panel" data-tilt data-reveal>
-              <div className="dash-panel-head">
-                <div>
-                  <h2>Continue working</h2>
-                  <span>Recently updated notes</span>
-                </div>
-                <button
-                  type="button"
-                  className="link-btn"
-                  onClick={() => openModal("palette")}
-                >
-                  Jump to <ArrowUpRight />
-                </button>
-              </div>
-              <div className="work-list">
-                {recent.map((note, index) => (
-                  <button
-                    key={note.id}
-                    type="button"
-                    className="work-row"
-                    onClick={() => open(note.id)}
-                  >
-                    <span className="work-index">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span className="work-state">
-                      <StatusIcon
-                        status={note.status}
-                        label={STATUS_LABEL[note.status]}
-                      />
-                    </span>
-                    <span className="work-copy">
-                      <span className="work-title">{note.title}</span>
-                      <span className="work-meta">
-                        {note.path || "Vault root"}
-                        {note.target ? ` · ${note.target}` : ""}
-                      </span>
-                    </span>
-                    {note.flag ? (
-                      <span className="work-flag">
-                        <Flag />
-                      </span>
-                    ) : null}
-                    {note.pinned ? (
-                      <span className="work-pin">Pinned</span>
-                    ) : null}
-                    <span className="work-time">
-                      {relativeTime(note.updated_at)}
-                    </span>
-                    <ChevronRight className="work-arrow" />
-                  </button>
-                ))}
-              </div>
-            </section>
+            <ContinueWorking
+              notes={recent}
+              onOpen={open}
+              onJump={() => openModal("palette")}
+            />
 
             <div className="dash-split">
-              <section className="dash-panel compact" data-tilt data-reveal>
-                <div className="dash-panel-head">
-                  <div>
-                    <h2>In progress</h2>
-                    <span>{active.length || "No"} active notes</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="icon-btn sm"
-                    onClick={() => setFilter("")}
-                    aria-label="View all notes"
-                    title="View all notes"
-                  >
-                    <ArrowUpRight />
-                  </button>
-                </div>
-                <div className="mini-list">
-                  {active.length ? (
-                    active.map((note) => (
-                      <button
-                        key={note.id}
-                        type="button"
-                        className="mini-row"
-                        onClick={() => open(note.id)}
-                      >
-                        <StatusIcon status={note.status} />
-                        <span>{note.title}</span>
-                        <span className="mini-time">
-                          {relativeTime(note.updated_at)}
-                        </span>
-                      </button>
-                    ))
-                  ) : (
-                    <p className="mini-empty">
-                      Nothing is marked active. Open a note and set its status
-                      to start tracking it.
-                    </p>
-                  )}
-                </div>
-              </section>
+              <MiniNotesPanel
+                title="In progress"
+                subtitle={`${active.length || "No"} active notes`}
+                notes={active}
+                emptyText="Nothing is marked active. Open a note and set its status to start tracking it."
+                actionIcon={ArrowUpRight}
+                actionLabel="View all notes"
+                onAction={() => setFilter("")}
+                onOpen={open}
+              />
 
-              <section className="dash-panel compact" data-tilt data-reveal>
-                <div className="dash-panel-head">
-                  <div>
-                    <h2>Pinned</h2>
-                    <span>Always within reach</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="icon-btn sm"
-                    onClick={() => openModal("palette")}
-                    aria-label="Open command palette"
-                    title="Jump to a note"
-                  >
-                    <Search />
-                  </button>
-                </div>
-                <div className="mini-list">
-                  {pinned.length ? (
-                    pinned.map((note) => (
-                      <button
-                        key={note.id}
-                        type="button"
-                        className="mini-row"
-                        onClick={() => open(note.id)}
-                      >
-                        <FileText />
-                        <span>{note.title}</span>
-                        <span className="mini-time">
-                          {relativeTime(note.updated_at)}
-                        </span>
-                      </button>
-                    ))
-                  ) : (
-                    <p className="mini-empty">
-                      Pin a note to keep it at the top of the sidebar and in
-                      this list.
-                    </p>
-                  )}
-                </div>
-              </section>
+              <MiniNotesPanel
+                title="Pinned"
+                subtitle="Always within reach"
+                notes={pinned}
+                emptyText="Pin a note and it will stay here, one click away."
+                actionIcon={Search}
+                actionLabel="Jump to a note"
+                onAction={() => openModal("palette")}
+                onOpen={open}
+              />
             </div>
           </div>
 
@@ -693,7 +455,7 @@ export function Dashboard() {
                   <h2>Flag insights</h2>
                   <span>
                     {insights
-                      ? `${plural(insights.unique_flags, "unique flag")} · ${insights.manual_flags} manual`
+                      ? `${plural(insights.unique_flags, "unique flag")} آ· ${insights.manual_flags} manual`
                       : "Flag intelligence"}
                   </span>
                 </div>
@@ -776,7 +538,7 @@ export function Dashboard() {
                       key={target}
                       type="button"
                       className="target-pill"
-                      onClick={() => filterByTarget(target)}
+                      onClick={() => applyVaultFilter(target)}
                       title={`Filter vault by ${target}`}
                     >
                       <span>{target}</span>
@@ -806,7 +568,7 @@ export function Dashboard() {
                       key={tag}
                       type="button"
                       className="tag-chip"
-                      onClick={() => filterByTarget(tag)}
+                      onClick={() => applyVaultFilter(tag)}
                       title={`Filter vault by #${tag}`}
                     >
                       #{tag}
@@ -855,7 +617,7 @@ export function Dashboard() {
                       <strong>{event.title}</strong>
                       <span>
                         {event.activity === "created" ? "Created" : "Updated"}
-                        {event.path ? ` · ${event.path}` : ""}
+                        {event.path ? ` آ· ${event.path}` : ""}
                       </span>
                     </span>
                     <span className="activity-time">
@@ -992,7 +754,7 @@ export function Dashboard() {
           <span>
             <ShieldCheck /> Local only
           </span>
-          <span className="dash-foot-sep">·</span>
+          <span className="dash-foot-sep">آ·</span>
           <span className="dash-path" title={boot?.vault_path}>
             {boot?.vault_path}
           </span>

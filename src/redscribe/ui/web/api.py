@@ -10,6 +10,7 @@ from the storage layer without modification.
 from __future__ import annotations
 
 import dataclasses
+import logging
 from dataclasses import dataclass
 from typing import Any
 
@@ -51,8 +52,25 @@ _SETTING_KEYS = (
     "sync_preview_scroll",
     "tree_expanded",
 )
+LOGGER = logging.getLogger(__name__)
+
 _OFF_AXIS_KEYS = frozenset(_SETTING_KEYS)
 _FONT_RANGE = range(9, 19)
+_THEME_KEYS = ("light", "dark")
+_VIEW_MODES = ("editor", "split", "preview")
+_BOOLEAN_SETTING_KEYS = frozenset({"restore_last_note", "sync_preview_scroll"})
+_MAX_TITLE = 200
+_MAX_SHORT = 200
+_MAX_TAGS = 500
+_MAX_CONTENT = 1_000_000
+_MAX_SNIPPET_COMMAND = 4000
+_MAX_SNIPPET_DESCRIPTION = 2000
+
+
+def _cap(value: str, field: str, limit: int) -> str:
+    if len(value) > limit:
+        raise ApiError(f"{field} exceeds {limit} characters")
+    return value
 
 
 class ApiError(Exception):
@@ -169,6 +187,11 @@ class Api:
             "restore_node": self.restore_node,
             "trashed_nodes": self.trashed_nodes,
             "empty_trash": self.empty_trash,
+            "list_versions": self.list_versions,
+            "get_version": self.get_version,
+            "restore_version": self.restore_version,
+            "rebuild_search_index": self.rebuild_search_index,
+            "backup_vault": self.backup_vault,
             "search": self.search,
             "quick_jump": self.quick_jump,
             "recent_notes": self.recent_notes,
@@ -220,10 +243,16 @@ class Api:
         stored = self._vault.get_setting(f"ui.{key}", default)
         return str(stored) if stored is not None else default
 
-    def _tree_walk(self, node: Node) -> dict[str, Any]:
-        data = node_summary(node, path=self._path_of(node.id))
+    def _tree_walk(
+        self,
+        node: Node,
+        paths: dict[int, str] | None = None,
+    ) -> dict[str, Any]:
+        if paths is None:
+            paths = self._vault.paths_map(include_self=False)
+        data = node_summary(node, path=paths.get(node.id, ""))
         data["children"] = (
-            [self._tree_walk(child) for child in self._vault.children(node.id)]
+            [self._tree_walk(child, paths) for child in self._vault.children(node.id)]
             if node.is_folder
             else []
         )
@@ -258,7 +287,8 @@ class Api:
         }
 
     def tree(self, body: dict[str, Any]) -> list[dict[str, Any]]:
-        return [self._tree_walk(node) for node in self._vault.children(None)]
+        paths = self._vault.paths_map(include_self=False)
+        return [self._tree_walk(node, paths) for node in self._vault.children(None)]
 
     def node(self, body: dict[str, Any]) -> dict[str, Any]:
         node = self._vault.get_node(_require_int(body, "id"))
@@ -286,8 +316,8 @@ class Api:
 
     def quick_capture(self, body: dict[str, Any]) -> dict[str, Any]:
         """Create a note from raw capture text in one round trip."""
-        title = _require_str(body, "title", default="").strip()
-        content = _require_str(body, "content", default="").strip()
+        title = _cap(_require_str(body, "title", default="").strip(), "title", _MAX_TITLE)
+        content = _cap(_require_str(body, "content", default="").strip(), "content", _MAX_CONTENT)
         if not title and not content:
             raise ApiError("A title or some content is required")
         if not title:
@@ -297,15 +327,19 @@ class Api:
             title,
             None,
             content=content,
-            tags=_require_str(body, "tags", default="").strip(),
-            target=_require_str(body, "target", default="").strip(),
+            tags=_cap(_require_str(body, "tags", default="").strip(), "tags", _MAX_TAGS),
+            target=_cap(_require_str(body, "target", default="").strip(), "target", _MAX_SHORT),
         )
         return node_summary(node, path=self._path_of(node.id))
 
     def create_note(self, body: dict[str, Any]) -> dict[str, Any]:
         template = get_template(_require_str(body, "template_key", default="blank"))
-        title = _require_str(body, "title", default="").strip() or template.default_title
-        target = _require_str(body, "target", default="").strip()
+        title = _cap(
+            _require_str(body, "title", default="").strip() or template.default_title,
+            "title",
+            _MAX_TITLE,
+        )
+        target = _cap(_require_str(body, "target", default="").strip(), "target", _MAX_SHORT)
         content = render_template(template, title, target)
         node = self._vault.create_node(
             title,
@@ -320,13 +354,17 @@ class Api:
         return node_summary(node, path=self._path_of(node.id))
 
     def create_folder(self, body: dict[str, Any]) -> dict[str, Any]:
-        title = _require_str(body, "title", default="").strip() or "New folder"
+        title = _cap(
+            _require_str(body, "title", default="").strip() or "New folder",
+            "title",
+            _MAX_TITLE,
+        )
         node = self._vault.create_node(title, parent_id=_optional_node_id(body), kind="folder")
         return node_summary(node, path=self._path_of(node.id))
 
     def rename(self, body: dict[str, Any]) -> dict[str, Any]:
         node_id = _require_int(body, "id")
-        title = _require_str(body, "title", default="").strip()
+        title = _cap(_require_str(body, "title", default="").strip(), "title", _MAX_TITLE)
         if not title:
             raise ApiError("Title cannot be empty")
         node = self._vault.update_node(node_id, title=title)
@@ -343,6 +381,14 @@ class Api:
             for key in ("title", "tags", "target", "status", "difficulty", "flag", "pinned")
             if key in body
         }
+        if "title" in fields:
+            fields["title"] = _cap(_require_str(body, "title").strip(), "title", _MAX_TITLE)
+        if "tags" in fields:
+            fields["tags"] = _cap(str(fields["tags"]), "tags", _MAX_TAGS)
+        if "target" in fields:
+            fields["target"] = _cap(str(fields["target"]).strip(), "target", _MAX_SHORT)
+        if "flag" in fields:
+            fields["flag"] = _cap(str(fields["flag"]).strip(), "flag", _MAX_SHORT)
         if not fields:
             raise ApiError("No fields to update")
         node = self._vault.update_node(node_id, **fields)
@@ -350,7 +396,7 @@ class Api:
 
     def save_content(self, body: dict[str, Any]) -> dict[str, Any]:
         node_id = _require_int(body, "id")
-        content = _require_str(body, "content")
+        content = _cap(_require_str(body, "content"), "content", _MAX_CONTENT)
         node = self._vault.update_node(node_id, content=content)
         return node_summary(node, path=self._path_of(node.id))
 
@@ -389,7 +435,53 @@ class Api:
         ]
 
     def empty_trash(self, body: dict[str, Any]) -> dict[str, Any]:
-        return {"removed": self._vault.empty_trash()}
+        """Purge the trash — but only after writing an automatic backup."""
+        try:
+            backup = self._vault.backup_to_auto()
+        except Exception as exc:
+            LOGGER.exception("Automatic backup before empty_trash failed")
+            raise ApiError(
+                "Could not back up the vault before emptying the trash; nothing was deleted",
+                status=500,
+            ) from exc
+        return {"removed": self._vault.empty_trash(), "backup": backup.name}
+
+    # ------------------------------------------------------------------
+    # Version history and maintenance
+    # ------------------------------------------------------------------
+
+    def list_versions(self, body: dict[str, Any]) -> list[dict[str, Any]]:
+        node_id = _require_int(body, "id")
+        if self._vault.get_node(node_id) is None:
+            raise ApiError("Node does not exist", status=404)
+        return self._vault.list_versions(node_id)
+
+    def get_version(self, body: dict[str, Any]) -> dict[str, Any]:
+        version_id = _require_int(body, "version_id")
+        entry = self._vault.get_version(version_id)
+        if entry is None:
+            raise ApiError("Version does not exist", status=404)
+        return entry
+
+    def restore_version(self, body: dict[str, Any]) -> dict[str, Any]:
+        version_id = _require_int(body, "version_id")
+        entry = self._vault.get_version(version_id)
+        if entry is None:
+            raise ApiError("Version does not exist", status=404)
+        node = self._vault.restore_version(version_id)
+        return node_summary(node, path=self._path_of(node.id))
+
+    def rebuild_search_index(self, body: dict[str, Any]) -> dict[str, Any]:
+        self._vault.rebuild_search_index()
+        return {"rebuilt": True}
+
+    def backup_vault(self, body: dict[str, Any]) -> dict[str, Any]:
+        try:
+            target = self._vault.backup_to_auto()
+        except Exception as exc:
+            LOGGER.exception("Backup failed")
+            raise ApiError("Backup failed", status=500) from exc
+        return {"filename": target.name}
 
     # ------------------------------------------------------------------
     # Listing, search, dashboards
@@ -462,7 +554,11 @@ class Api:
 
     def backlinks(self, body: dict[str, Any]) -> dict[str, Any]:
         """Return backlinks, outlinks, and unresolved links for one note."""
-        return note_links_payload(note_links(self._vault, _require_int(body, "id")))
+        note_id = _require_int(body, "id")
+        try:
+            return note_links_payload(note_links(self._vault, note_id))
+        except ValueError as exc:
+            raise ApiError(str(exc), status=404) from exc
 
     def timeline(self, body: dict[str, Any]) -> list[dict[str, Any]]:
         """Return recent activity, optionally scoped to a folder subtree."""
@@ -500,20 +596,28 @@ class Api:
 
     def create_snippet(self, body: dict[str, Any]) -> dict[str, Any]:
         snippet = self._vault.create_snippet(
-            _require_str(body, "title"),
-            _require_str(body, "command"),
-            description=_require_str(body, "description", default=""),
-            tags=_require_str(body, "tags", default=""),
+            _cap(_require_str(body, "title"), "title", _MAX_TITLE),
+            _cap(_require_str(body, "command"), "command", _MAX_SNIPPET_COMMAND),
+            description=_cap(
+                _require_str(body, "description", default=""),
+                "description",
+                _MAX_SNIPPET_DESCRIPTION,
+            ),
+            tags=_cap(_require_str(body, "tags", default=""), "tags", _MAX_TAGS),
         )
         return _snippet_data(snippet)
 
     def update_snippet(self, body: dict[str, Any]) -> dict[str, Any]:
         snippet = self._vault.update_snippet(
             _require_int(body, "id"),
-            title=_require_str(body, "title"),
-            command=_require_str(body, "command"),
-            description=_require_str(body, "description", default=""),
-            tags=_require_str(body, "tags", default=""),
+            title=_cap(_require_str(body, "title"), "title", _MAX_TITLE),
+            command=_cap(_require_str(body, "command"), "command", _MAX_SNIPPET_COMMAND),
+            description=_cap(
+                _require_str(body, "description", default=""),
+                "description",
+                _MAX_SNIPPET_DESCRIPTION,
+            ),
+            tags=_cap(_require_str(body, "tags", default=""), "tags", _MAX_TAGS),
         )
         return _snippet_data(snippet)
 
@@ -537,14 +641,85 @@ class Api:
         unknown = set(body) - _OFF_AXIS_KEYS
         if unknown:
             raise ApiError(f"Unsupported setting keys: {', '.join(sorted(unknown))}")
+
+        def boolean_setting(key: str) -> str:
+            value = body[key]
+            if isinstance(value, bool):
+                return "1" if value else "0"
+            normalized = str(value).strip().lower()
+            if normalized in {"1", "true", "yes", "on"}:
+                return "1"
+            if normalized in {"0", "false", "no", "off"}:
+                return "0"
+            raise ApiError(f"{key} must be a boolean")
+
+        for key in _BOOLEAN_SETTING_KEYS & set(body):
+            self._vault.set_setting(f"ui.{key}", boolean_setting(key))
+
         if "font_size" in body:
             size = _optional_int(body, "font_size")
             if size is None or size not in _FONT_RANGE:
                 raise ApiError("font_size must be an integer between 9 and 18")
             self._vault.set_setting("ui.font_size", str(size))
-        for key in _OFF_AXIS_KEYS - {"font_size"}:
-            if key in body:
-                self._vault.set_setting(f"ui.{key}", str(body[key]).strip())
+
+        if "theme" in body:
+            theme = _require_str(body, "theme").strip().lower()
+            if theme not in _THEME_KEYS:
+                raise ApiError("theme must be 'light' or 'dark'")
+            self._vault.set_setting("ui.theme", theme)
+
+        if "view_mode" in body:
+            view_mode = _require_str(body, "view_mode").strip().lower()
+            if view_mode not in _VIEW_MODES:
+                raise ApiError("view_mode must be 'editor', 'split' or 'preview'")
+            self._vault.set_setting("ui.view_mode", view_mode)
+
+        if "last_template" in body:
+            template = _require_str(body, "last_template").strip().lower()
+            if template not in {item.key for item in TEMPLATES}:
+                raise ApiError(f"Unknown template: {template}")
+            self._vault.set_setting("ui.last_template", template)
+
+        if "last_note" in body:
+            raw = body["last_note"]
+            if raw in (None, ""):
+                self._vault.set_setting("ui.last_note", "")
+            else:
+                note_id = _optional_int(body, "last_note")
+                if note_id is None:
+                    raise ApiError("last_note must be an integer or empty")
+                self._vault.set_setting("ui.last_note", str(note_id))
+
+        if "sidebar_width" in body:
+            raw = body["sidebar_width"]
+            if raw in (None, ""):
+                self._vault.set_setting("ui.sidebar_width", "")
+            else:
+                width = _optional_int(body, "sidebar_width")
+                if width is None or not 200 <= width <= 600:
+                    raise ApiError("sidebar_width must be an integer between 200 and 600")
+                self._vault.set_setting("ui.sidebar_width", str(width))
+
+        if "split_sash" in body:
+            raw = body["split_sash"]
+            if raw in (None, ""):
+                self._vault.set_setting("ui.split_sash", "")
+            else:
+                sash = _optional_int(body, "split_sash")
+                if sash is None or not 20 <= sash <= 85:
+                    raise ApiError("split_sash must be an integer between 20 and 85")
+                self._vault.set_setting("ui.split_sash", str(sash))
+
+        if "tree_expanded" in body:
+            raw = body["tree_expanded"]
+            if raw in (None, ""):
+                self._vault.set_setting("ui.tree_expanded", "")
+            else:
+                text = str(raw).strip()
+                if len(text) > 8192 or not all(part.isdigit() or part == "," for part in text):
+                    raise ApiError("tree_expanded must be a comma-separated id list")
+                self._vault.set_setting("ui.tree_expanded", text)
+
         return self.get_settings({})
 
     def load_demo(self, body: dict[str, Any]) -> dict[str, Any]:

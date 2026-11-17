@@ -16,9 +16,16 @@ import {
 import { api } from "../lib/api";
 import { STATUS_LABEL } from "../lib/constants";
 import { flagFormat } from "../lib/flags";
+import { parseTags } from "../lib/tags";
 import { extractOutline } from "../lib/outline";
 import type { FlagPattern, NodeDetail } from "../lib/types";
-import { copyText, formatDate, plural, relativeTime, wordCount } from "../lib/utils";
+import {
+  copyText,
+  formatDate,
+  plural,
+  relativeTime,
+  wordCount,
+} from "../lib/utils";
 import { readingTime } from "../lib/ux";
 import { useAppStore } from "../store/useAppStore";
 import { useUiStore, type InspectorTab } from "../store/useUiStore";
@@ -113,7 +120,29 @@ export function NoteInspector({
         </button>
       </div>
 
-      <div className="inspector-tabs" role="tablist" aria-label="Inspector sections">
+      <div
+        className="inspector-tabs"
+        role="tablist"
+        aria-label="Inspector sections"
+        onKeyDown={(event) => {
+          const current = TABS.findIndex((item) => item.id === tab);
+          if (current < 0) return;
+          let next = -1;
+          if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+            next = (current + 1) % TABS.length;
+          } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+            next = (current - 1 + TABS.length) % TABS.length;
+          } else if (event.key === "Home") {
+            next = 0;
+          } else if (event.key === "End") {
+            next = TABS.length - 1;
+          }
+          if (next < 0) return;
+          event.preventDefault();
+          setTab(TABS[next].id);
+          document.getElementById(`inspector-tab-${TABS[next].id}`)?.focus();
+        }}
+      >
         {TABS.map((item) => {
           const Icon = item.icon;
           const active = tab === item.id;
@@ -125,6 +154,7 @@ export function NoteInspector({
               id={`inspector-tab-${item.id}`}
               aria-selected={active}
               aria-controls={`inspector-panel-${item.id}`}
+              tabIndex={active ? 0 : -1}
               className={active ? "active" : ""}
               onClick={() => setTab(item.id)}
             >
@@ -217,22 +247,20 @@ export function NoteInspector({
             <div className="prop-row">
               <span className="prop-key">Tags</span>
               <span className="prop-value prop-tags">
-                {note.tag_list.length ? (
-                  note.tag_list.map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      className="chip tag"
-                      onClick={() => filterByTag(tag)}
-                      title={`Filter vault by #${tag}`}
-                    >
-                      <Tag />
-                      {tag}
-                    </button>
-                  ))
-                ) : (
-                  "—"
-                )}
+                {parseTags(note.tags).length
+                  ? parseTags(note.tags).map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        className="chip tag"
+                        onClick={() => filterByTag(tag)}
+                        title={`Filter vault by #${tag}`}
+                      >
+                        <Tag />
+                        {tag}
+                      </button>
+                    ))
+                  : "—"}
               </span>
             </div>
             <div className="prop-row">
@@ -262,7 +290,9 @@ export function NoteInspector({
             </div>
             <div className="prop-row">
               <span className="prop-key">Created</span>
-              <span className="prop-value">{formatDate(note.created_at, true)}</span>
+              <span className="prop-value">
+                {formatDate(note.created_at, true)}
+              </span>
             </div>
             <div className="prop-row">
               <span className="prop-key">Updated</span>
@@ -274,7 +304,7 @@ export function NoteInspector({
             <div className="prop-row">
               <span className="prop-key">Length</span>
               <span className="prop-value">
-                {plural(words, "word")} · {readingTime(draft)}
+                {plural(words, "word")} آ· {readingTime(draft)}
               </span>
             </div>
             <button

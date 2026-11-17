@@ -6,7 +6,8 @@ import { mkdir } from "node:fs/promises";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cache = path.join(root, "node_modules", ".cache");
-const bundle = path.join(cache, "motion.test.mjs");
+
+const unitTests = ["motion.test.ts", "tags.test.ts", "tree.test.ts"];
 
 async function typecheck() {
   const result = spawnSync(
@@ -20,21 +21,24 @@ async function typecheck() {
 
 async function unit() {
   await mkdir(cache, { recursive: true });
-  await build({
-    entryPoints: [path.join(root, "scripts", "motion.test.ts")],
-    bundle: true,
-    platform: "node",
-    format: "esm",
-    target: "node20",
-    outfile: bundle,
-    logLevel: "silent",
-  });
-  const result = spawnSync(process.execPath, ["--test", bundle], {
-    cwd: root,
-    stdio: "inherit",
-  });
-  if (result.error) throw result.error;
-  if (result.status !== 0) process.exit(result.status ?? 1);
+  for (const entry of unitTests) {
+    const bundle = path.join(cache, entry.replace(/\.ts$/, ".mjs"));
+    await build({
+      entryPoints: [path.join(root, "scripts", entry)],
+      bundle: true,
+      platform: "node",
+      format: "esm",
+      target: "node20",
+      outfile: bundle,
+      logLevel: "silent",
+    });
+    const result = spawnSync(process.execPath, ["--test", bundle], {
+      cwd: root,
+      stdio: "inherit",
+    });
+    if (result.error) throw result.error;
+    if (result.status !== 0) process.exit(result.status ?? 1);
+  }
 }
 
 await typecheck();

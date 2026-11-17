@@ -44,8 +44,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { api } from "../lib/api";
+import { onInsertSnippet } from "../lib/events";
 import { usePreview } from "../hooks/usePreview";
 import { useMediaQuery } from "../hooks/useMediaQuery";
+import { maxWidthQuery } from "../lib/breakpoints";
 import {
   MarkdownEditor,
   type MarkdownEditorHandle,
@@ -66,30 +68,8 @@ import {
 } from "../lib/utils";
 import { readingTime } from "../lib/ux";
 import { STATUS_LABEL } from "../lib/constants";
-
-function ToolButton({
-  icon: Icon,
-  label,
-  shortcut,
-  onClick,
-}: {
-  icon: LucideIcon;
-  label: string;
-  shortcut?: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className="tool-btn"
-      onClick={onClick}
-      title={`${label}${shortcut ? ` (${shortcut})` : ""}`}
-      aria-label={label}
-    >
-      <Icon />
-    </button>
-  );
-}
+import { Breadcrumbs } from "./workspace/Breadcrumbs";
+import { ToolButton } from "./workspace/ToolButton";
 
 export function NoteWorkspace() {
   const note = useAppStore((state) => state.note);
@@ -110,6 +90,7 @@ export function NoteWorkspace() {
   const renameCurrent = useAppStore((state) => state.renameCurrent);
   const duplicateNode = useAppStore((state) => state.duplicateNode);
   const trashNode = useAppStore((state) => state.trashNode);
+  const restoreNode = useAppStore((state) => state.restoreNode);
   const openNote = useAppStore((state) => state.openNote);
   const closeNote = useAppStore((state) => state.closeNote);
   const setFilter = useAppStore((state) => state.setFilter);
@@ -136,8 +117,8 @@ export function NoteWorkspace() {
     null,
   );
 
-  const mobile = useMediaQuery("(max-width: 720px)");
-  const compact = useMediaQuery("(max-width: 1180px)");
+  const mobile = useMediaQuery(maxWidthQuery("md"));
+  const compact = useMediaQuery(maxWidthQuery("xl"));
   const effectiveView = mobile && viewMode === "split" ? "editor" : viewMode;
   const preview = usePreview(
     draft,
@@ -180,14 +161,10 @@ export function NoteWorkspace() {
   }, [compact, setInspectorOpen]);
 
   useEffect(() => {
-    const insert = (event: Event) => {
-      const detail = (event as CustomEvent<{ text?: string }>).detail;
-      if (!detail?.text) return;
-      editorRef.current?.insertText(detail.text);
+    return onInsertSnippet((text) => {
+      editorRef.current?.insertText(text);
       toast("Snippet inserted at the cursor", "success");
-    };
-    window.addEventListener("redscribe:insert-snippet", insert);
-    return () => window.removeEventListener("redscribe:insert-snippet", insert);
+    });
   }, [toast]);
 
   if (!note) return null;
@@ -370,7 +347,10 @@ export function NoteWorkspace() {
           action: async () => {
             try {
               await trashNode(note.id);
-              toast("Moved to trash");
+              toast("Moved to trash", "default", {
+                label: "Undo",
+                run: () => restoreNode(note.id),
+              });
             } catch (error) {
               toast(
                 error instanceof Error ? error.message : "Could not move note",
@@ -436,25 +416,12 @@ export function NoteWorkspace() {
       />
       <header className="note-head">
         <div className="note-topline">
-          <div className="breadcrumbs" aria-label="Breadcrumb">
-            <button type="button" onClick={close}>
-              Vault
-            </button>
-            {crumbs.map((crumb) => (
-              <span key={crumb.id} style={{ display: "contents" }}>
-                <span className="sep">/</span>
-                <button
-                  type="button"
-                  onClick={() => goTo(crumb.id)}
-                  title={crumb.title}
-                >
-                  {crumb.title}
-                </button>
-              </span>
-            ))}
-            <span className="sep">/</span>
-            <span className="current">{note.title}</span>
-          </div>
+          <Breadcrumbs
+            crumbs={crumbs}
+            current={note.title}
+            onVault={close}
+            onGoTo={goTo}
+          />
 
           <div className="note-actions">
             <button
@@ -740,7 +707,7 @@ export function NoteWorkspace() {
               )}
             </div>
             <span className="pane-meta">
-              {plural(words, "word")} · {readingTime(draft)}
+              {plural(words, "word")} آ· {readingTime(draft)}
             </span>
             <button
               type="button"

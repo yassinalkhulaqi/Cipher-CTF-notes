@@ -37,6 +37,7 @@ export function GraphModal() {
 
   const [graph, setGraph] = useState<VaultGraph | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const positionsRef = useRef<Map<number, Point>>(new Map());
@@ -59,6 +60,9 @@ export function GraphModal() {
         setError(
           err instanceof Error ? err.message : "Could not load the vault graph",
         );
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
@@ -278,95 +282,111 @@ export function GraphModal() {
               {danglingCount > 0 ? ` · ${danglingCount} unresolved` : ""}
             </span>
           </div>
-          <div className="graph-stage">
-            <div className="graph-canvas-wrap">
-              {visibleNodes.length > 0 ? (
-                <svg
-                  className="graph-canvas"
-                viewBox={`0 0 ${bounds.width} ${bounds.height}`}
-                role="img"
-                aria-label="Vault knowledge graph"
-                onClick={() => setSelectedId(null)}
+          <div className="graph-stage" aria-busy={loading}>
+            {loading && !graph ? (
+              <div
+                className="graph-loading"
+                role="status"
+                aria-label="Loading vault graph"
               >
-                {visibleEdges.map((edge) => {
-                  const source = positions.get(edge.source);
-                  const target = positions.get(edge.target);
-                  if (!source || !target) return null;
-                  return (
-                    <line
-                      key={`${edge.source}-${edge.target}-${edge.kind}`}
-                      x1={source.x}
-                      y1={source.y}
-                      x2={target.x}
-                      y2={target.y}
-                      className={`graph-edge ${edge.kind === "parent" ? "parent" : "link"}`}
-                    />
-                  );
-                })}
-                {visibleNodes.map((node) => {
-                  const point = positions.get(node.id);
-                  if (!point) return null;
-                  const isReference = node.kind === "reference";
-                  return (
-                    <g
-                      key={node.id}
-                      className={`graph-node ${isReference ? "reference" : ""} ${selectedId === node.id ? "selected" : ""}`}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setSelectedId(node.id);
-                      }}
-                      onDoubleClick={() => open(node)}
-                      onKeyDown={(event) => {
-                        if (event.key !== "Enter" && event.key !== " ") return;
-                        event.preventDefault();
-                        if (node.kind === "note") open(node);
-                        else setSelectedId(node.id);
-                      }}
-                      tabIndex={0}
-                      role="button"
-                      aria-label={`${node.title}${node.kind === "note" ? ", note" : `, ${node.kind}`}`}
-                    >
-                      <circle
-                        cx={point.x}
-                        cy={point.y}
-                        r={isReference ? 9 : 14}
-                        className="graph-disc"
-                      />
-                      <text
-                        x={point.x}
-                        y={point.y}
-                        textAnchor="middle"
-                        dominantBaseline="central"
-                        className="graph-label"
-                      >
-                        {shortTitle(node.title)}
-                      </text>
-                      <title>{node.title}</title>
-                    </g>
-                  );
-                })}
-              </svg>
+                <div className="graph-loading-canvas skeleton" />
+                <div className="graph-loading-rows">
+                  {Array.from({ length: 5 }, (_, index) => (
+                    <div className="skeleton-line" key={index} />
+                  ))}
+                </div>
+              </div>
             ) : (
-              <div className="graph-empty">
-                <Network />
-                <p>
-                  {graph && graph.nodes.length === 0
-                    ? "This vault has no notes yet."
-                    : "No notes match the current filter."}
-                </p>
-                <button
-                  type="button"
-                  className="btn primary"
-                  onClick={() => {
-                    closeModal();
-                    openNewNote();
-                  }}
-                >
-                  Create a note
-                </button>
+              <div className="graph-canvas-wrap">
+                {visibleNodes.length > 0 ? (
+                  <svg
+                    className="graph-canvas"
+                    viewBox={`0 0 ${bounds.width} ${bounds.height}`}
+                    role="img"
+                    aria-label="Vault knowledge graph"
+                    onClick={() => setSelectedId(null)}
+                  >
+                    {visibleEdges.map((edge) => {
+                      const source = positions.get(edge.source);
+                      const target = positions.get(edge.target);
+                      if (!source || !target) return null;
+                      return (
+                        <line
+                          key={`${edge.source}-${edge.target}-${edge.kind}`}
+                          x1={source.x}
+                          y1={source.y}
+                          x2={target.x}
+                          y2={target.y}
+                          className={`graph-edge ${edge.kind === "parent" ? "parent" : "link"}`}
+                        />
+                      );
+                    })}
+                    {visibleNodes.map((node) => {
+                      const point = positions.get(node.id);
+                      if (!point) return null;
+                      const isReference = node.kind === "reference";
+                      return (
+                        <g
+                          key={node.id}
+                          className={`graph-node ${isReference ? "reference" : ""} ${selectedId === node.id ? "selected" : ""}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setSelectedId(node.id);
+                          }}
+                          onDoubleClick={() => open(node)}
+                          onKeyDown={(event) => {
+                            if (event.key !== "Enter" && event.key !== " ")
+                              return;
+                            event.preventDefault();
+                            if (node.kind === "note") open(node);
+                            else setSelectedId(node.id);
+                          }}
+                          tabIndex={0}
+                          role="button"
+                          aria-label={`${node.title}${node.kind === "note" ? ", note" : `, ${node.kind}`}`}
+                        >
+                          <circle
+                            cx={point.x}
+                            cy={point.y}
+                            r={isReference ? 9 : 14}
+                            className="graph-disc"
+                          />
+                          <text
+                            x={point.x}
+                            y={point.y}
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            className="graph-label"
+                          >
+                            {shortTitle(node.title)}
+                          </text>
+                          <title>{node.title}</title>
+                        </g>
+                      );
+                    })}
+                  </svg>
+                ) : (
+                  <div className="graph-empty">
+                    <Network />
+                    <p>
+                      {graph && graph.nodes.length === 0
+                        ? "This vault has no notes yet."
+                        : "No notes match the current filter."}
+                    </p>
+                    <button
+                      type="button"
+                      className="btn primary"
+                      onClick={() => {
+                        closeModal();
+                        openNewNote();
+                      }}
+                    >
+                      Create a note
+                    </button>
+                  </div>
+                )}
               </div>
             )}
-            </div>
             {selected ? (
               <aside className="graph-details" aria-label="Selected node">
                 <div className="graph-details-head">

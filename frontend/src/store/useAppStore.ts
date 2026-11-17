@@ -107,6 +107,7 @@ interface AppState {
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let draftRevision = 0;
+let saveChain: Promise<void> = Promise.resolve();
 
 function clearSaveTimer(): void {
   if (saveTimer !== null) {
@@ -279,38 +280,42 @@ export const useAppStore = create<AppState>()((set, get) => ({
     }, 850);
   },
 
-  saveNow: async () => {
-    const { note, draft, dirty } = get();
-    if (!note || !dirty) return;
-    clearSaveTimer();
-    const revision = draftRevision;
-    const noteId = note.id;
-    const content = draft;
-    set({ saveState: "saving" });
-    try {
-      const updated = await api.saveContent(noteId, content);
-      if (get().note?.id !== noteId) return;
-      if (draftRevision === revision) {
-        set((state) => ({
-          note: state.note
-            ? {
-                ...state.note,
-                content,
-                updated_at: updated.updated_at,
-                path: updated.path,
-                title: updated.title,
-              }
-            : state.note,
-          dirty: false,
-          saveState: "saved",
-        }));
-      } else {
-        set({ saveState: "dirty" });
+  saveNow: () => {
+    const run = async (): Promise<void> => {
+      const { note, draft, dirty } = get();
+      if (!note || !dirty) return;
+      clearSaveTimer();
+      const revision = draftRevision;
+      const noteId = note.id;
+      const content = draft;
+      set({ saveState: "saving" });
+      try {
+        const updated = await api.saveContent(noteId, content);
+        if (get().note?.id !== noteId) return;
+        if (draftRevision === revision) {
+          set((state) => ({
+            note: state.note
+              ? {
+                  ...state.note,
+                  content,
+                  updated_at: updated.updated_at,
+                  path: updated.path,
+                  title: updated.title,
+                }
+              : state.note,
+            dirty: false,
+            saveState: "saved",
+          }));
+        } else {
+          set({ saveState: "dirty" });
+        }
+      } catch (error) {
+        set({ saveState: "error" });
+        throw error;
       }
-    } catch (error) {
-      set({ saveState: "error" });
-      throw error;
-    }
+    };
+    saveChain = saveChain.catch(() => undefined).then(run);
+    return saveChain;
   },
 
   renameNode: async (id, title) => {

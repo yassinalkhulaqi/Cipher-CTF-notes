@@ -18,14 +18,18 @@ export function ConfirmModal() {
       footer={
         <>
           <span className="grow" />
-          <button type="button" className="btn ghost" onClick={closeModal}>
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={closeModal}
+            autoFocus
+          >
             Cancel
           </button>
           <button
             type="button"
             className={`btn ${request.danger ? "danger" : "primary"}`}
             onClick={resolveConfirm}
-            autoFocus
           >
             {request.confirmLabel}
           </button>

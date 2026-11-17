@@ -57,8 +57,7 @@ export function springSettled(
   velocityEpsilon = 0.02,
 ): boolean {
   return (
-    Math.abs(value - target) < epsilon &&
-    Math.abs(velocity) < velocityEpsilon
+    Math.abs(value - target) < epsilon && Math.abs(velocity) < velocityEpsilon
   );
 }
 

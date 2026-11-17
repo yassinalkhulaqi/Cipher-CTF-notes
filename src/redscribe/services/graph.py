@@ -83,6 +83,7 @@ def build_vault_graph(vault: Vault) -> VaultGraph:
     edges: list[GraphEdge] = []
     seen_edges: set[tuple[int, int, str]] = set()
     next_reference_id = 0
+    paths = vault.paths_map(include_self=False)
 
     def add_edge(source: int, target: int, kind: str, *, resolved: bool = True) -> None:
         key = (source, target, kind)
@@ -96,7 +97,7 @@ def build_vault_graph(vault: Vault) -> VaultGraph:
             id=node.id,
             title=node.title,
             kind=node.kind,
-            path=vault.path_of(node.id, include_self=False),
+            path=paths.get(node.id, ""),
             status=node.status,
             flag=node.flag,
             tags=tuple(node.tag_list),
@@ -111,7 +112,7 @@ def build_vault_graph(vault: Vault) -> VaultGraph:
             add_edge(node.parent_id, node.id, GRAPH_EDGE_PARENT)
         if not node.is_note:
             continue
-        for target, alias in wikilink_pairs(node.content):
+        for target, _alias in wikilink_pairs(node.content):
             target_id = notes_by_slug.get(slugify(target))
             if target_id is None or target_id == node.id:
                 continue
@@ -136,7 +137,7 @@ def build_vault_graph(vault: Vault) -> VaultGraph:
                     id=next_reference_id,
                     title=alias or target,
                     kind=GRAPH_NODE_KIND_REFERENCE,
-                    path=vault.path_of(node.id, include_self=False),
+                    path=paths.get(node.id, ""),
                     resolved=False,
                 )
             )
@@ -254,7 +255,7 @@ def note_links(vault: Vault, note_id: int) -> NoteLinks:
     for other in vault.live_nodes():
         if not other.is_note or other.id == note_id:
             continue
-        for target, alias in wikilink_pairs(other.content):
+        for target, _alias in wikilink_pairs(other.content):
             if slugify(target) != target_slug:
                 continue
             backlinks.append(

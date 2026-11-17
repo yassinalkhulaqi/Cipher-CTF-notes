@@ -60,7 +60,6 @@ filterwarnings = ["error"]
 [tool.coverage.run]
 branch = true
 source = ["redscribe"]
-omit = ["*/redscribe/ui/*"]
 
 [tool.coverage.report]
 show_missing = true

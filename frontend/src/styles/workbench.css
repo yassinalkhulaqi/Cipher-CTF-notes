@@ -1,8 +1,8 @@
-.sidebar.sidebar-rail {
+﻿.sidebar.sidebar-rail {
   width: 58px;
   min-width: 58px;
   max-width: 58px;
-  padding: 8px 0;
+  padding: var(--space-2) 0;
   align-items: center;
   gap: 6px;
 }
@@ -17,8 +17,8 @@
   border-radius: var(--radius-sm);
   color: var(--muted);
   transition:
-    background var(--speed-fast) var(--ease),
-    color var(--speed-fast) var(--ease);
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out);
 }
 
 .rail-brand {
@@ -47,7 +47,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   width: 100%;
   padding: 0 8px;
 }
@@ -67,7 +67,7 @@
 .sidebar-nav-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   width: 100%;
   min-height: 28px;
   padding: 0 8px;
@@ -76,8 +76,8 @@
   font-size: 11.5px;
   text-align: left;
   transition:
-    background var(--speed-fast) var(--ease),
-    color var(--speed-fast) var(--ease);
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    color var(--motion-duration-fast) var(--motion-ease-out);
 }
 
 .sidebar-nav-row svg {
@@ -123,11 +123,11 @@
 .topbar-context {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
   max-width: 230px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-sm);
 }
 
 .topbar-context > svg {
@@ -146,7 +146,7 @@
 .dash-duo {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.9fr);
-  gap: 12px;
+  gap: var(--space-3);
   margin-bottom: 12px;
 }
 
@@ -154,7 +154,7 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: 4px 8px 10px;
+  padding: var(--space-1) 8px 10px;
 }
 
 .activity-row {
@@ -166,7 +166,7 @@
   padding: 7px 8px;
   border-radius: var(--radius-sm);
   text-align: left;
-  transition: background var(--speed-fast) var(--ease);
+  transition: background var(--motion-duration-fast) var(--motion-ease-out);
 }
 
 .activity-row:hover {
@@ -232,15 +232,15 @@
   align-items: center;
   gap: 9px;
   min-width: 0;
-  padding: 8px;
+  padding: var(--space-2);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-2) 45%, transparent);
   text-align: left;
   transition:
-    background var(--speed-fast) var(--ease),
-    border-color var(--speed-fast) var(--ease),
-    transform var(--speed-fast) var(--ease);
+    background var(--motion-duration-fast) var(--motion-ease-out),
+    border-color var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-fast) var(--motion-ease-out);
 }
 
 .quick-action:hover {
@@ -321,7 +321,7 @@
   gap: 6px;
   width: 252px;
   flex: none;
-  padding: 12px 14px 14px;
+  padding: var(--space-3) 14px 14px;
   border-left: 1px solid var(--border);
   background: color-mix(in srgb, var(--surface) 42%, transparent);
   overflow: auto;
@@ -358,7 +358,7 @@
 .graph-details-path {
   margin: 0;
   color: var(--faint);
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
@@ -374,8 +374,8 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 8px;
-  padding: 4px 0;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
 }
 
@@ -398,7 +398,7 @@
 .graph-detail-value {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   color: var(--text-soft);
   font-size: 10.5px;
 }
@@ -411,7 +411,7 @@
 .graph-detail-flag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   color: var(--green);
   font-family: var(--font-mono);
   font-size: 9.5px;
@@ -428,7 +428,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 3px;
-  padding: 4px 0;
+  padding: var(--space-1) 0;
 }
 
 .graph-detail-tags span {
@@ -447,7 +447,9 @@
 .graph-node.selected .graph-disc {
   stroke: var(--accent-hover);
   stroke-width: 2.5;
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent));
+  filter: drop-shadow(
+    0 0 6px color-mix(in srgb, var(--accent) 55%, transparent)
+  );
 }
 
 .graph-node:focus-visible {
@@ -469,7 +471,7 @@
   }
 }
 
-@media (max-width: 980px) {
+@media (max-width: 920px) {
   .dash-duo {
     grid-template-columns: minmax(0, 1fr);
   }

@@ -289,7 +289,10 @@ export const MarkdownEditor = forwardRef<
     let nextStart: number;
     let nextEnd: number;
     if (selected.startsWith(prefix) && selected.endsWith(suffix)) {
-      const inner = selected.slice(prefix.length, selected.length - suffix.length);
+      const inner = selected.slice(
+        prefix.length,
+        selected.length - suffix.length,
+      );
       next = value.slice(0, start) + inner + value.slice(end);
       nextStart = start;
       nextEnd = start + inner.length;
@@ -407,12 +410,7 @@ export const MarkdownEditor = forwardRef<
       applyText(next, lineStart, lineStart + changed.length);
       return;
     }
-    if (
-      event.key === "Enter" &&
-      !control &&
-      !event.shiftKey &&
-      !composing
-    ) {
+    if (event.key === "Enter" && !control && !event.shiftKey && !composing) {
       const editor = event.currentTarget;
       const start = editor.selectionStart;
       const lineStart = value.lastIndexOf("\n", start - 1) + 1;
@@ -511,9 +509,7 @@ export const MarkdownEditor = forwardRef<
           type="button"
           className={`icon-btn sm ${replaceOpen ? "active" : ""}`}
           onClick={() =>
-            useUiStore
-              .getState()
-              .openFind(replaceOpen ? "find" : "replace")
+            useUiStore.getState().openFind(replaceOpen ? "find" : "replace")
           }
           aria-label="Toggle replace"
           title="Toggle replace"

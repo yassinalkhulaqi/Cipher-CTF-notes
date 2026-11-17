@@ -123,7 +123,7 @@ Details.
     )
     note = import_markdown_file(vault, source)
     assert note.title == "Cross-tenant access"
-    assert note.tags == "web,high"
+    assert note.tags == "web, high"
     assert note.status == "done"
     assert note.difficulty == "medium"
     assert note.target == "app.acme.test"

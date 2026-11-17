@@ -4,7 +4,11 @@ interface SkeletonProps {
   compact?: boolean;
 }
 
-export function Skeleton({ lines = 3, className = "", compact }: SkeletonProps) {
+export function Skeleton({
+  lines = 3,
+  className = "",
+  compact,
+}: SkeletonProps) {
   return (
     <div
       className={`skeleton ${compact ? "compact" : ""} ${className}`.trim()}

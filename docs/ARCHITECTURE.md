@@ -18,6 +18,33 @@ Core modules never import the desktop UI layer. The web frontend calls the
 same `Vault` API over localhost HTTP and renders returned models; it does not
 issue SQL directly.
 
+## Frontend module map
+
+State lives in two Zustand stores (`store/useAppStore.ts` for the vault and
+note lifecycle; `store/useUiStore.ts` for modals/toasts/chrome) plus the
+motion-preference store (`motion/preferences.ts`). Cross-component events go
+through `lib/events.ts` (typed) — never ad-hoc `window` strings.
+
+| Module | Responsibility |
+| --- | --- |
+| `lib/api.ts` | Typed JSON API client; `AbortController` 10s timeout, one idempotent `save_content` retry, `ApiError` |
+| `lib/tags.ts` | Tag parsing/normalization/limits (parse/add/remove/toggle, `TAG_MAX_*`) |
+| `lib/events.ts` | Typed event bus: `snippets-changed`, `insert-snippet`, `focus-filter` |
+| `lib/tree.ts` | Pure tree model: flatten/filter/count/index — unit tested in `scripts/tree.test.ts` |
+| `lib/breakpoints.ts` | Canonical breakpoint scale mirrored by `@media` rules (xs/sm/md/lg/xl) |
+| `hooks/useSidebarResize.ts` | Pointer/keyboard sidebar resize (clamped, persisted on release) |
+| `hooks/useDashboardData.ts` | Dashboard data with a stable note signature — effects don't refire on tree identity churn |
+| `hooks/useTagSuggestions.ts` | Shared vault-tag autocomplete fetch |
+| `components/sidebar/` | `TreeRow` (tree rows + inline rename), `SidebarRail` (collapsed rail) |
+| `components/dashboard/` | `PulseStrip` (stat strip with animated counters) |
+| `components/workspace/` | `ToolButton`, `Breadcrumbs` |
+| `components/TagInput.tsx` | Chip-based tag editor with vault autocomplete (combobox/listbox ARIA) |
+| `components/modals/TagExplorerModal.tsx` | Live tag counts; click to filter the tree |
+| `scripts/test.mjs` | Bundles and runs the `node --test` suites (`motion`, `tags`, `tree`) |
+
+Modal close timers, exit animations, and reduced-motion behavior derive from
+`--motion-duration-*` tokens; see `docs/DESIGN_SYSTEM.md`.
+
 ## Data model
 
 A vault is one SQLite file containing:

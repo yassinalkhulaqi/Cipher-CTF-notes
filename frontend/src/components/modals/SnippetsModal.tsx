@@ -16,13 +16,16 @@ import {
   Wand2,
 } from "lucide-react";
 import { api } from "../../lib/api";
+import {
+  insertSnippet,
+  onSnippetsChanged,
+  snippetsChanged,
+} from "../../lib/events";
 import type { Snippet } from "../../lib/types";
 import { copyText, plural } from "../../lib/utils";
 import { useAppStore } from "../../store/useAppStore";
 import { useUiStore } from "../../store/useUiStore";
 import { Modal } from "./Modal";
-
-const SNIPPETS_CHANGED = "redscribe:snippets-changed";
 
 function snippetKey(snippet: Snippet): string {
   return snippet.builtin
@@ -75,9 +78,7 @@ export function SnippetsModal() {
 
   useEffect(() => {
     load();
-    const reload = () => load();
-    window.addEventListener(SNIPPETS_CHANGED, reload);
-    return () => window.removeEventListener(SNIPPETS_CHANGED, reload);
+    return onSnippetsChanged(() => load());
   }, [load]);
 
   const categories = useMemo(() => {
@@ -180,11 +181,7 @@ export function SnippetsModal() {
         note.target ?? "",
       );
       closeModal();
-      window.dispatchEvent(
-        new CustomEvent("redscribe:insert-snippet", {
-          detail: { text: resolved.command },
-        }),
-      );
+      insertSnippet(resolved.command);
     } catch (error) {
       toast(
         error instanceof Error ? error.message : "Could not insert the snippet",
@@ -204,7 +201,7 @@ export function SnippetsModal() {
       action: async () => {
         try {
           await api.deleteSnippet(id);
-          window.dispatchEvent(new Event(SNIPPETS_CHANGED));
+          snippetsChanged();
           toast("Snippet deleted", "success");
         } catch (error) {
           toast(

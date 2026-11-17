@@ -12,10 +12,7 @@ export interface FlagFormat {
 
 const FLAG_SHAPE = /^([A-Za-z][A-Za-z0-9_-]{0,31})\{([^{}\s].*)\}$/;
 
-export function flagFormat(
-  value: string,
-  patterns: FlagPattern[],
-): FlagFormat {
+export function flagFormat(value: string, patterns: FlagPattern[]): FlagFormat {
   const trimmed = value.trim();
   if (!trimmed) {
     return {

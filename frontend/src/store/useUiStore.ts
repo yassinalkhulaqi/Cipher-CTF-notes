@@ -1,4 +1,4 @@
-import { create } from "zustand";
+﻿import { create } from "zustand";
 
 export type ModalName =
   | "palette"
@@ -17,6 +17,7 @@ export type ModalName =
   | "timeline"
   | "quick-capture"
   | "flag-intel"
+  | "tags"
   | "confirm"
   | null;
 
@@ -24,10 +25,16 @@ export type FindMode = "find" | "replace";
 
 export type InspectorTab = "outline" | "links" | "properties";
 
+export interface ToastAction {
+  label: string;
+  run: () => void | Promise<void>;
+}
+
 export interface ToastItem {
   id: number;
   message: string;
   tone: "default" | "success" | "error";
+  action?: ToastAction;
 }
 
 export interface ConfirmRequest {
@@ -64,7 +71,11 @@ interface UiState {
   openSnippetForm: (id: number | null) => void;
   askConfirm: (request: ConfirmRequest) => void;
   resolveConfirm: () => void;
-  toast: (message: string, tone?: ToastItem["tone"]) => void;
+  toast: (
+    message: string,
+    tone?: ToastItem["tone"],
+    action?: ToastAction,
+  ) => void;
   dismissToast: (id: number) => void;
   setMobileSidebar: (open: boolean) => void;
   toggleSidebarCollapsed: () => void;
@@ -80,9 +91,28 @@ interface UiState {
 let toastId = 0;
 let modalCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
-const MODAL_EXIT_MS = 160;
+const MODAL_EXIT_FALLBACK_MS = 220;
 const SIDEBAR_STORAGE_KEY = "redscribe.sidebarCollapsed";
 const INSPECTOR_STORAGE_KEY = "redscribe.inspectorOpen";
+
+// Derive the close-timer from the same token the CSS animations use so exit
+// animations are never truncated (or stretched when motion is set to off).
+function modalExitDuration(): number {
+  try {
+    const raw = window
+      .getComputedStyle(document.documentElement)
+      .getPropertyValue("--motion-duration-base")
+      .trim();
+    const value = raw.endsWith("ms")
+      ? Number.parseFloat(raw)
+      : Number.parseFloat(raw) * 1000;
+    return Number.isFinite(value) && value >= 0
+      ? value
+      : MODAL_EXIT_FALLBACK_MS;
+  } catch {
+    return MODAL_EXIT_FALLBACK_MS;
+  }
+}
 
 function readStoredFlag(key: string, fallback: boolean): boolean {
   try {
@@ -143,7 +173,7 @@ export const useUiStore = create<UiState>()((set, get) => ({
         modalClosing: false,
         confirmRequest: stack.includes("confirm") ? get().confirmRequest : null,
       });
-    }, MODAL_EXIT_MS);
+    }, modalExitDuration());
   },
 
   closeAllModals: () => {
@@ -184,16 +214,27 @@ export const useUiStore = create<UiState>()((set, get) => ({
     if (state.modalClosing) return;
     const request = state.confirmRequest;
     get().closeModal();
-    if (request) void request.action();
+    if (!request) return;
+    void Promise.resolve()
+      .then(() => request.action())
+      .catch((error: unknown) => {
+        get().toast(
+          error instanceof Error ? error.message : "The action failed",
+          "error",
+        );
+      });
   },
 
-  toast: (message, tone = "default") => {
+  toast: (message, tone = "default", action) => {
     toastId += 1;
-    const item: ToastItem = { id: toastId, message, tone };
+    const item: ToastItem = { id: toastId, message, tone, action };
     set((state) => ({ toasts: [...state.toasts.slice(-3), item] }));
-    setTimeout(() => {
-      get().dismissToast(item.id);
-    }, 3200);
+    setTimeout(
+      () => {
+        get().dismissToast(item.id);
+      },
+      action ? 5200 : 3200,
+    );
   },
 
   dismissToast: (id) => {

@@ -1,4 +1,11 @@
-import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { motionDuration } from "./preferences";
 
 interface PresenceEntry<T> {

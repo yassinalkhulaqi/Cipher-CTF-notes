@@ -50,6 +50,27 @@ export function TrashModal() {
     }
   };
 
+  const restoreAll = async () => {
+    if (items.length === 0) return;
+    setBusy(-1);
+    try {
+      // Restore sequentially: the vault serializes writes on one worker anyway.
+      for (const item of items) {
+        await restoreNode(item.id);
+      }
+      setItems([]);
+      toast(`Restored ${plural(items.length, "item")}`, "success");
+    } catch (error) {
+      toast(
+        error instanceof Error ? error.message : "Could not restore everything",
+        "error",
+      );
+      load();
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const empty = () => {
     askConfirm({
       title: "Empty trash",
@@ -85,6 +106,14 @@ export function TrashModal() {
           <span className="grow" />
           <button type="button" className="btn ghost" onClick={closeModal}>
             Close
+          </button>
+          <button
+            type="button"
+            className="btn subtle"
+            onClick={() => void restoreAll()}
+            disabled={items.length === 0 || busy !== null}
+          >
+            <RotateCcw /> Restore all
           </button>
           <button
             type="button"
