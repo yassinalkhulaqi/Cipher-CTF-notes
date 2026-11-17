@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import dataclasses
 import re
+from collections.abc import Sequence
 from typing import Any
 
 from redscribe.domain.models import Node
-from redscribe.domain.utils import collapse_whitespace, slugify, truncate
+from redscribe.domain.utils import collapse_whitespace, parse_timestamp, slugify, truncate
 from redscribe.storage.db import Vault
 
 WIKILINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]", re.IGNORECASE)
@@ -362,3 +363,79 @@ def note_links_payload(links: NoteLinks) -> dict[str, Any]:
 def timeline_payload(events: tuple[TimelineEvent, ...]) -> list[dict[str, Any]]:
     """Return the JSON payload for the timeline view."""
     return [dataclasses.asdict(event) for event in events]
+
+
+TIMELINE_PERIOD_DAY = "day"
+TIMELINE_PERIOD_WEEK = "week"
+TIMELINE_PERIOD_MONTH = "month"
+_TIMELINE_PERIODS = frozenset({TIMELINE_PERIOD_DAY, TIMELINE_PERIOD_WEEK, TIMELINE_PERIOD_MONTH})
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class TimelineGroup:
+    """A contiguous bucket of timeline events sharing a time period."""
+
+    key: str
+    label: str
+    events: tuple[TimelineEvent, ...]
+
+
+def _timeline_bucket(event: TimelineEvent, period: str) -> tuple[str, str]:
+    parsed = parse_timestamp(event.at)
+    if parsed is None:
+        return "unknown", "Undated"
+    if period == TIMELINE_PERIOD_DAY:
+        key = parsed.strftime("%Y-%m-%d")
+        return key, key
+    if period == TIMELINE_PERIOD_WEEK:
+        iso = parsed.isocalendar()
+        key = f"{iso.year}-W{iso.week:02d}"
+        return key, key
+    key = f"{parsed.year:04d}-{parsed.month:02d}"
+    return key, key
+
+
+def group_timeline(
+    events: Sequence[TimelineEvent], *, period: str = TIMELINE_PERIOD_DAY
+) -> tuple[TimelineGroup, ...]:
+    """Group events by day, week, or month, keeping their incoming order."""
+    if period not in _TIMELINE_PERIODS:
+        raise ValueError(f"Unknown timeline period: {period}")
+    groups: list[TimelineGroup] = []
+    keys: dict[str, int] = {}
+    for event in events:
+        key, label = _timeline_bucket(event, period)
+        index = keys.get(key)
+        if index is None:
+            keys[key] = len(groups)
+            groups.append(TimelineGroup(key=key, label=label, events=(event,)))
+        else:
+            current = groups[index]
+            groups[index] = TimelineGroup(
+                key=current.key,
+                label=current.label,
+                events=(*current.events, event),
+            )
+    return tuple(groups)
+
+
+def timeline_activity(events: Sequence[TimelineEvent]) -> dict[str, int]:
+    """Count created and updated events."""
+    counts = {"created": 0, "updated": 0}
+    for event in events:
+        if event.activity in counts:
+            counts[event.activity] += 1
+    return counts
+
+
+def timeline_group_payload(groups: tuple[TimelineGroup, ...]) -> list[dict[str, Any]]:
+    """Return the JSON payload for grouped timeline events."""
+    return [
+        {
+            "key": group.key,
+            "label": group.label,
+            "count": len(group.events),
+            "events": timeline_payload(group.events),
+        }
+        for group in groups
+    ]

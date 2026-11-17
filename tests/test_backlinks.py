@@ -3,10 +3,14 @@ from __future__ import annotations
 import pytest
 
 from redscribe.services.graph import (
+    TimelineEvent,
     backlinks_for,
     build_timeline,
+    group_timeline,
     note_links,
     note_links_payload,
+    timeline_activity,
+    timeline_group_payload,
 )
 from redscribe.storage.db import Vault
 from redscribe.ui.web.api import Api, ApiError
@@ -150,3 +154,99 @@ def test_api_timeline_returns_events(vault: Vault) -> None:
     assert events
     assert events[0]["title"] == "Writeup"
     assert events[0]["activity"] == "created"
+
+
+def _event(title: str, at: str, *, activity: str = "updated") -> TimelineEvent:
+    return TimelineEvent(node_id=len(title), title=title, at=at, activity=activity)
+
+
+def test_group_timeline_by_day_keeps_newest_group_first() -> None:
+    events = (
+        _event("New", "2026-11-17T09:00:00+00:00"),
+        _event("Same day", "2026-11-17T08:00:00+00:00"),
+        _event("Old", "2026-11-16T22:00:00+00:00"),
+    )
+
+    groups = group_timeline(events)
+
+    assert [group.key for group in groups] == ["2026-11-17", "2026-11-16"]
+    assert [group.label for group in groups] == ["2026-11-17", "2026-11-16"]
+    assert [event.title for event in groups[0].events] == ["New", "Same day"]
+    assert [event.title for event in groups[1].events] == ["Old"]
+
+
+def test_group_timeline_by_week_uses_iso_weeks() -> None:
+    events = (
+        _event("Sunday", "2026-01-04T12:00:00+00:00"),
+        _event("Thursday", "2026-01-01T12:00:00+00:00"),
+        _event("Next week", "2026-01-05T12:00:00+00:00"),
+    )
+
+    groups = group_timeline(events, period="week")
+
+    assert [group.key for group in groups] == ["2026-W01", "2026-W02"]
+    assert len(groups[0].events) == 2
+
+
+def test_group_timeline_by_month() -> None:
+    events = (
+        _event("November", "2026-11-01T00:00:00+00:00"),
+        _event("October late", "2026-10-31T23:00:00+00:00"),
+        _event("October early", "2026-10-02T01:00:00+00:00"),
+    )
+
+    groups = group_timeline(events, period="month")
+
+    assert [group.key for group in groups] == ["2026-11", "2026-10"]
+    assert [event.title for event in groups[1].events] == ["October late", "October early"]
+
+
+def test_group_timeline_collects_undated_events() -> None:
+    events = (_event("Known", "2026-11-17T00:00:00Z"), _event("Unknown", ""))
+
+    groups = group_timeline(events)
+
+    assert groups[-1].key == "unknown"
+    assert groups[-1].label == "Undated"
+    assert groups[-1].events[0].title == "Unknown"
+
+
+def test_group_timeline_handles_empty_and_invalid_periods() -> None:
+    assert group_timeline(()) == ()
+    with pytest.raises(ValueError, match="Unknown timeline period"):
+        group_timeline((), period="year")
+
+
+def test_group_timeline_accepts_vault_events(vault: Vault) -> None:
+    vault.create_node("First")
+    vault.create_node("Second")
+    events = build_timeline(vault)
+
+    groups = group_timeline(events)
+
+    assert len(groups) == 1
+    assert len(groups[0].events) == 2
+
+
+def test_timeline_activity_counts_activities() -> None:
+    events = (
+        _event("One", "2026-11-17T00:00:00Z", activity="created"),
+        _event("Two", "2026-11-17T00:00:00Z", activity="updated"),
+        _event("Three", "2026-11-17T00:00:00Z", activity="other"),
+    )
+
+    assert timeline_activity(events) == {"created": 1, "updated": 1}
+
+
+def test_timeline_group_payload_serializes_buckets() -> None:
+    events = (
+        _event("One", "2026-11-17T00:00:00Z", activity="created"),
+        _event("Two", "2026-11-16T00:00:00Z"),
+    )
+
+    payload = timeline_group_payload(group_timeline(events))
+
+    assert [entry["key"] for entry in payload] == ["2026-11-17", "2026-11-16"]
+    assert payload[0]["count"] == 1
+    assert payload[0]["events"][0]["title"] == "One"
+    assert payload[0]["events"][0]["activity"] == "created"
