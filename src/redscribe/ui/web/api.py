@@ -39,6 +39,20 @@ from redscribe.services.graph import (
     timeline_payload,
 )
 from redscribe.storage.db import Vault
+from redscribe.ui.web.api_contract import (
+    CONTRACT_VERSION,
+    MAX_CONTENT_LENGTH,
+    MAX_SHORT_LENGTH,
+    MAX_SNIPPET_COMMAND_LENGTH,
+    MAX_SNIPPET_DESCRIPTION_LENGTH,
+    MAX_TAG_LENGTH,
+    MAX_TITLE_LENGTH,
+    ApiErrorCode,
+    ContractError,
+    contract_counts,
+    describe_api,
+    validate_call,
+)
 
 _SETTING_KEYS = (
     "theme",
@@ -59,12 +73,6 @@ _FONT_RANGE = range(9, 19)
 _THEME_KEYS = ("light", "dark")
 _VIEW_MODES = ("editor", "split", "preview")
 _BOOLEAN_SETTING_KEYS = frozenset({"restore_last_note", "sync_preview_scroll"})
-_MAX_TITLE = 200
-_MAX_SHORT = 200
-_MAX_TAGS = 500
-_MAX_CONTENT = 1_000_000
-_MAX_SNIPPET_COMMAND = 4000
-_MAX_SNIPPET_DESCRIPTION = 2000
 
 
 def _cap(value: str, field: str, limit: int) -> str:
@@ -76,10 +84,17 @@ def _cap(value: str, field: str, limit: int) -> str:
 class ApiError(Exception):
     """An error that is safe to surface to the web frontend."""
 
-    def __init__(self, message: str, *, status: int = 400) -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        status: int = 400,
+        code: ApiErrorCode | None = None,
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.status = status
+        self.code = code
 
 
 @dataclass(slots=True)
@@ -220,17 +235,26 @@ class Api:
             "flag_insights": self.flag_insights,
             "search_snippets": self.search_snippets,
             "quick_capture": self.quick_capture,
+            "api_health": self.api_health,
+            "api_schema": self.api_schema,
         }
 
     def handle(self, method: str, body: dict[str, Any]) -> Any:
-        """Dispatch one API call, converting vault errors into API errors."""
+        """Dispatch one API call through its contract, converting errors."""
         route = self._routes.get(method)
         if route is None:
-            raise ApiError(f"Unknown API method '{method}'", status=404)
+            raise ApiError(
+                f"Unknown API method '{method}'",
+                status=404,
+                code=ApiErrorCode.UNKNOWN_METHOD,
+            )
         try:
+            validate_call(method, body)
             return route(body)
+        except ContractError as exc:
+            raise ApiError(exc.message, status=exc.status, code=exc.code) from exc
         except (ValueError, TypeError) as exc:
-            raise ApiError(str(exc)) from exc
+            raise ApiError(str(exc), code=ApiErrorCode.INTERNAL) from exc
 
     # ------------------------------------------------------------------
     # Serialization helpers
@@ -316,8 +340,10 @@ class Api:
 
     def quick_capture(self, body: dict[str, Any]) -> dict[str, Any]:
         """Create a note from raw capture text in one round trip."""
-        title = _cap(_require_str(body, "title", default="").strip(), "title", _MAX_TITLE)
-        content = _cap(_require_str(body, "content", default="").strip(), "content", _MAX_CONTENT)
+        title = _cap(_require_str(body, "title", default="").strip(), "title", MAX_TITLE_LENGTH)
+        content = _cap(
+            _require_str(body, "content", default="").strip(), "content", MAX_CONTENT_LENGTH
+        )
         if not title and not content:
             raise ApiError("A title or some content is required")
         if not title:
@@ -327,8 +353,10 @@ class Api:
             title,
             None,
             content=content,
-            tags=_cap(_require_str(body, "tags", default="").strip(), "tags", _MAX_TAGS),
-            target=_cap(_require_str(body, "target", default="").strip(), "target", _MAX_SHORT),
+            tags=_cap(_require_str(body, "tags", default="").strip(), "tags", MAX_TAG_LENGTH),
+            target=_cap(
+                _require_str(body, "target", default="").strip(), "target", MAX_SHORT_LENGTH
+            ),
         )
         return node_summary(node, path=self._path_of(node.id))
 
@@ -337,9 +365,9 @@ class Api:
         title = _cap(
             _require_str(body, "title", default="").strip() or template.default_title,
             "title",
-            _MAX_TITLE,
+            MAX_TITLE_LENGTH,
         )
-        target = _cap(_require_str(body, "target", default="").strip(), "target", _MAX_SHORT)
+        target = _cap(_require_str(body, "target", default="").strip(), "target", MAX_SHORT_LENGTH)
         content = render_template(template, title, target)
         node = self._vault.create_node(
             title,
@@ -357,14 +385,14 @@ class Api:
         title = _cap(
             _require_str(body, "title", default="").strip() or "New folder",
             "title",
-            _MAX_TITLE,
+            MAX_TITLE_LENGTH,
         )
         node = self._vault.create_node(title, parent_id=_optional_node_id(body), kind="folder")
         return node_summary(node, path=self._path_of(node.id))
 
     def rename(self, body: dict[str, Any]) -> dict[str, Any]:
         node_id = _require_int(body, "id")
-        title = _cap(_require_str(body, "title", default="").strip(), "title", _MAX_TITLE)
+        title = _cap(_require_str(body, "title", default="").strip(), "title", MAX_TITLE_LENGTH)
         if not title:
             raise ApiError("Title cannot be empty")
         node = self._vault.update_node(node_id, title=title)
@@ -382,13 +410,13 @@ class Api:
             if key in body
         }
         if "title" in fields:
-            fields["title"] = _cap(_require_str(body, "title").strip(), "title", _MAX_TITLE)
+            fields["title"] = _cap(_require_str(body, "title").strip(), "title", MAX_TITLE_LENGTH)
         if "tags" in fields:
-            fields["tags"] = _cap(str(fields["tags"]), "tags", _MAX_TAGS)
+            fields["tags"] = _cap(str(fields["tags"]), "tags", MAX_TAG_LENGTH)
         if "target" in fields:
-            fields["target"] = _cap(str(fields["target"]).strip(), "target", _MAX_SHORT)
+            fields["target"] = _cap(str(fields["target"]).strip(), "target", MAX_SHORT_LENGTH)
         if "flag" in fields:
-            fields["flag"] = _cap(str(fields["flag"]).strip(), "flag", _MAX_SHORT)
+            fields["flag"] = _cap(str(fields["flag"]).strip(), "flag", MAX_SHORT_LENGTH)
         if not fields:
             raise ApiError("No fields to update")
         node = self._vault.update_node(node_id, **fields)
@@ -396,7 +424,7 @@ class Api:
 
     def save_content(self, body: dict[str, Any]) -> dict[str, Any]:
         node_id = _require_int(body, "id")
-        content = _cap(_require_str(body, "content"), "content", _MAX_CONTENT)
+        content = _cap(_require_str(body, "content"), "content", MAX_CONTENT_LENGTH)
         node = self._vault.update_node(node_id, content=content)
         return node_summary(node, path=self._path_of(node.id))
 
@@ -596,28 +624,28 @@ class Api:
 
     def create_snippet(self, body: dict[str, Any]) -> dict[str, Any]:
         snippet = self._vault.create_snippet(
-            _cap(_require_str(body, "title"), "title", _MAX_TITLE),
-            _cap(_require_str(body, "command"), "command", _MAX_SNIPPET_COMMAND),
+            _cap(_require_str(body, "title"), "title", MAX_TITLE_LENGTH),
+            _cap(_require_str(body, "command"), "command", MAX_SNIPPET_COMMAND_LENGTH),
             description=_cap(
                 _require_str(body, "description", default=""),
                 "description",
-                _MAX_SNIPPET_DESCRIPTION,
+                MAX_SNIPPET_DESCRIPTION_LENGTH,
             ),
-            tags=_cap(_require_str(body, "tags", default=""), "tags", _MAX_TAGS),
+            tags=_cap(_require_str(body, "tags", default=""), "tags", MAX_TAG_LENGTH),
         )
         return _snippet_data(snippet)
 
     def update_snippet(self, body: dict[str, Any]) -> dict[str, Any]:
         snippet = self._vault.update_snippet(
             _require_int(body, "id"),
-            title=_cap(_require_str(body, "title"), "title", _MAX_TITLE),
-            command=_cap(_require_str(body, "command"), "command", _MAX_SNIPPET_COMMAND),
+            title=_cap(_require_str(body, "title"), "title", MAX_TITLE_LENGTH),
+            command=_cap(_require_str(body, "command"), "command", MAX_SNIPPET_COMMAND_LENGTH),
             description=_cap(
                 _require_str(body, "description", default=""),
                 "description",
-                _MAX_SNIPPET_DESCRIPTION,
+                MAX_SNIPPET_DESCRIPTION_LENGTH,
             ),
-            tags=_cap(_require_str(body, "tags", default=""), "tags", _MAX_TAGS),
+            tags=_cap(_require_str(body, "tags", default=""), "tags", MAX_TAG_LENGTH),
         )
         return _snippet_data(snippet)
 
@@ -774,3 +802,20 @@ class Api:
             "filename": "redscribe-vault.html",
             "mime": "text/html",
         }
+
+    # ------------------------------------------------------------------
+    # Contract introspection
+    # ------------------------------------------------------------------
+
+    def api_health(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Report that the dispatch layer and its contracts are available."""
+        return {
+            "ok": True,
+            "version": __version__,
+            "contract_version": CONTRACT_VERSION,
+            "counts": contract_counts(),
+        }
+
+    def api_schema(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Return the full, versioned description of the dispatch contracts."""
+        return describe_api()
