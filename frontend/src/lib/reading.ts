@@ -129,6 +129,22 @@ export function buildReadingOutline(
   return anchors;
 }
 
+export interface ReadingStatsSummary {
+  words: number;
+  paragraphs: number;
+  headings: number;
+  reading: string;
+}
+
+export function formatReadingStats(stats: ReadingStats): ReadingStatsSummary {
+  return {
+    words: stats.words,
+    paragraphs: stats.paragraphs,
+    headings: stats.headings,
+    reading: formatReadingTime(stats.readingSeconds),
+  };
+}
+
 export function formatReadingTime(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
   const rest = seconds % 60;

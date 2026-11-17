@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   DEFAULT_READING_PREFS,
   buildReadingOutline,
+  formatReadingStats,
   formatReadingTime,
   normalizeReadingPrefs,
   readingExcerpt,
@@ -68,6 +69,16 @@ test("reading excerpt keeps short prose intact and truncates long prose", () => 
   assert.equal(readingExcerpt("one two three four five", 3), "one two…");
   assert.equal(readingExcerpt("one two", 5), "one two");
   assert.equal(readingExcerpt("", 5), "");
+});
+
+test("formatReadingStats composes the footer summary", () => {
+  const summary = formatReadingStats(
+    readingStats("# One\n\nTwo words here.\n"),
+  );
+  assert.equal(summary.words, 3);
+  assert.equal(summary.paragraphs, 1);
+  assert.equal(summary.headings, 1);
+  assert.equal(summary.reading, "9s read");
 });
 
 test("readingParagraphs ignores headings and blank blocks", () => {
