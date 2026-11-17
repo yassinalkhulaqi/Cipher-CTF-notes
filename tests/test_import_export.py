@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pytest
 
+from redscribe.content.render import render_standalone_html
+from redscribe.content.render_frontmatter import canonical_front_matter
 from redscribe.services.exporter import (
     export_note_html,
     export_note_markdown,
@@ -340,3 +342,73 @@ def test_safe_filename() -> None:
     assert safe_filename("Hello / World") == "Hello - World"
     assert safe_filename("", fallback="note-1", extension=".md") == "note-1.md"
     assert safe_filename("name.md", extension=".md") == "name.md.md"
+
+
+def test_read_text_file_supports_utf16_bom(tmp_path: Path) -> None:
+    source = tmp_path / "utf16.md"
+    source.write_text("Café", encoding="utf-16")
+    assert read_text_file(source) == "Café"
+
+
+def test_parse_front_matter_supports_aliases_and_close_marker(tmp_path: Path) -> None:
+    source = tmp_path / "alias.md"
+    source.write_text(
+        "---\ntag: [web, high]\ncreated_at: 2026-01-01\nmodified: 2026-02-01\n"
+        "flag: 'flag{alias}'\n...\nBody",
+        encoding="utf-8",
+    )
+    metadata, body = parse_front_matter(read_text_file(source))
+    assert metadata == {
+        "tags": "web,high",
+        "created": "2026-01-01",
+        "updated": "2026-02-01",
+        "flag": "flag{alias}",
+    }
+    assert body == "Body"
+
+
+def test_canonical_front_matter_orders_fields_and_skips_empty_optional() -> None:
+    front = canonical_front_matter(
+        {
+            "title": "T",
+            "status": "todo",
+            "created": "c",
+            "updated": "u",
+            "tags": " web, WEB ",
+            "flag": "",
+            "zeta": "last",
+            "alpha": "first",
+        }
+    )
+    assert front == (
+        '---\ntitle: "T"\nstatus: "todo"\ncreated: "c"\nupdated: "u"\n'
+        'tags: "web"\nalpha: "first"\nzeta: "last"\n---'
+    )
+
+
+def test_standalone_html_helper_renders_toc() -> None:
+    document = render_standalone_html("# One\n\n## Two", title="TOC", toc=True)
+    assert document.startswith("<!doctype html>")
+    assert '<nav class="toc"' in document
+    assert '<h1 id="one">One</h1>' in document
+    assert 'href="#two"' in document
+
+
+def test_note_html_export_includes_toc_and_heading_ids(tmp_path: Path, vault: Vault) -> None:
+    note = vault.create_node("Outline", content="# One\n\n## Two\n\nBody")
+    destination = export_note_html(vault, note.id, tmp_path / "outline.html")
+    content = destination.read_text(encoding="utf-8")
+    assert '<nav class="toc"' in content
+    assert '<h1 id="one">One</h1>' in content
+    assert 'href="#two"' in content
+
+
+def test_vault_markdown_export_avoids_existing_files(tmp_path: Path, vault: Vault) -> None:
+    destination = tmp_path / "mirror"
+    destination.mkdir()
+    (destination / "Root note.md").write_text("keep", encoding="utf-8")
+    vault.create_node("Root note", content="new")
+
+    assert export_vault_markdown(vault, destination) == 1
+    assert (destination / "Root note.md").read_text(encoding="utf-8") == "keep"
+    assert "new" in (destination / "Root note (2).md").read_text(encoding="utf-8")

@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from redscribe.content.highlight import CodeToken, normalize_language, tokenize_code
+from redscribe.content.highlight import (
+    CodeToken,
+    normalize_language,
+    supported_languages,
+    tokenize_code,
+)
 
 
 def _joined(tokens: list[CodeToken]) -> str:
@@ -85,3 +90,47 @@ def test_tokenize_preserves_unicode_and_line_endings() -> None:
     assert _joined(tokens) == code
     assert any("héllo" in token.text for token in tokens)
     assert any(token.kind == "comment" and "naïve" in token.text for token in tokens)
+
+
+def test_tokenize_nested_block_comments() -> None:
+    code = "/* outer /* inner */ still */\nfn main() {}"
+    tokens = tokenize_code(code, "rust")
+    assert _joined(tokens) == code
+    assert [token.text for token in tokens if token.kind == "comment"] == [
+        "/* outer /* inner */ still */"
+    ]
+
+
+def test_comment_and_string_contents_are_not_keywords() -> None:
+    code = '# "not keyword" def\nprint("def")'
+    tokens = tokenize_code(code, "python")
+    assert _joined(tokens) == code
+    assert any(token.kind == "comment" and "def" in token.text for token in tokens)
+    assert any(token.kind == "string" and token.text == '"def"' for token in tokens)
+    assert not any(token.kind == "keyword" and token.text == "def" for token in tokens)
+
+
+def test_tokenize_string_prefixes() -> None:
+    code = 'text = r"raw\\n" + f"value {1}"'
+    tokens = tokenize_code(code, "python")
+    assert _joined(tokens) == code
+    assert any(token.kind == "string" and token.text.startswith('r"') for token in tokens)
+    assert any(token.kind == "string" and token.text.startswith('f"') for token in tokens)
+
+
+def test_html_comments_and_attributes() -> None:
+    code = '<a href="x">hi</a> <!-- note -->'
+    tokens = tokenize_code(code, "html")
+    assert _joined(tokens) == code
+    assert any(token.kind == "comment" and token.text == "<!-- note -->" for token in tokens)
+    assert any(token.kind == "string" and token.text == '"x"' for token in tokens)
+
+
+def test_supported_languages_and_extra_aliases() -> None:
+    languages = supported_languages()
+    assert "python" in languages
+    assert "powershell" in languages
+    assert languages == tuple(sorted(languages))
+    assert normalize_language(" c++ ") == "cpp"
+    tokens = tokenize_code("int x;", "c++")
+    assert any(token.kind == "keyword" and token.text == "int" for token in tokens)

@@ -2,111 +2,40 @@
 
 from __future__ import annotations
 
-import json
-import re
+import codecs
 from pathlib import Path
 
+from redscribe.content.render_frontmatter import (
+    normalize_tag_string as _normalize_tag_string,
+)
+from redscribe.content.render_frontmatter import (
+    parse_front_matter as _parse_front_matter,
+)
+from redscribe.content.render_frontmatter import (
+    title_from_body as _title_from_body,
+)
 from redscribe.domain.models import DIFFICULTIES, STATUSES, Node
 from redscribe.storage.db import Vault
 
-_FRONT_MATTER_KEY = re.compile(r"^(?P<key>[A-Za-z0-9_-]+)\s*:\s*(?P<value>.*)$")
-_FRONT_MATTER_LIST_ITEM = re.compile(r"^\s*-\s+(?P<value>.+?)\s*$")
-_HEADING = re.compile(r"^\s{0,3}#\s+(?P<title>.+?)\s*#*\s*$")
 _MARKDOWN_SUFFIXES = {".md", ".markdown", ".txt"}
 _SKIP_DIRECTORIES = {".git", ".obsidian", ".trash", "node_modules", "__pycache__"}
 
 
 def read_text_file(path: Path) -> str:
-    data = path.read_bytes()
-    for encoding in ("utf-8-sig", "utf-8", "cp1252"):
-        try:
-            return data.decode(encoding)
-        except UnicodeDecodeError:
-            continue
-    return data.decode("utf-8", errors="replace")
+    return _decode_bytes(path.read_bytes())
 
 
 def parse_front_matter(text: str) -> tuple[dict[str, str], str]:
     """Parse a simple YAML front matter block and return metadata plus body."""
-    normalized = text.replace("\r\n", "\n").replace("\r", "\n").lstrip("\ufeff")
-    if not normalized.startswith("---\n"):
-        return {}, normalized
-    lines = normalized.split("\n")
-    end = -1
-    for index in range(1, len(lines)):
-        if lines[index].strip() in {"---", "..."}:
-            end = index
-            break
-    if end < 0:
-        return {}, normalized
-    metadata: dict[str, str] = {}
-    index = 1
-    while index < end:
-        line = lines[index]
-        if not line.strip() or line.lstrip().startswith("#"):
-            index += 1
-            continue
-        match = _FRONT_MATTER_KEY.match(line)
-        if not match:
-            index += 1
-            continue
-        key = match.group("key").strip().lower()
-        value = _clean_value(match.group("value").strip())
-        index += 1
-        if key == "tags":
-            if value:
-                value = normalize_tags(value)
-            else:
-                items: list[str] = []
-                while index < end:
-                    item = _FRONT_MATTER_LIST_ITEM.match(lines[index])
-                    if item is None:
-                        break
-                    items.append(_clean_value(item.group("value")))
-                    index += 1
-                value = normalize_tags(",".join(items))
-        metadata[key] = value
-    body = "\n".join(lines[end + 1 :]).lstrip("\n")
-    return metadata, body
-
-
-def _clean_value(value: str) -> str:
-    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
-        if value[0] == '"':
-            try:
-                parsed = json.loads(value)
-                if isinstance(parsed, str):
-                    return parsed
-            except json.JSONDecodeError:
-                pass
-        return value[1:-1]
-    return value
+    return _parse_front_matter(text)
 
 
 def normalize_tags(value: str) -> str:
-    cleaned = value.strip()
-    if cleaned.startswith("[") and cleaned.endswith("]"):
-        cleaned = cleaned[1:-1]
-    tags: list[str] = []
-    seen: set[str] = set()
-    for part in cleaned.split(","):
-        tag = part.strip()
-        key = tag.casefold()
-        if tag and key not in seen:
-            seen.add(key)
-            tags.append(tag)
-    return ",".join(tags)
+    return _normalize_tag_string(value)
 
 
 def title_from_body(body: str, fallback: str) -> str:
-    for line in body.splitlines():
-        if not line.strip():
-            continue
-        match = _HEADING.match(line)
-        if match:
-            return match.group("title").strip() or fallback
-        break
-    return fallback
+    return _title_from_body(body, fallback)
 
 
 def import_markdown_file(vault: Vault, path: str | Path, parent_id: int | None = None) -> Node:
@@ -169,3 +98,20 @@ def import_directory(
         vault.delete_node(folder.id, permanent=True)
         return None, 0
     return folder, count
+
+
+def _decode_bytes(data: bytes) -> str:
+    if data.startswith(codecs.BOM_UTF32_LE):
+        return data.decode("utf-32")
+    if data.startswith(codecs.BOM_UTF32_BE):
+        return data.decode("utf-32")
+    if data.startswith(codecs.BOM_UTF16_LE):
+        return data.decode("utf-16")
+    if data.startswith(codecs.BOM_UTF16_BE):
+        return data.decode("utf-16")
+    for encoding in ("utf-8-sig", "utf-8", "cp1252"):
+        try:
+            return data.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    return data.decode("utf-8", errors="replace")

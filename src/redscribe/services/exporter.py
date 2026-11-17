@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import html
-import json
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-from redscribe.content.markdown import DOCUMENT_CSS, render_html, render_markdown_body
+from redscribe.content.markdown import DOCUMENT_CSS, render_markdown_body
+from redscribe.content.render import render_standalone_html
+from redscribe.content.render_frontmatter import canonical_front_matter
 from redscribe.domain.models import Node
 from redscribe.domain.utils import safe_filename
 from redscribe.storage.db import Vault
@@ -77,24 +78,17 @@ _VAULT_CSS = """
 
 
 def note_front_matter(node: Node) -> str:
-    values: list[tuple[str, str]] = [
-        ("title", node.title),
-        ("status", node.status),
-        ("created", node.created_at),
-        ("updated", node.updated_at),
-    ]
-    if node.tags:
-        values.append(("tags", node.tags))
-    if node.target:
-        values.append(("target", node.target))
-    if node.difficulty:
-        values.append(("difficulty", node.difficulty))
-    if node.flag:
-        values.append(("flag", node.flag))
-    lines = ["---"]
-    lines.extend(f"{key}: {json.dumps(value, ensure_ascii=False)}" for key, value in values)
-    lines.append("---")
-    return "\n".join(lines)
+    values: dict[str, str] = {
+        "title": node.title,
+        "status": node.status,
+        "created": node.created_at,
+        "updated": node.updated_at,
+        "tags": node.tags,
+        "target": node.target,
+        "difficulty": node.difficulty,
+        "flag": node.flag,
+    }
+    return canonical_front_matter(values)
 
 
 def note_to_markdown(node: Node) -> str:
@@ -132,11 +126,12 @@ def export_note_html(vault: Vault, node_id: int, destination: str | Path) -> Pat
         ("Updated", node.updated_at),
     ]
     path = vault.path_of(node.id, include_self=False)
-    document = render_html(
+    document = render_standalone_html(
         node.content,
-        node.title,
+        title=node.title,
         subtitle=path or "RedScribe note",
         meta=meta,
+        toc=True,
     )
     target.write_text(document, encoding="utf-8", newline="\n")
     return target
@@ -151,7 +146,7 @@ def export_vault_markdown(vault: Vault, destination: str | Path) -> int:
 
     def walk(parent_id: int | None, directory: Path) -> None:
         nonlocal count
-        used: set[str] = set()
+        used: set[str] = {child.name.casefold() for child in directory.iterdir()}
         for node in groups.get(parent_id, []):
             if node.is_folder:
                 folder_name = _unique_name(
