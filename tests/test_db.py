@@ -3,13 +3,24 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 
 from redscribe.domain.models import Node, VaultStats
+from redscribe.storage import ISSUE_CODES, IntegrityReport
 from redscribe.storage import db as storage_db
 from redscribe.storage.db import SCHEMA_VERSION, Vault
+from redscribe.storage.integrity import IndexDrift, IntegrityIssue
+from redscribe.storage.retention import (
+    AutoBackup,
+    CheckpointResult,
+    PruneResult,
+    list_auto_backups,
+    parse_auto_backup,
+)
 
 
 def test_new_vault_is_empty(vault: Vault) -> None:
@@ -573,3 +584,439 @@ def test_live_nodes_round_trip(vault: Vault) -> None:
     live = vault.live_nodes()
     assert {node.id for node in live} == {folder.id, note.id}
     assert all(isinstance(node, Node) for node in live)
+
+
+@contextmanager
+def _without_foreign_keys(vault: Vault) -> Iterator[sqlite3.Connection]:
+    connection = vault.connection
+    connection.execute("PRAGMA foreign_keys = OFF")
+    try:
+        yield connection
+    finally:
+        connection.execute("PRAGMA foreign_keys = ON")
+
+
+def _raw_node(
+    connection: sqlite3.Connection,
+    *,
+    parent_id: int | None = None,
+    title: str = "Raw",
+    kind: str = "note",
+    tags: str = "",
+    deleted_at: str | None = None,
+) -> int:
+    stamp = "2026-01-01T00:00:00Z"
+    cursor = connection.execute(
+        "INSERT INTO nodes (parent_id, title, kind, content, tags, target, status, "
+        "difficulty, flag, pinned, sort_order, created_at, updated_at, deleted_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            parent_id,
+            title,
+            kind,
+            "",
+            tags,
+            "",
+            "todo",
+            "",
+            "",
+            0,
+            0,
+            stamp,
+            stamp,
+            deleted_at,
+        ),
+    )
+    connection.commit()
+    return int(cursor.lastrowid)
+
+
+def test_integrity_report_clean_vault(vault: Vault) -> None:
+    report = vault.integrity_report()
+    assert isinstance(report, IntegrityReport)
+    assert report.ok is True
+    assert report.issues == ()
+    assert report.nodes_checked == 0
+    assert report.settings_checked == 0
+    assert report.schema_version == SCHEMA_VERSION
+    assert report.fts_enabled is True
+    assert report.error_count == 0
+    assert report.warning_count == 0
+    assert report.codes() == frozenset()
+    assert report.counts() == {}
+    payload = report.as_dict()
+    assert payload["ok"] is True
+    assert payload["issues"] == []
+    assert payload["nodes_checked"] == 0
+
+
+def test_integrity_report_counts_nodes_and_settings(vault: Vault) -> None:
+    vault.create_node("One")
+    vault.create_node("Two")
+    vault.set_setting("theme", "dark")
+    report = vault.integrity_report()
+    assert report.nodes_checked == 2
+    assert report.settings_checked == 1
+    assert report.ok is True
+
+
+def test_integrity_report_detects_missing_parent(vault: Vault) -> None:
+    note = vault.create_node("Lost")
+    with _without_foreign_keys(vault) as connection:
+        connection.execute("UPDATE nodes SET parent_id = 9999 WHERE id = ?", (note.id,))
+        connection.commit()
+    report = vault.integrity_report()
+    issues = [issue for issue in report.issues if issue.code == "missing_parent"]
+    assert len(issues) == 1
+    assert isinstance(issues[0], IntegrityIssue)
+    assert issues[0].node_id == note.id
+    assert issues[0].severity == "error"
+    assert issues[0].related_ids == (9999,)
+    assert report.ok is False
+    assert report.error_count == 1
+    assert report.codes() == frozenset({"missing_parent"})
+
+
+def test_integrity_report_detects_orphan_with_note_parent(vault: Vault) -> None:
+    parent = vault.create_node("Container", content="x")
+    with _without_foreign_keys(vault) as connection:
+        child_id = _raw_node(connection, parent_id=parent.id, title="Child")
+    issues = [issue for issue in vault.integrity_report().issues if issue.code == "orphan_node"]
+    assert [issue.node_id for issue in issues] == [child_id]
+    assert issues[0].severity == "warning"
+    assert issues[0].related_ids == (parent.id,)
+
+
+def test_integrity_report_detects_live_node_with_deleted_parent(vault: Vault) -> None:
+    folder = vault.create_node("Folder", kind="folder")
+    child = vault.create_node("Child", folder.id)
+    with _without_foreign_keys(vault) as connection:
+        connection.execute(
+            "UPDATE nodes SET deleted_at = ? WHERE id = ?",
+            ("2026-01-01T00:00:00Z", folder.id),
+        )
+        connection.commit()
+    issues = [issue for issue in vault.integrity_report().issues if issue.code == "orphan_node"]
+    assert [issue.node_id for issue in issues] == [child.id]
+    assert "deleted parent" in issues[0].message
+
+
+def test_integrity_report_detects_two_node_cycle(vault: Vault) -> None:
+    first = vault.create_node("First", kind="folder")
+    second = vault.create_node("Second", first.id, kind="folder")
+    with _without_foreign_keys(vault) as connection:
+        connection.execute("UPDATE nodes SET parent_id = ? WHERE id = ?", (second.id, first.id))
+        connection.commit()
+    issues = [issue for issue in vault.integrity_report().issues if issue.code == "cycle"]
+    assert len(issues) == 1
+    assert issues[0].node_id == first.id
+    assert issues[0].related_ids == tuple(sorted((first.id, second.id)))
+    assert "cycle" in issues[0].message.lower()
+    assert vault.integrity_report().ok is False
+
+
+def test_integrity_report_detects_self_cycle(vault: Vault) -> None:
+    note = vault.create_node("Self", kind="folder")
+    with _without_foreign_keys(vault) as connection:
+        connection.execute("UPDATE nodes SET parent_id = ? WHERE id = ?", (note.id, note.id))
+        connection.commit()
+    issues = [issue for issue in vault.integrity_report().issues if issue.code == "cycle"]
+    assert len(issues) == 1
+    assert issues[0].related_ids == (note.id,)
+
+
+def test_integrity_report_detects_invalid_tags(vault: Vault) -> None:
+    bad = vault.create_node("Bad tags")
+    other = vault.create_node("Control tags")
+    good = vault.create_node("Good tags", tags="web, ctf")
+    connection = vault.connection
+    connection.execute("UPDATE nodes SET tags = ? WHERE id = ?", (" a , a , b", bad.id))
+    connection.execute("UPDATE nodes SET tags = ? WHERE id = ?", ("tag\nline", other.id))
+    connection.commit()
+    issues = [issue for issue in vault.integrity_report().issues if issue.code == "invalid_tag"]
+    assert [issue.node_id for issue in issues] == sorted((bad.id, other.id))
+    assert good.id not in {issue.node_id for issue in issues}
+
+
+def test_integrity_report_detects_duplicate_slugs(vault: Vault) -> None:
+    first = vault.create_node("Same Title")
+    second = vault.create_node("same title")
+    vault.create_node("Other")
+    trashed = vault.create_node("Same Title")
+    vault.delete_node(trashed.id)
+    issues = [issue for issue in vault.integrity_report().issues if issue.code == "duplicate_slug"]
+    assert len(issues) == 1
+    assert issues[0].key == "same-title"
+    assert issues[0].related_ids == (first.id, second.id)
+    assert issues[0].severity == "warning"
+
+
+def test_integrity_report_detects_bad_json_settings(vault: Vault) -> None:
+    vault.set_setting("broken", "{not json")
+    vault.set_setting("broken_list", "[1, 2")
+    vault.set_setting("plain", "hello")
+    vault.set_json_setting("layout", {"width": 240})
+    issues = [
+        issue for issue in vault.integrity_report().issues if issue.code == "invalid_json_setting"
+    ]
+    assert [issue.key for issue in issues] == ["broken", "broken_list"]
+    assert len({issue.key for issue in issues}) == 2
+
+
+def test_integrity_report_accepts_extra_json_keys(vault: Vault) -> None:
+    vault.set_setting("custom", "nope")
+    assert vault.integrity_report().codes() == frozenset()
+    report = vault.integrity_report(json_keys=["custom"])
+    assert report.codes() == frozenset({"invalid_json_setting"})
+    assert report.counts() == {"invalid_json_setting": 1}
+
+
+def test_integrity_report_detects_fts_drift_and_repair_fixes_it(vault: Vault) -> None:
+    note = vault.create_node("Needle", content="needle alpha")
+    extra = vault.create_node("Extra", content="beta")
+    connection = vault.connection
+    for trigger in ("nodes_fts_ai", "nodes_fts_ad", "nodes_fts_au"):
+        connection.execute(f"DROP TRIGGER {trigger}")
+    connection.commit()
+    connection.execute("UPDATE nodes SET content = ? WHERE id = ?", ("needle omega", note.id))
+    connection.commit()
+    with _without_foreign_keys(vault) as raw:
+        raw.execute("DELETE FROM nodes WHERE id = ?", (extra.id,))
+        raw.commit()
+    report = vault.integrity_report()
+    assert {"fts_drift", "fts_missing_trigger"} <= report.codes()
+    drift = vault.index_drift()
+    assert isinstance(drift, IndexDrift)
+    assert note.id in drift.changed_ids
+    assert extra.id in drift.stale_ids
+    assert len(drift.missing_triggers) == 3
+    result = vault.repair_index()
+    assert result.rebuilt is True
+    assert result.rows_fixed >= 2
+    assert result.triggers_restored == 3
+    assert result.remaining_drift == 0
+    assert vault.index_drift().clean is True
+    assert [hit.node_id for hit in vault.search("omega")] == [note.id]
+    assert vault.integrity_report().ok is True
+
+
+def test_repair_index_is_noop_when_clean(vault: Vault) -> None:
+    vault.create_node("Note", content="alpha")
+    assert vault.index_drift().clean is True
+    result = vault.repair_index()
+    assert result.rebuilt is False
+    assert result.rows_fixed == 0
+    assert result.triggers_restored == 0
+    assert result.remaining_drift == 0
+    assert result.as_dict()["rebuilt"] is False
+    assert vault.index_drift().clean is True
+
+
+def test_repair_index_when_fts_disabled(vault: Vault) -> None:
+    vault.fts_enabled = False
+    result = vault.repair_index()
+    assert result.rebuilt is False
+    assert vault.index_drift().clean is True
+    report = vault.integrity_report()
+    assert report.fts_enabled is False
+    assert report.codes() == frozenset()
+
+
+def test_integrity_report_detects_missing_fts_index_and_repairs(
+    vault_factory: Callable[..., Vault],
+) -> None:
+    vault = vault_factory("broken-index.db")
+    vault.create_node("Note", content="alpha")
+    connection = vault.connection
+    for trigger in ("nodes_fts_ai", "nodes_fts_ad", "nodes_fts_au"):
+        connection.execute(f"DROP TRIGGER IF EXISTS {trigger}")
+    connection.execute("DROP TABLE nodes_fts")
+    connection.commit()
+    report = vault.integrity_report()
+    assert "fts_missing_index" in report.codes()
+    assert report.error_count == 1
+    result = vault.repair_index()
+    assert result.rebuilt is True
+    assert result.triggers_restored == 3
+    assert vault.index_drift().clean is True
+    assert [hit.node_id for hit in vault.search("alpha")] != []
+
+
+def test_integrity_report_issues_are_sorted(vault: Vault) -> None:
+    vault.create_node("Duplicate")
+    vault.create_node("Duplicate")
+    vault.set_setting("bad", "{oops")
+    connection = vault.connection
+    connection.execute(
+        "UPDATE nodes SET tags = ? WHERE id = (SELECT MIN(id) FROM nodes)",
+        (" a , a ",),
+    )
+    connection.commit()
+    report = vault.integrity_report()
+    codes = [issue.code for issue in report.issues]
+    assert codes == sorted(codes, key=ISSUE_CODES.index)
+    assert report.counts() == {
+        "invalid_tag": 1,
+        "duplicate_slug": 1,
+        "invalid_json_setting": 1,
+    }
+    payload = report.as_dict()
+    assert all(isinstance(entry["related_ids"], list) for entry in payload["issues"])
+
+
+def test_issue_codes_are_unique() -> None:
+    assert len(ISSUE_CODES) == len(set(ISSUE_CODES))
+
+
+def test_prune_versions_keeps_newest_per_node(vault: Vault) -> None:
+    first = vault.create_node("First", content="v0")
+    second = vault.create_node("Second", content="v0")
+    for status in ("active", "done", "blocked", "todo"):
+        vault.update_node(first.id, status=status)
+    for tag in ("a", "b"):
+        vault.update_node(second.id, tags=tag)
+    first_ids = [entry["id"] for entry in vault.list_versions(first.id)]
+    second_ids = [entry["id"] for entry in vault.list_versions(second.id)]
+    assert len(first_ids) >= 3
+    assert len(second_ids) >= 2
+    result = vault.prune_versions(1)
+    assert isinstance(result, PruneResult)
+    assert result.versions_removed == len(first_ids) + len(second_ids) - 2
+    assert result.nodes_affected == 2
+    assert result.orphan_versions_removed == 0
+    assert [entry["id"] for entry in vault.list_versions(first.id)] == first_ids[:1]
+    assert [entry["id"] for entry in vault.list_versions(second.id)] == second_ids[:1]
+    assert result.as_dict()["nodes_affected"] == 2
+
+
+def test_prune_versions_zero_clears_history(vault: Vault) -> None:
+    note = vault.create_node("Note")
+    vault.update_node(note.id, status="done")
+    assert vault.list_versions(note.id) != []
+    result = vault.prune_versions(0)
+    assert result.versions_removed >= 1
+    assert vault.list_versions(note.id) == []
+    with pytest.raises(ValueError, match="non-negative"):
+        vault.prune_versions(-1)
+
+
+def test_prune_versions_removes_orphan_history(vault: Vault) -> None:
+    note = vault.create_node("Note")
+    vault.update_node(note.id, status="done")
+    with _without_foreign_keys(vault) as connection:
+        connection.execute(
+            "INSERT INTO nodes_history (node_id, title, content, tags, target, status, "
+            "difficulty, flag, created_at) VALUES (?, 'Ghost', '', '', '', '', '', '', ?)",
+            (99999, "2026-01-01T00:00:00Z"),
+        )
+        connection.commit()
+    result = vault.prune_versions(5)
+    assert result.orphan_versions_removed == 1
+
+
+def test_backup_to_auto_rotation_keeps_newest_and_user_backups(tmp_path: Path) -> None:
+    with Vault(tmp_path / "vault.db") as vault:
+        created = [vault.backup_to_auto() for _ in range(4)]
+        user_backup = tmp_path / "backups" / "my-manual-backup.db"
+        user_backup.write_bytes(b"user data")
+        newest = vault.backup_to_auto(max_backups=2)
+    remaining = {path.name for path in (tmp_path / "backups").iterdir()}
+    assert newest.name in remaining
+    assert created[-1].name in remaining
+    assert created[0].name not in remaining
+    assert created[1].name not in remaining
+    assert created[2].name not in remaining
+    assert user_backup.read_bytes() == b"user data"
+    automatic = [name for name in remaining if name.startswith("vault-")]
+    assert len(automatic) == 2
+
+
+def test_backup_to_auto_rotation_orders_by_timestamp(tmp_path: Path) -> None:
+    directory = tmp_path / "backups"
+    directory.mkdir()
+    for stamp in ("20260101T000000Z", "20260102T000000Z", "20260103T000000Z"):
+        (directory / f"vault-{stamp}.db").write_bytes(b"old")
+    user_backup = directory / "notes-export.db"
+    user_backup.write_bytes(b"user")
+    with Vault(tmp_path / "vault.db") as vault:
+        newest = vault.backup_to_auto(max_backups=2)
+    remaining = {path.name for path in directory.iterdir()}
+    assert newest.name in remaining
+    assert "vault-20260103T000000Z.db" in remaining
+    assert "vault-20260102T000000Z.db" not in remaining
+    assert "vault-20250101T000000Z.db" not in remaining
+    assert user_backup.read_bytes() == b"user"
+
+
+def test_backup_to_auto_without_max_keeps_all(vault: Vault) -> None:
+    created = [vault.backup_to_auto() for _ in range(4)]
+    assert all(path.exists() for path in created)
+    assert len(created) == len(set(created))
+
+
+def test_backup_to_auto_rejects_non_positive_rotation(vault: Vault) -> None:
+    with pytest.raises(ValueError, match="at least 1"):
+        vault.backup_to_auto(max_backups=0)
+    with pytest.raises(ValueError, match="at least 1"):
+        vault.backup_to_auto(max_backups=-2)
+    directory = vault.path.parent / "backups"
+    assert not directory.exists()
+
+
+def test_backup_to_auto_rotation_for_memory_vault(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(storage_db.tempfile, "gettempdir", lambda: str(tmp_path))
+    with Vault(":memory:") as vault:
+        first = vault.backup_to_auto()
+        second = vault.backup_to_auto(max_backups=1)
+    directory = tmp_path / "redscribe-backups"
+    assert [entry.path.name for entry in list_auto_backups(directory)] == [second.name]
+    assert first.exists() is False
+
+
+def test_parse_auto_backup_and_list(tmp_path: Path) -> None:
+    directory = tmp_path / "backups"
+    directory.mkdir()
+    names = (
+        "vault-20260101T000000Z.db",
+        "vault-20260101T000000Z-2.db",
+        "vault-20260101T000000Z-10.db",
+        "manual.db",
+    )
+    for name in names:
+        (directory / name).write_bytes(b"x")
+    entries = list_auto_backups(directory)
+    assert [entry.sequence for entry in entries] == [0, 2, 10]
+    assert [entry.sort_key for entry in entries] == sorted(entry.sort_key for entry in entries)
+    assert parse_auto_backup(Path("manual.db")) is None
+    entry = parse_auto_backup(Path("vault-20260101T000000Z-10.db"))
+    assert isinstance(entry, AutoBackup)
+    assert entry.stamp == "20260101T000000Z"
+    assert entry.sequence == 10
+    assert list_auto_backups(tmp_path / "missing") == []
+
+
+def test_checkpoint_and_optimize(vault: Vault) -> None:
+    vault.create_node("Note")
+    result = vault.checkpoint()
+    assert isinstance(result, CheckpointResult)
+    assert result.mode == "TRUNCATE"
+    assert result.busy == 0
+    assert result.log >= 0
+    assert result.checkpointed >= 0
+    assert result.as_dict()["mode"] == "TRUNCATE"
+    passive = vault.checkpoint(mode="passive")
+    assert passive.mode == "PASSIVE"
+    with pytest.raises(ValueError, match="Unsupported checkpoint mode"):
+        vault.checkpoint(mode="NOPE")
+    vault.optimize()
+
+
+def test_checkpoint_memory_vault() -> None:
+    with Vault(":memory:") as vault:
+        result = vault.checkpoint()
+        assert result.busy == 0
+        assert result.log == -1
+        assert result.checkpointed == -1
+        vault.optimize()

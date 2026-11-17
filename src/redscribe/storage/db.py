@@ -8,7 +8,7 @@ import logging
 import re
 import sqlite3
 import tempfile
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TypeVar, cast
@@ -26,6 +26,22 @@ from redscribe.domain.models import (
     VaultStats,
 )
 from redscribe.domain.utils import collapse_whitespace, slugify, truncate, utc_now
+from redscribe.storage.integrity import (
+    FTS_TRIGGERS,
+    IndexDrift,
+    IndexRepairResult,
+    IntegrityReport,
+    contains_control_characters,
+    index_drift,
+    normalize_tags,
+    scan_integrity,
+)
+from redscribe.storage.retention import (
+    CheckpointResult,
+    PruneResult,
+    rotate_auto_backups,
+    validate_checkpoint_mode,
+)
 
 LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -109,7 +125,7 @@ _MIGRATIONS: dict[int, str] = {
     3: _MIGRATION_3,
 }
 
-_FTS_TRIGGERS = ("nodes_fts_ai", "nodes_fts_ad", "nodes_fts_au")
+_FTS_TRIGGERS = FTS_TRIGGERS
 
 _FTS_SCHEMA = """
 CREATE VIRTUAL TABLE IF NOT EXISTS nodes_fts USING fts5(
@@ -148,32 +164,6 @@ _ALLOWED_UPDATE_FIELDS = {
     "flag",
     "pinned",
 }
-
-
-def normalize_tags(raw: str) -> str:
-    """Normalize a comma-separated tag list.
-
-    Trims each tag, collapses internal whitespace, drops empties, and
-    de-duplicates case-insensitively (first occurrence wins). The stored
-    format stays human-readable ``a, b, c``.
-    """
-    seen: set[str] = set()
-    tags: list[str] = []
-    for piece in raw.split(","):
-        normalized = re.sub(r"\s+", " ", piece).strip()
-        if not normalized:
-            continue
-        key = normalized.casefold()
-        if key in seen:
-            continue
-        seen.add(key)
-        tags.append(normalized)
-    return ", ".join(tags)
-
-
-def contains_control_characters(value: str) -> bool:
-    """Return whether a single-line field carries control characters."""
-    return any(ord(character) < 32 and character not in "\t" for character in value)
 
 
 class Vault:
@@ -1070,6 +1060,45 @@ class Vault:
         with self._connection:
             self._connection.execute("INSERT INTO nodes_fts(nodes_fts) VALUES('rebuild')")
 
+    def integrity_report(self, *, json_keys: Iterable[str] = ()) -> IntegrityReport:
+        """Return a deterministic, sorted snapshot of vault health issues."""
+        return scan_integrity(
+            self._connection,
+            schema_version=self.schema_version,
+            fts_enabled=self.fts_enabled,
+            json_keys=json_keys,
+        )
+
+    def index_drift(self) -> IndexDrift:
+        """Return row-level differences between the nodes table and FTS index."""
+        if not self.fts_enabled:
+            return IndexDrift()
+        return index_drift(self._connection, triggers=_FTS_TRIGGERS)
+
+    def repair_index(self) -> IndexRepairResult:
+        """Rebuild FTS data and restore triggers only when drift is present."""
+        if not self.fts_enabled:
+            return IndexRepairResult()
+        drift = index_drift(self._connection, triggers=_FTS_TRIGGERS)
+        if drift.clean:
+            return IndexRepairResult()
+        rows_fixed = drift.rows
+        triggers_restored = len(drift.missing_triggers)
+        if drift.missing_index or drift.missing_triggers:
+            self._connection.executescript(_FTS_SCHEMA)
+        if drift.missing_index or drift.corrupt or rows_fixed:
+            with self._connection:
+                self._connection.execute("INSERT INTO nodes_fts(nodes_fts) VALUES('rebuild')")
+        remaining = index_drift(self._connection, triggers=_FTS_TRIGGERS)
+        if not remaining.clean:
+            LOGGER.warning("FTS index still reports drift after repair")
+        return IndexRepairResult(
+            rebuilt=bool(drift.missing_index or drift.corrupt or rows_fixed),
+            rows_fixed=rows_fixed,
+            triggers_restored=triggers_restored,
+            remaining_drift=remaining.rows,
+        )
+
     # ------------------------------------------------------------------
     # Version history
     # ------------------------------------------------------------------
@@ -1206,6 +1235,40 @@ class Vault:
             raise RuntimeError("Restored node could not be read back")
         return restored
 
+    def prune_versions(self, keep: int) -> PruneResult:
+        """Keep the newest ``keep`` versions per node and drop the rest."""
+        if keep < 0:
+            raise ValueError("keep must be non-negative")
+        with self._connection:
+            orphan_cursor = self._connection.execute(
+                "DELETE FROM nodes_history WHERE node_id NOT IN (SELECT id FROM nodes)"
+            )
+            orphan_removed = max(0, orphan_cursor.rowcount)
+            node_ids = [
+                int(row[0])
+                for row in self._connection.execute(
+                    "SELECT DISTINCT node_id FROM nodes_history ORDER BY node_id"
+                )
+            ]
+            removed = 0
+            affected = 0
+            for node_id in node_ids:
+                cursor = self._connection.execute(
+                    "DELETE FROM nodes_history WHERE node_id = ? AND id NOT IN ("
+                    "  SELECT id FROM nodes_history WHERE node_id = ? ORDER BY id DESC LIMIT ?"
+                    ")",
+                    (node_id, node_id, keep),
+                )
+                count = max(0, cursor.rowcount)
+                if count:
+                    removed += count
+                    affected += 1
+        return PruneResult(
+            versions_removed=removed,
+            nodes_affected=affected,
+            orphan_versions_removed=orphan_removed,
+        )
+
     def paths_map(self, *, include_self: bool = True) -> dict[int, str]:
         """Return ``{node_id: path}`` for every node in one pass (no per-node queries)."""
         rows = self._connection.execute("SELECT id, parent_id, title FROM nodes").fetchall()
@@ -1236,13 +1299,16 @@ class Vault:
 
         return {node_id: path_of(node_id) for node_id in titles}
 
-    def backup_to_auto(self) -> Path:
+    def backup_to_auto(self, max_backups: int | None = None) -> Path:
         """Write an automatic backup next to the vault before destructive actions.
 
         The filename carries a full ``YYYYMMDDTHHMMSSZ`` timestamp and, if that
         already exists, a numeric suffix, so a backup is never silently
-        overwritten by a later one within the same second.
+        overwritten by a later one within the same second. When ``max_backups``
+        is set, only automatic backups are rotated; user-named backups are kept.
         """
+        if max_backups is not None and max_backups < 1:
+            raise ValueError("max_backups must be at least 1")
         if self.path is None:
             directory = Path(tempfile.gettempdir()) / "redscribe-backups"
         else:
@@ -1254,6 +1320,8 @@ class Vault:
             target = directory / f"vault-{stamp}-{counter}.db"
             counter += 1
         self.backup_to(target)
+        if max_backups is not None:
+            rotate_auto_backups(directory, keep=max_backups, exclude=target)
         return target
 
     def backup_to(self, destination: str | Path) -> Path:
@@ -1275,6 +1343,23 @@ class Vault:
         with tempfile.TemporaryDirectory(prefix="redscribe-backup-") as directory:
             target = self.backup_to(Path(directory) / "vault.db")
             return target.read_bytes()
+
+    def checkpoint(self, *, mode: str = "TRUNCATE") -> CheckpointResult:
+        """Checkpoint the write-ahead log and return SQLite's counters."""
+        normalized = validate_checkpoint_mode(mode)
+        row = self._connection.execute(f"PRAGMA wal_checkpoint({normalized})").fetchone()
+        if row is None:
+            return CheckpointResult(mode=normalized, busy=0, log=0, checkpointed=0)
+        return CheckpointResult(
+            mode=normalized,
+            busy=int(row[0]),
+            log=int(row[1]),
+            checkpointed=int(row[2]),
+        )
+
+    def optimize(self) -> None:
+        """Refresh SQLite's query planner statistics for this vault."""
+        self._connection.execute("PRAGMA optimize")
 
     def iter_notes(self) -> Iterator[Node]:
         rows = self._connection.execute(
