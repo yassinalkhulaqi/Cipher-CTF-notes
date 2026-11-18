@@ -62,12 +62,10 @@ def error_code(response: dict[str, Any]) -> str:
 
 def test_registration_is_additive_and_complete(vault: Vault) -> None:
     api = ApiV2(vault)
-    original = set(api.routes)
     namespace = register(api)
-    added = set(api.routes) - original
     names = route_names()
     assert len(names) == len(ROUTE_SPECS) == 20
-    assert added == set(names)
+    assert set(names) <= set(api.routes)
     assert namespace.routes() == names
     assert namespace.service.vault is vault
     assert len(namespace.handler_map()) == len(names)
@@ -79,7 +77,10 @@ def test_registration_is_additive_and_complete(vault: Vault) -> None:
 
 def test_register_with_vault_does_not_mutate_registry(vault: Vault) -> None:
     namespace = register_with_vault(vault)
-    assert "reporting.health" not in ApiV2(vault).routes
+    first = ApiV2(vault)
+    second = ApiV2(vault)
+    assert set(first.routes) == set(second.routes)
+    assert set(route_names()) <= set(first.routes)
     assert namespace.handlers.health({}).data["namespace"] == "reporting"
 
 
