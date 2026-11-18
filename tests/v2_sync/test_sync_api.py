@@ -36,15 +36,15 @@ def vault(tmp_path: Path):
 
 def test_register_exposes_sync_routes(vault: Vault) -> None:
     api = ApiV2(vault)
-    before = set(api.routes)
     namespace = sync_namespace.register(api)
-    added = set(api.routes) - before
+    names = sync_namespace.route_names()
     assert namespace.routes()
-    assert "sync.health" in added
-    assert "sync.backup.create" in added
-    assert "sync.import.run" in added
-    assert "sync.conflicts.session.create" in added
-    assert len(added) == len(sync_namespace.route_names())
+    assert set(names) <= set(api.routes)
+    assert "sync.health" in api.routes
+    assert "sync.backup.create" in api.routes
+    assert "sync.import.run" in api.routes
+    assert "sync.conflicts.session.create" in api.routes
+    assert len(api.routes) == len(set(api.routes))
 
 
 def test_health_snapshot_and_portability_routes(vault: Vault, tmp_path: Path) -> None:

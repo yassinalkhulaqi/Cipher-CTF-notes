@@ -12,11 +12,12 @@ from redscribe.ui.web.v2.routes import ApiV2
 INSTALLED_FLAG = "_v2_namespaces_installed"
 
 
+def _module_names() -> list[str]:
+    return sorted(info.name for info in pkgutil.iter_modules(__path__))
+
+
 def _modules() -> list[Any]:
-    modules: list[Any] = []
-    for info in pkgutil.iter_modules(__path__):
-        modules.append(importlib.import_module(f"{__name__}.{info.name}"))
-    return modules
+    return [importlib.import_module(f"{__name__}.{name}") for name in _module_names()]
 
 
 def register_all(api: ApiV2) -> ApiV2:
@@ -50,6 +51,8 @@ def installed() -> bool:
 
 
 def __getattr__(name: str) -> Any:
+    if name in _module_names():
+        return importlib.import_module(f"{__name__}.{name}")
     for module in _modules():
         if hasattr(module, name):
             return getattr(module, name)
