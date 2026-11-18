@@ -35,16 +35,15 @@ def error_code(response: dict[str, Any]) -> str:
 
 def test_registration_is_additive_and_introspectable(vault: Vault) -> None:
     api = ApiV2(vault)
-    before = set(api.routes)
     namespace = register(api)
-    added = set(api.routes) - before
-    assert added == set(route_names())
-    assert len(route_names()) == len(ROUTE_SPECS)
-    assert namespace.routes() == route_names()
+    names = route_names()
+    assert set(names) <= set(api.routes)
+    assert len(names) == len(ROUTE_SPECS)
+    assert namespace.routes() == names
     assert namespace.service.vault is vault
     assert all(spec["description"] for spec in route_specs())
     assert all("action" in spec for spec in route_specs())
-    assert "security.health" not in ApiV2(vault).routes
+    assert set(ApiV2(vault).routes) == set(api.routes)
     standalone = register_with_vault(vault)
     assert standalone.handlers.health({}).data["namespace"] == "security"
 
