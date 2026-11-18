@@ -15,6 +15,8 @@ const unitTests = [
   "commands.test.ts",
   "apiClient.test.ts",
   "blocks.test.ts",
+  "evidence.test.ts",
+  "engagements.test.ts",
 ];
 
 async function typecheck() {

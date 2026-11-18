@@ -11,8 +11,11 @@ from redscribe.ui.web.v2.contracts import (
     envelope,
     error_envelope,
 )
+from redscribe.ui.web.v2.namespaces import install_namespaces
 from redscribe.ui.web.v2.router import V2Router
 from redscribe.ui.web.v2.routes import ApiV2
+
+install_namespaces()
 
 __all__ = [
     "API_VERSION",
