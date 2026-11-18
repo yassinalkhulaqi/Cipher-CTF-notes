@@ -69,7 +69,8 @@ def test_register_uses_additive_hook(vault: Vault) -> None:
 
     namespace.register(api)
 
-    assert len(api.routes) == 58
+    assert set(route_names()) <= set(api.routes)
+    assert len(api.routes) == len(set(api.routes))
     assert api.route("snippets.list").mutating is False
     assert api.route("playbooks.create").mutating is True
     assert api.route("runs.start").entity_type == "run"
