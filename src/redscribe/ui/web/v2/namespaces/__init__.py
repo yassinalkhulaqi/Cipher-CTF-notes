@@ -3,7 +3,13 @@
 from __future__ import annotations
 
 from redscribe.storage.db import Vault
-from redscribe.ui.web.v2.namespaces import evidence
+from redscribe.ui.web.v2.namespaces import engagements, evidence
+from redscribe.ui.web.v2.namespaces.engagements import (
+    EngagementNamespace,
+    configure,
+    register,
+    route_names,
+)
 from redscribe.ui.web.v2.routes import ApiV2
 
 INSTALLED_FLAG = "_v2_namespaces_installed"
@@ -11,6 +17,7 @@ INSTALLED_FLAG = "_v2_namespaces_installed"
 
 def register_all(api: ApiV2) -> ApiV2:
     """Register every optional namespace on an API v2 instance."""
+    engagements.register(api)
     evidence.register(api)
     return api
 
@@ -35,4 +42,12 @@ def installed() -> bool:
     return bool(getattr(ApiV2, INSTALLED_FLAG, False))
 
 
-__all__ = ["install_namespaces", "installed", "register_all"]
+__all__ = [
+    "EngagementNamespace",
+    "configure",
+    "install_namespaces",
+    "installed",
+    "register_all",
+    "register",
+    "route_names",
+]
