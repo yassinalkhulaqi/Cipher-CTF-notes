@@ -65,4 +65,10 @@ def test_evaluate_reports_each_shortfall() -> None:
 
 def test_branch_gate_job_skips_main_pushes() -> None:
     workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-    assert "  gates:\n    name: Branch gates\n    runs-on: ubuntu-latest\n    if: github.ref != 'refs/heads/main'" in workflow
+    expected = (
+        "  gates:\n"
+        "    name: Branch gates\n"
+        "    runs-on: ubuntu-latest\n"
+        "    if: github.ref != 'refs/heads/main'"
+    )
+    assert expected in workflow
