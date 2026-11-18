@@ -2,20 +2,16 @@ import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
-import { mkdir } from "node:fs/promises";
+import { mkdir, readdir } from "node:fs/promises";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cache = path.join(root, "node_modules", ".cache");
 
-const unitTests = [
-  "motion.test.ts",
-  "tags.test.ts",
-  "tree.test.ts",
-  "router.test.ts",
-  "commands.test.ts",
-  "apiClient.test.ts",
-  "a11y_v2.test.ts",
-];
+const unitTests = (
+  await readdir(path.join(root, "scripts"))
+)
+  .filter((name) => name.endsWith(".test.ts"))
+  .sort();
 
 async function typecheck() {
   const result = spawnSync(
