@@ -2,4 +2,6 @@
 
 from __future__ import annotations
 
-__all__ = ["sync"]
+from redscribe.v2.engagements.services import EngagementService
+
+__all__ = ["EngagementService"]
