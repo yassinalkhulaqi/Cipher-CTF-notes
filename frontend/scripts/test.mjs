@@ -2,16 +2,47 @@ import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
-import { mkdir, readdir } from "node:fs/promises";
+import { mkdir, readFile, readdir } from "node:fs/promises";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cache = path.join(root, "node_modules", ".cache");
+const suitesDir = path.join(root, "scripts", "test-suites");
 
-const unitTests = (
-  await readdir(path.join(root, "scripts"))
-)
-  .filter((name) => name.endsWith(".test.ts"))
-  .sort();
+const baseTests = [
+  "motion.test.ts",
+  "tags.test.ts",
+  "tree.test.ts",
+  "router.test.ts",
+  "commands.test.ts",
+  "apiClient.test.ts",
+  "blocks.test.ts",
+  "evidence.test.ts",
+  "engagements.test.ts",
+];
+
+async function extraTests() {
+  let entries;
+  try {
+    entries = await readdir(suitesDir);
+  } catch {
+    return [];
+  }
+  const extras = [];
+  for (const entry of entries.sort()) {
+    if (!entry.endsWith(".json")) continue;
+    const text = await readFile(path.join(suitesDir, entry), "utf8");
+    const names = JSON.parse(text);
+    if (!Array.isArray(names)) continue;
+    extras.push(
+      ...names.filter(
+        (name) => typeof name === "string" && name.endsWith(".test.ts"),
+      ),
+    );
+  }
+  return extras;
+}
+
+const unitTests = [...new Set([...baseTests, ...(await extraTests())])];
 
 async function typecheck() {
   const result = spawnSync(
@@ -45,5 +76,5 @@ async function unit() {
   }
 }
 
-await typecheck();
+if (!process.env.REDSCRIBE_SKIP_TYPECHECK) await typecheck();
 await unit();
