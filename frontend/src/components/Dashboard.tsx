@@ -300,8 +300,8 @@ export function Dashboard() {
 
           <footer className="dash-foot">
             <ShieldCheck />
-            SQLite vault آ· {boot?.vault_path ?? "local storage"} آ· no
-            accounts, no telemetry
+            SQLite vault · {boot?.vault_path ?? "local storage"} · no accounts,
+            no telemetry
           </footer>
         </div>
       </section>
@@ -317,7 +317,7 @@ export function Dashboard() {
             <h1>{timeGreeting()}.</h1>
             <p>
               {plural(stats.notes, "note")} in the vault
-              {lastTouched ? ` آ· last touched ${lastTouched}` : ""}
+              {lastTouched ? ` · last touched ${lastTouched}` : ""}
             </p>
           </div>
           <div className="dash-actions">
@@ -455,7 +455,7 @@ export function Dashboard() {
                   <h2>Flag insights</h2>
                   <span>
                     {insights
-                      ? `${plural(insights.unique_flags, "unique flag")} آ· ${insights.manual_flags} manual`
+                      ? `${plural(insights.unique_flags, "unique flag")} · ${insights.manual_flags} manual`
                       : "Flag intelligence"}
                   </span>
                 </div>
@@ -617,7 +617,7 @@ export function Dashboard() {
                       <strong>{event.title}</strong>
                       <span>
                         {event.activity === "created" ? "Created" : "Updated"}
-                        {event.path ? ` آ· ${event.path}` : ""}
+                        {event.path ? ` · ${event.path}` : ""}
                       </span>
                     </span>
                     <span className="activity-time">
@@ -754,7 +754,7 @@ export function Dashboard() {
           <span>
             <ShieldCheck /> Local only
           </span>
-          <span className="dash-foot-sep">آ·</span>
+          <span className="dash-foot-sep">·</span>
           <span className="dash-path" title={boot?.vault_path}>
             {boot?.vault_path}
           </span>

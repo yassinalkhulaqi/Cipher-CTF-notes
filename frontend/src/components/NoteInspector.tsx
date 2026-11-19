@@ -304,7 +304,7 @@ export function NoteInspector({
             <div className="prop-row">
               <span className="prop-key">Length</span>
               <span className="prop-value">
-                {plural(words, "word")} آ· {readingTime(draft)}
+                {plural(words, "word")} · {readingTime(draft)}
               </span>
             </div>
             <button
