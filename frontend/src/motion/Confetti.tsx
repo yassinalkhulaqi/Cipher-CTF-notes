@@ -21,12 +21,12 @@ interface Particle {
 }
 
 const COLORS = [
-  "#f05248",
-  "#e7a354",
-  "#52c9a0",
-  "#78a7f7",
-  "#b59df7",
-  "#e6b450",
+  "#7c6bf5",
+  "#9183ff",
+  "#34d399",
+  "#5b9cf8",
+  "#b6a4ff",
+  "#f5b544",
 ];
 
 export function Confetti({ fire, origin }: ConfettiProps) {

@@ -9,22 +9,24 @@ Implementation lives in `frontend/src/styles/`.
 
 | File | Role |
 | --- | --- |
-| `tokens.css` | Core tokens: type, spacing, radii, elevation, z-index, color theming, legacy aliases |
+| `tokens.css` | Core tokens: type, spacing, radii, elevation, z-index, color theming, semantic states, legacy aliases |
 | `motion-tokens.css` | Canonical motion scale: durations, easings, distances, reduced-motion contract |
 | `base.css` | Reset, focus ring, scrollbars, `sr-only`, keyframes, contrast/forced-colors support |
 | `components.css` / `modals.css` / `workspace.css` / `layout.css` / `inspector.css` / `workbench.css` | Component styles |
 | `motion-*.css` | Motion-aware refinements per surface |
-| `ux-polish.css` | Final additive polish layer (caption, focus, chips) |
+| `ux-polish.css` | Additive polish layer (caption, focus, chips) |
+| `brand-polish.css` | Final "Slate & Signal" layer: focus, touch targets, surfaces, tactile states |
 
 Loaded order is fixed in `styles/index.css`; later layers may refine, never
 fork, the core tokens.
 
 ## Color
 
-Two themes are supported via `data-theme` on `<html>`: `dark` (graphite, warm
-accent) and `light` (warm paper). Both define the same semantic sets — never
-reference raw hex values in component CSS; reference a semantic token so both
-themes stay consistent.
+Two themes are supported via `data-theme` on `<html>`: `dark` (cool slate) and
+`light` (soft silver). Both share one "Slate & Signal" language: cool graphite
+surfaces and a single confident violet signal colour reserved for action.
+Never reference raw hex values in component CSS; reference a semantic token so
+both themes stay consistent.
 
 ### Semantic surfaces and text
 
@@ -32,20 +34,22 @@ themes stay consistent.
 | --- | --- |
 | `--bg`, `--bg-deep`, `--bg-elev` | App background, recessed background, elevated background |
 | `--sidebar-bg`, `--surface`, `--surface-2`, `--surface-3` | Sidebar, base cards, hover/raised, active/sunken |
+| `--surface-alt`, `--surface-base`, `--surface-panel`, `--surface-raised`, `--input-bg` | Recessed, base, panel, raised, and form surfaces |
 | `--panel-bg`, `--editor-bg`, `--editor-gutter`, `--preview-bg` | Workspace panels |
 | `--surface-glass(-strong)` | Translucent overlays |
-| `--border`, `--border-strong`, `--border-accent` | Hairlines, emphasis hairlines, accent hairlines |
-| `--text`, `--text-soft`, `--muted`, `--faint` | Primary, secondary, tertiary, quaternary text |
-| `--accent`, `--accent-hover`, `--accent-2`, `--accent-soft`, `--accent-soft-2` | Brand accent and tints |
+| `--border`, `--border-strong`, `--border-subtle`, `--border-accent` | Hairlines, emphasis, quiet, and accent hairlines |
+| `--text`, `--text-soft`, `--muted`, `--faint`, `--text-primary`, `--text-muted` | Primary, secondary, tertiary, quaternary text |
+| `--accent`, `--accent-hover`, `--accent-muted`, `--accent-2`, `--accent-soft`, `--accent-soft-2`, `--accent-ink`, `--accent-contrast` | The one signal accent and its tints / on-accent ink |
 | `--blue/green/yellow/red/purple` (+`-soft`) | Status and flag-intel semantics |
+| `--success`, `--warning`, `--danger`, `--critical`, `--info` | Named state aliases for status UI |
 
 **Contrast contract.** `--text`, `--text-soft`, and `--muted` measure at
 4.5:1 or better against every surface they are designed for in both themes.
-`--faint` is reserved for decorative or redundant glyphs; as of the A11y
-redesign it also clears 4.5:1 on `--bg`, `--surface-2`, and `--surface-3`
-(dark: `#848b99`; light: `#6b6357`). Do not introduce new text colors below
-4.5:1 on their intended background. `@media (prefers-contrast: more)` raises
-all tertiary hues a further step.
+`--faint` is reserved for decorative or redundant glyphs; it also clears
+4.5:1 on `--bg`, `--surface-2`, and `--surface-3` (dark: `#8492aa`; light:
+`#5c6780`). Do not introduce new text colors below 4.5:1 on their intended
+background. `@media (prefers-contrast: more)` raises all tertiary hues a
+further step.
 
 ### Selection, focus, scroll
 
@@ -72,8 +76,9 @@ medium 520, semibold 600, bold 650.
 ## Geometry
 
 Spacing `--space-1…12` (4, 8, 12, 16, 20, 24, 32, 40, 48). Radii `--radius-xs
-4 … --radius-xl 16` and `--radius-full`. Layout chrome: `--topbar-h 50px`,
-`--statusbar-h 27px`, `--sidebar-w 272px`, `--sidebar-w-collapsed 80px`.
+5 / sm 8 / md 11 / lg 15 / xl 20` and `--radius-full`. Layout chrome:
+`--topbar-h 52px`, `--statusbar-h 28px`, `--sidebar-w 272px`,
+`--sidebar-w-collapsed 80px`.
 Z-index: `--z-topbar 20`, `--z-sash 30`, `--z-menu 60`, `--z-overlay 80`,
 `--z-toast 100`.
 
@@ -174,24 +179,23 @@ zoom. Deprecated aliases may not gain new consumers.
 
 ## Contrast verification
 
-Measured with the WCAG 2.x relative-luminance formula (2026-11). All text
-pairs used by the dark graphite theme; light theme values in parentheses
-where different.
+Measured with the WCAG 2.x relative-luminance formula (2026-11). All pairs
+are dark-theme values; light-theme values in parentheses where different.
 
 | Foreground | Background | Contrast | Verdict |
 | --- | --- | --- | --- |
-| `--text #e8e9ed` (`#211d17`) | `--bg #0a0b0e` (`#f2efe9`) | 15.9:1 (13.9:1) | AAA |
-| `--text-soft #b4b8c2` (`#4e483f`) | `--bg` (`--bg`) | 9.7:1 (8.9:1) | AAA |
-| `--text-soft` | `--surface-2 #181c23` (`#f5f1e9`) | 8.6:1 (8.2:1) | AAA |
-| `--muted #828a98` (`#746c61`) | `--bg` | 5.8:1 (4.6:1) | AA |
-| `--muted` | `--surface-2` | 5.3:1 (4.9:1) | AA |
-| `--muted` | `--surface-3 #20252f` (`#eae4d9`) | 4.7:1 (4.2:1 → `#544f45` in more-contrast) | AA / more-contrast |
-| `--faint #848b99` (`#6b6357`) | `--bg` | 5.7:1 (5.2:1) | AA |
-| `--faint` (redesign; was `#5f6673` = 3.4:1, `#9a9183` = 2.7:1) | `--surface-2` | 5.0:1 (5.3:1) | AA |
-| `--faint` | `--surface-3` | 4.5:1 (4.7:1) | AA |
-| `--accent #f05248` (`#ba3a30`) | `--bg` | 5.3:1 (5.6:1) | AA (text) |
-| `--blue #78a7f7` (`#2d67c4`) | `--bg` | 8.2:1 (6.0:1) | AA |
-| `--green #52c9a0` (`#167553`) | `--bg` | 10.1:1 (5.9:1) | AA |
+| `--text #e9edf5` (`#1b2333`) | `--bg #0b0d12` (`#f5f7fb`) | 16.6:1 (14.7:1) | AAA |
+| `--text-soft #b9c2d3` (`#44506a`) | `--bg` (`--bg`) | 10.9:1 (7.5:1) | AAA |
+| `--text-soft` | `--surface-2 #191e2a` (`#f4f6fb`) | 9.3:1 (7.2:1) | AAA |
+| `--muted #8893a8` (`#5c6780`) | `--bg` | 6.3:1 (5.3:1) | AA |
+| `--muted` | `--surface-2` | 5.4:1 (5.2:1) | AA |
+| `--muted` | `--surface-3 #232a38` (`#e8ecf5`) | 4.7:1 (4.8:1) | AA |
+| `--faint #8492aa` (`#5c6780`) | `--bg` | 6.2:1 (5.3:1) | AA |
+| `--faint` | `--surface-2` | 5.3:1 (5.2:1) | AA |
+| `--faint` | `--surface-3` | 4.6:1 (4.8:1) | AA |
+| `--accent #7c6bf5` (`#5b46d6`) | `--bg` | 4.9:1 (6.0:1) | AA (text) |
+| `--blue #5b9cf8` (`#2f62c9`) | `--bg` | 7.0:1 (5.3:1) | AA |
+| `--green #34d399` (`#12805c`) | `--bg` | 10.1:1 (4.6:1) | AA |
 
 Rules enforced by this redesign:
 
@@ -229,3 +233,25 @@ Rules enforced by this redesign:
   status bar save state is a polite live region.
 - JS timing derives from `--motion-duration-base` (no more 160ms vs 220ms
   modal-exit drift).
+
+## Slate & Signal (feat/best-ui-ux)
+
+A fresh visual identity applied through the existing token contract; no
+component APIs or behaviour changed.
+
+- Replaced the warm graphite/paper palette with cool slate surfaces and one
+  violet signal accent used only for action and selection.
+- Added the previously undeclared semantic tokens (`--success`, `--warning`,
+  `--danger`, `--critical`, `--info`, `--accent-contrast`, `--text-primary`,
+  `--text-muted`, `--border-subtle`, `--input-bg`, `--surface-raised`,
+  `--surface-alt`, `--surface-base`, `--surface-panel`) so components fall
+  back to the theme instead of hardcoded colours.
+- Softened the radius scale (5/8/11/15/20) and retuned elevation to soft,
+  cool-tinted shadows; raised chrome heights to 52px/28px.
+- Raised `--faint` (dark `#8492aa`, light `#5c6780`) and `--muted` (light
+  `#5c6780`) so every text token clears 4.5:1 on its documented surfaces.
+- Added `brand-polish.css` as the final layer: global `:focus-visible`,
+  themed scrollbars, tactile button/input/tree states, dashboard and modal
+  surfaces, and a reduced-motion guard.
+- Re-themed the favicon and confetti palette to the new accent; updated the
+  browser theme-color metadata.
