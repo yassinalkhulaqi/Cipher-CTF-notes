@@ -11,11 +11,13 @@ from redscribe.ui.web.v2.contracts import (
     envelope,
     error_envelope,
 )
-from redscribe.ui.web.v2.namespaces import install_namespaces
 from redscribe.ui.web.v2.router import V2Router
 from redscribe.ui.web.v2.routes import ApiV2
 
-install_namespaces()
+# Namespace registration is explicit: ``V2Router`` installs every optional
+# namespace when it builds its own registry, and callers that construct an
+# ``ApiV2`` directly register only the namespaces they need. Importing this
+# package must not mutate ``ApiV2`` globally.
 
 __all__ = [
     "API_VERSION",

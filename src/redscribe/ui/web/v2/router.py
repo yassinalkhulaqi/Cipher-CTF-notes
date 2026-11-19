@@ -44,7 +44,13 @@ class V2Router:
 
     def __init__(self, vault: Vault, api: ApiV2 | None = None) -> None:
         self._vault = vault
-        self._api = api if api is not None else ApiV2(vault)
+        if api is None:
+            # Imported lazily: namespaces imports routes, and doing this at
+            # module scope would make the import order significant.
+            from redscribe.ui.web.v2.namespaces import register_all
+
+            api = register_all(ApiV2(vault))
+        self._api = api
         self._local_idempotency: dict[str, storage.IdempotencyRecord] = {}
 
     @property
