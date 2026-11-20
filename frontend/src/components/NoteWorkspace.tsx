@@ -707,7 +707,7 @@ export function NoteWorkspace() {
               )}
             </div>
             <span className="pane-meta">
-              {plural(words, "word")} آ· {readingTime(draft)}
+              {plural(words, "word")} · {readingTime(draft)}
             </span>
             <button
               type="button"
