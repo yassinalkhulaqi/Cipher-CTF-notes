@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { A11yClient } from "../src/features/a11y/client";
@@ -362,12 +362,13 @@ test("a11y stylesheet and test registration are wired into the frontend", () => 
     path.join(root, "src", "features", "a11y", "components", "A11yPanel.tsx"),
     "utf8",
   );
-  const testScript = readFileSync(
-    path.join(root, "scripts", "test.mjs"),
-    "utf8",
-  );
+  const suitesDir = path.join(root, "scripts", "test-suites");
+  const registration = readdirSync(suitesDir)
+    .filter((name) => name.endsWith(".json"))
+    .map((name) => readFileSync(path.join(suitesDir, name), "utf8"))
+    .join("\n");
   assert.match(css, /--a11y-font-scale/);
   assert.match(css, /a11y-reduce-motion/);
   assert.match(panel, /styles\/a11y\.css/);
-  assert.match(testScript, /"a11y_v2\.test\.ts"/);
+  assert.match(registration, /"a11y_v2\.test\.ts"/);
 });
