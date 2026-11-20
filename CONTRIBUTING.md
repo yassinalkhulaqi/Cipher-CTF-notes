@@ -35,7 +35,10 @@ point at a specific database.
 - No runtime dependencies. The core must run on a stock Python 3.10+
   installation; the optional `web` extra provides the native window.
 - Keep database work on the UI thread and vault writes transactional.
-- New behavior in `src/redscribe` needs tests in `tests`.
+- New behavior in `src/redscribe` needs tests in `tests`. Every directory under
+  `tests/` is a Python package (`__init__.py` required) because several
+  namespaces share test module names such as `test_service.py`; without the
+  package markers pytest cannot collect them together.
 - Run `ruff format` before committing.
 - Commit messages follow Conventional Commits (`feat:`, `fix:`, `docs:`,
   `test:`, `chore:`).
