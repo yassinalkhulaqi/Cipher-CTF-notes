@@ -31,7 +31,14 @@ def register_all(api: ApiV2) -> ApiV2:
 
 
 def install_namespaces() -> None:
-    """Ensure all API v2 instances receive optional namespace routes."""
+    """Legacy opt-in hook that patches ``ApiV2`` to install all namespaces.
+
+    Deprecated: importing ``redscribe.ui.web.v2`` no longer calls this, because
+    a global monkey patch made additive registration impossible to test or
+    control. New code should use :func:`register_all` explicitly (``V2Router``
+    already does this when it builds its own registry). This function remains
+    for callers that relied on the old behaviour.
+    """
     if getattr(ApiV2, INSTALLED_FLAG, False):
         return
     original_init = ApiV2.__init__

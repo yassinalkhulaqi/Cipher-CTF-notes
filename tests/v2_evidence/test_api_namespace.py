@@ -15,7 +15,6 @@ from redscribe.storage.db import Vault
 from redscribe.ui.web.api import Api
 from redscribe.ui.web.server import ApiServer
 from redscribe.ui.web.v2.router import V2Router
-from redscribe.ui.web.v2.routes import ApiV2
 from redscribe.v2.evidence.hashing import encode_base64_payload
 
 
@@ -88,8 +87,10 @@ def ingest(router: V2Router, filename: str = "sample.txt", data: bytes = b"sampl
 
 
 def test_namespace_routes_are_registered_on_every_api(vault: Vault) -> None:
-    first = ApiV2(vault)
-    second = ApiV2(vault)
+    # V2Router is the supported path that installs optional namespaces;
+    # a bare ApiV2 stays minimal so registration remains explicit/additive.
+    first = V2Router(vault).api
+    second = V2Router(vault).api
     evidence_routes = [name for name in first.routes if name.startswith("evidence.")]
     assert len(evidence_routes) == 35
     assert evidence_routes == [name for name in second.routes if name.startswith("evidence.")]
