@@ -1,0 +1,125 @@
+/* Theme tokens: palette overrides layered on the base design system.
+ * Themes are selected with data-theme on the root element. */
+
+:root {
+  --accent: #8b7cf6;
+  --accent-hover: #9d8ffa;
+  --surface-base: #0d0d10;
+  --surface-raised: #16161a;
+  --surface-overlay: #1d1d22;
+  --text-primary: #f5f5f6;
+  --text-secondary: #a1a1aa;
+  --border: #2a2a31;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --theme-transition: 180ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+:root[data-theme="aurora"] {
+  --accent: #38bdf8;
+  --accent-hover: #65cdfa;
+  --surface-base: #071014;
+  --surface-raised: #0d1b22;
+  --surface-overlay: #122630;
+  --border: #1c3540;
+}
+
+:root[data-theme="ember"] {
+  --accent: #fb7185;
+  --accent-hover: #fc8d9d;
+  --surface-base: #120b0d;
+  --surface-raised: #1c1114;
+  --surface-overlay: #26171b;
+  --border: #3a2026;
+}
+
+:root[data-theme="contrast"] {
+  --accent: #c4b5fd;
+  --accent-hover: #ddd6fe;
+  --surface-base: #050506;
+  --surface-raised: #0d0d0f;
+  --surface-overlay: #161619;
+  --text-primary: #ffffff;
+  --text-secondary: #f0f0f2;
+  --border: #ffffff;
+}
+
+body,
+.theme-surface {
+  background: var(--surface-base);
+  color: var(--text-primary);
+  transition:
+    background-color var(--theme-transition),
+    color var(--theme-transition);
+}
+
+.theme-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.theme-switcher__group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.theme-switcher__label {
+  font-size: var(--text-sm, 11px);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+
+.theme-switcher__segment {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.theme-switcher__option {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  cursor: pointer;
+  text-transform: capitalize;
+}
+
+.theme-switcher__option[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--surface-base);
+}
+
+.theme-switcher__palette {
+  display: flex;
+  gap: 8px;
+}
+
+.theme-switcher__swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.theme-switcher__swatch[aria-pressed="true"] {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px var(--surface-base);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body,
+  .theme-surface {
+    transition: none;
+  }
+}
