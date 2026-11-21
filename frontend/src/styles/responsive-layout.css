@@ -1,0 +1,102 @@
+/* Responsive layout primitives: fluid grids, stacks, breakpoint visibility
+ * and a keyboard-operable split pane. */
+
+.layout-grid {
+  min-width: 0;
+}
+
+.layout-stack > * {
+  min-width: 0;
+}
+
+.layout-center {
+  box-sizing: border-box;
+}
+
+.layout-split {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.layout-split.is-vertical {
+  flex-direction: column;
+}
+
+.layout-split__pane {
+  flex-grow: 0;
+  flex-shrink: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.layout-split__pane:last-child {
+  flex-grow: 1;
+}
+
+.layout-split__handle {
+  flex: 0 0 6px;
+  background: var(--border, #2a2a31);
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.layout-split.is-vertical .layout-split__handle {
+  cursor: row-resize;
+}
+
+.layout-split__handle:hover,
+.layout-split__handle:focus-visible {
+  background: var(--accent, #8b7cf6);
+  outline: none;
+}
+
+.layout-responsive-hidden {
+  display: none !important;
+}
+
+@media (max-width: 640px) {
+  .layout-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .layout-stack[data-direction="horizontal"] {
+    flex-direction: column;
+  }
+
+  .layout-split.is-horizontal {
+    flex-direction: column;
+  }
+
+  .layout-split.is-horizontal .layout-split__handle {
+    cursor: row-resize;
+  }
+}
+
+@media (min-width: 900px) {
+  .layout-container {
+    padding-inline: 24px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .layout-container {
+    max-width: 1440px;
+    margin-inline: auto;
+  }
+}
+
+.layout-safe-area {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layout-split__pane {
+    scroll-behavior: auto;
+  }
+}
