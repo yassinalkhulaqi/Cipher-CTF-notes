@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { cx } from "./componentUtils";
 
 export type PopoverPlacement = "top" | "bottom" | "left" | "right";

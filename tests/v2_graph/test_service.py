@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import pytest
-from tests.v2_graph.conftest import seed_vault
 
 from redscribe.storage.db import Vault
 from redscribe.v2.graph.model import GraphEdge, GraphModel, GraphNode
 from redscribe.v2.graph.service import GraphFilters, GraphIntelligenceService
 from redscribe.v2.graph.snapshot import SnapshotStore, diff_snapshots
+from tests.v2_graph.conftest import seed_vault
 
 
 def service(vault: Vault) -> GraphIntelligenceService:

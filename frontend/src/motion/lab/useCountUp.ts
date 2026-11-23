@@ -7,7 +7,10 @@ export interface CountUpOptions {
   decimals?: number;
 }
 
-export function useCountUp(target: number, options: CountUpOptions = {}): number {
+export function useCountUp(
+  target: number,
+  options: CountUpOptions = {},
+): number {
   const {
     durationMs = 600,
     easingName = "easeOutCubic",

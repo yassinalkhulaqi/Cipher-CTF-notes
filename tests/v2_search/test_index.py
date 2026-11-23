@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from tests.v2_search.conftest import make_document
-
 from redscribe.v2.search.index import InvertedIndex
+from tests.v2_search.conftest import make_document
 
 
 def test_empty_index_stats() -> None:

@@ -13,7 +13,10 @@ export function ThemeSwitcher() {
         <span className="theme-switcher__label" id="theme-mode-label">
           Mode
         </span>
-        <div className="theme-switcher__segment" aria-labelledby="theme-mode-label">
+        <div
+          className="theme-switcher__segment"
+          aria-labelledby="theme-mode-label"
+        >
           {MODES.map((option) => (
             <button
               key={option}
@@ -31,7 +34,10 @@ export function ThemeSwitcher() {
         <span className="theme-switcher__label" id="theme-name-label">
           Palette
         </span>
-        <div className="theme-switcher__palette" aria-labelledby="theme-name-label">
+        <div
+          className="theme-switcher__palette"
+          aria-labelledby="theme-name-label"
+        >
           {themeNames.map((name) => (
             <button
               key={name}

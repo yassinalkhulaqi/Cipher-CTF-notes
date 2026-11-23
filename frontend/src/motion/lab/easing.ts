@@ -20,8 +20,7 @@ export const easing = {
     t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2,
   easeOutCubic: (t: number): number => 1 - Math.pow(1 - t, 3),
   easeOutQuint: (t: number): number => 1 - Math.pow(1 - t, 5),
-  easeOutExpo: (t: number): number =>
-    t === 1 ? 1 : 1 - Math.pow(2, -10 * t),
+  easeOutExpo: (t: number): number => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t)),
   easeOutBack,
   easeOutElastic,
 } satisfies Record<string, EasingFunction>;

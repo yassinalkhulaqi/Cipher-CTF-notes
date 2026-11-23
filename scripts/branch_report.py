@@ -4,7 +4,14 @@ import argparse
 import json
 from collections import defaultdict
 
-from loc_gate import FileChange, collect, emit, resolve_base, summarize
+from loc_gate import (
+    FileChange,
+    aggregate,
+    collect,
+    emit,
+    resolve_base,
+    summarize,
+)
 
 GROUPS = {
     "backend": ("src/redscribe/",),
@@ -34,14 +41,37 @@ def group_changes(changes: list[FileChange]) -> dict[str, list[FileChange]]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Report per-branch change mix.")
     parser.add_argument("--base", default="origin/main")
+    parser.add_argument("--baseline", default="", help="Exact V3 baseline ref.")
+    parser.add_argument("--branches", default="", help="Comma-separated branch refs.")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
-    changes = collect(args.base)
+    if args.branches:
+        baseline = args.baseline or resolve_base(args.base)
+        branch_list = [item.strip() for item in args.branches.split(",") if item.strip()]
+        rows, totals = aggregate(branch_list, baseline)
+        for branch, row in zip(branch_list, rows, strict=True):
+            row["branch"] = branch
+        payload = {"baseline": baseline, "branches": rows, "totals": totals}
+        if args.json:
+            emit(json.dumps(payload, indent=2, sort_keys=True))
+        else:
+            emit(f"V3 branch report vs {baseline[:12]}")
+            emit(f"{'branch':<42} {'net':>8} {'added':>8} {'tests':>8}")
+            for row in rows:
+                emit(
+                    f"{row['branch']:<42} {row['net']:>8} {row['added']:>8} {row['tests_added']:>8}"
+                )
+            emit(
+                f"{'TOTAL':<42} {totals['net']:>8} {totals['added']:>8} {totals['tests_added']:>8}"
+            )
+        return 0
+
+    changes = collect(args.baseline or args.base)
     summary = summarize(changes)
     grouped = group_changes(changes)
     payload = {
-        "base": resolve_base(args.base),
+        "base": resolve_base(args.base) if not args.baseline else args.baseline,
         "summary": summary,
         "groups": {
             name: {
