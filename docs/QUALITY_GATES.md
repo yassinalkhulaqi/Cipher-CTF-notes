@@ -1,7 +1,24 @@
 # Quality Gates
 
-Every V2 branch must pass the same gates locally and in CI. A red gate blocks
-merge; do not work around it with skips or generated-file edits.
+Every V2 and V3 branch must pass the same gates locally and in CI. A red gate
+blocks merge; do not work around it with skips or generated-file edits.
+
+## V3 additions
+
+V3 branches measure **net** LOC against `V3_BASELINE` (`main` at `c65e699`):
+
+```bash
+python scripts/loc_gate.py --baseline c65e699 --min-net 2000 --min-test-loc 600
+python scripts/loc_gate.py --baseline c65e699 --aggregate \
+  --branches dev/v3-00-platform-kernel,... --program-min-net 30000
+python scripts/branch_report.py --baseline c65e699
+```
+
+V3 tests live in `tests/v3_*` packages and `frontend/scripts/v3*.test.ts`. Each
+V3 branch registers its frontend tests in
+`frontend/scripts/test-suites/NN.json`. All V3 Python modules live under
+`src/redscribe/v3/`, and V3 frontend code under `frontend/src/v3/` or
+`frontend/src/features/<name>/`.
 
 ## Automated commands
 

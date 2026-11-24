@@ -7,7 +7,12 @@ export {
   resolveBreakpointValue,
 } from "./breakpoints";
 export type { Breakpoint, BreakpointMap } from "./breakpoints";
-export { useBreakpoint, useIsAbove, useIsBelow, useWindowWidth } from "./useBreakpoint";
+export {
+  useBreakpoint,
+  useIsAbove,
+  useIsBelow,
+  useWindowWidth,
+} from "./useBreakpoint";
 export { useContainerClass, useContainerWidth } from "./useContainerQuery";
 export { Center } from "./Center";
 export type { CenterProps } from "./Center";

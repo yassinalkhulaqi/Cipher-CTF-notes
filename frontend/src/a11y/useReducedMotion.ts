@@ -14,7 +14,8 @@ export function useReducedMotion(): boolean {
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return;
     const list = window.matchMedia(QUERY);
-    const update = (event: MediaQueryListEvent): void => setReduced(event.matches);
+    const update = (event: MediaQueryListEvent): void =>
+      setReduced(event.matches);
     setReduced(list.matches);
     if (typeof list.addEventListener === "function") {
       list.addEventListener("change", update);

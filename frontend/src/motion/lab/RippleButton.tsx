@@ -31,7 +31,9 @@ export function RippleButton({
       };
       setRipples((current) => [...current, ripple]);
       setTimeout(() => {
-        setRipples((current) => current.filter((item) => item.id !== ripple.id));
+        setRipples((current) =>
+          current.filter((item) => item.id !== ripple.id),
+        );
       }, 600);
       onClick?.();
     },

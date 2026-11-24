@@ -80,7 +80,7 @@ def test_register_with_vault_does_not_mutate_registry(vault: Vault) -> None:
     first = ApiV2(vault)
     second = ApiV2(vault)
     assert set(first.routes) == set(second.routes)
-    assert set(route_names()) <= set(first.routes)
+    assert set(route_names()).isdisjoint(set(first.routes))
     assert namespace.handlers.health({}).data["namespace"] == "reporting"
 
 

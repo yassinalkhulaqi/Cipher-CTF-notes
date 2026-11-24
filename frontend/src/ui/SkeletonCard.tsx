@@ -17,7 +17,9 @@ export function SkeletonCard({
   className,
 }: SkeletonCardProps) {
   const style = width
-    ? (styleVars({ width: typeof width === "number" ? `${width}px` : width }) as CSSProperties)
+    ? (styleVars({
+        width: typeof width === "number" ? `${width}px` : width,
+      }) as CSSProperties)
     : undefined;
 
   return (

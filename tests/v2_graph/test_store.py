@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from tests.v2_graph.conftest import seed_vault
-
 from redscribe.storage.db import Vault
 from redscribe.v2.graph.model import (
     EDGE_LINK,
@@ -21,6 +19,7 @@ from redscribe.v2.graph.store import (
     NodeStore,
     build_graph_store,
 )
+from tests.v2_graph.conftest import seed_vault
 
 
 def test_node_store_indexes_kinds_and_tags() -> None:

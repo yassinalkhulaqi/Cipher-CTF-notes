@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import pytest
-from tests.v2_search.conftest import seed_vault
 
 from redscribe.storage.db import Vault
 from redscribe.ui.web.v2.contracts import V2Error
 from redscribe.ui.web.v2.namespaces.search import get_service, register
 from redscribe.ui.web.v2.routes import ApiV2
+from tests.v2_search.conftest import seed_vault
 
 ROUTES = (
     "search.query",

@@ -9,46 +9,56 @@ export interface SwitchProps
   description?: string;
 }
 
-export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
-  { checked, onCheckedChange, label, description, className, disabled, ...rest },
-  ref,
-) {
-  const labelId = useId();
-  const descriptionId = useId();
+export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
+  function Switch(
+    {
+      checked,
+      onCheckedChange,
+      label,
+      description,
+      className,
+      disabled,
+      ...rest
+    },
+    ref,
+  ) {
+    const labelId = useId();
+    const descriptionId = useId();
 
-  return (
-    <div className={cx("ui-switch-row", className)}>
-      <button
-        {...rest}
-        ref={ref}
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-labelledby={label ? labelId : undefined}
-        aria-describedby={description ? descriptionId : undefined}
-        disabled={disabled}
-        className={cx("ui-switch", checked && "ui-switch--checked")}
-        onClick={() => onCheckedChange(!checked)}
-      >
-        <span className="ui-switch__thumb" aria-hidden="true" />
-      </button>
-      {label || description ? (
-        <span className="ui-switch__text">
-          {label ? (
-            <span className="ui-switch__label" id={labelId}>
-              {label}
-            </span>
-          ) : null}
-          {description ? (
-            <span className="ui-switch__description" id={descriptionId}>
-              {description}
-            </span>
-          ) : null}
-        </span>
-      ) : null}
-    </div>
-  );
-});
+    return (
+      <div className={cx("ui-switch-row", className)}>
+        <button
+          {...rest}
+          ref={ref}
+          type="button"
+          role="switch"
+          aria-checked={checked}
+          aria-labelledby={label ? labelId : undefined}
+          aria-describedby={description ? descriptionId : undefined}
+          disabled={disabled}
+          className={cx("ui-switch", checked && "ui-switch--checked")}
+          onClick={() => onCheckedChange(!checked)}
+        >
+          <span className="ui-switch__thumb" aria-hidden="true" />
+        </button>
+        {label || description ? (
+          <span className="ui-switch__text">
+            {label ? (
+              <span className="ui-switch__label" id={labelId}>
+                {label}
+              </span>
+            ) : null}
+            {description ? (
+              <span className="ui-switch__description" id={descriptionId}>
+                {description}
+              </span>
+            ) : null}
+          </span>
+        ) : null}
+      </div>
+    );
+  },
+);
 
 export interface SwitchFieldProps {
   label: string;
