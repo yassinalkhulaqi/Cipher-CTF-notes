@@ -107,9 +107,13 @@ export function normalizeLocale(locale: string): string {
   const parts = locale.trim().replace(/_/g, "-").split("-");
   if (!parts[0]) return "en";
   const language = parts[0].toLowerCase();
-  const tail = parts.slice(1).map((part) =>
-    part.length === 2 ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1),
-  );
+  const tail = parts
+    .slice(1)
+    .map((part) =>
+      part.length === 2
+        ? part.toUpperCase()
+        : part.charAt(0).toUpperCase() + part.slice(1),
+    );
   return [language, ...tail].join("-");
 }
 
@@ -121,7 +125,10 @@ export function localeDirection(locale: string): Direction {
   return RTL_LANGUAGES.has(languageOf(locale)) ? "rtl" : "ltr";
 }
 
-export function resolvedDirection(locale: string, override?: Direction): "ltr" | "rtl" {
+export function resolvedDirection(
+  locale: string,
+  override?: Direction,
+): "ltr" | "rtl" {
   if (override === "ltr" || override === "rtl") return override;
   return localeDirection(locale) === "rtl" ? "rtl" : "ltr";
 }
@@ -143,7 +150,14 @@ export function translate(
 ): { message: string; missing: boolean; used: string } {
   const normalized = normalizeLocale(locale);
   const language = languageOf(normalized);
-  const candidates = [normalized, language, ...V3_CATALOGS.filter((entry) => languageOf(entry.locale) === language).map((entry) => entry.locale), "en"];
+  const candidates = [
+    normalized,
+    language,
+    ...V3_CATALOGS.filter((entry) => languageOf(entry.locale) === language).map(
+      (entry) => entry.locale,
+    ),
+    "en",
+  ];
   for (const candidate of candidates) {
     const catalog = catalogFor(candidate);
     const template = catalog[key];
@@ -158,9 +172,14 @@ export function translate(
   return { message: key, missing: true, used: "" };
 }
 
-export function interpolate(template: string, params: Record<string, string | number>): string {
+export function interpolate(
+  template: string,
+  params: Record<string, string | number>,
+): string {
   return template.replace(/\{(\w+)\}/g, (match, name: string) =>
-    Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match,
+    Object.prototype.hasOwnProperty.call(params, name)
+      ? String(params[name])
+      : match,
   );
 }
 
@@ -170,17 +189,58 @@ export function coverage(locale: string): number {
   const catalog =
     normalized === "en"
       ? BASE
-      : (V3_CATALOGS.find((entry) => entry.locale === normalized)?.messages ?? {});
-  return Math.round((keys.filter((key) => key in catalog).length / keys.length) * 1000) / 10;
+      : (V3_CATALOGS.find((entry) => entry.locale === normalized)?.messages ??
+        {});
+  return (
+    Math.round(
+      (keys.filter((key) => key in catalog).length / keys.length) * 1000,
+    ) / 10
+  );
 }
 
 export function additionalLocaleOptions(): LocaleOptionView[] {
   return [
-    { value: "pt-BR", label: "Portuguese (Brazil)", native_name: "Português (Brasil)", direction: "ltr", script: "Latn" },
-    { value: "it", label: "Italian", native_name: "Italiano", direction: "ltr", script: "Latn" },
-    { value: "nl", label: "Dutch", native_name: "Nederlands", direction: "ltr", script: "Latn" },
-    { value: "ko", label: "Korean", native_name: "한국어", direction: "ltr", script: "Hang" },
-    { value: "fa", label: "Persian", native_name: "فارسی", direction: "rtl", script: "Arab" },
-    { value: "ur", label: "Urdu", native_name: "اردو", direction: "rtl", script: "Arab" },
+    {
+      value: "pt-BR",
+      label: "Portuguese (Brazil)",
+      native_name: "Português (Brasil)",
+      direction: "ltr",
+      script: "Latn",
+    },
+    {
+      value: "it",
+      label: "Italian",
+      native_name: "Italiano",
+      direction: "ltr",
+      script: "Latn",
+    },
+    {
+      value: "nl",
+      label: "Dutch",
+      native_name: "Nederlands",
+      direction: "ltr",
+      script: "Latn",
+    },
+    {
+      value: "ko",
+      label: "Korean",
+      native_name: "한국어",
+      direction: "ltr",
+      script: "Hang",
+    },
+    {
+      value: "fa",
+      label: "Persian",
+      native_name: "فارسی",
+      direction: "rtl",
+      script: "Arab",
+    },
+    {
+      value: "ur",
+      label: "Urdu",
+      native_name: "اردو",
+      direction: "rtl",
+      script: "Arab",
+    },
   ];
 }

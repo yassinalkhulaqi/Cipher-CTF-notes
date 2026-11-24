@@ -17,10 +17,15 @@ export function DigestCard({ digest, onJump, onSelect }: DigestCardProps) {
         <h3>{card.title}</h3>
         <span className="activity-digest__count">{card.count} events</span>
       </header>
-      <p className="activity-digest__subtitle">{card.subtitle || "No kinds recorded"}</p>
+      <p className="activity-digest__subtitle">
+        {card.subtitle || "No kinds recorded"}
+      </p>
       <div className="activity-digest__actors">
         {Object.keys(digest.actor_counts)
-          .sort((left, right) => digest.actor_counts[right] - digest.actor_counts[left])
+          .sort(
+            (left, right) =>
+              digest.actor_counts[right] - digest.actor_counts[left],
+          )
           .slice(0, 4)
           .map((actor) => (
             <span key={actor} className="activity-digest__actor">
@@ -31,8 +36,14 @@ export function DigestCard({ digest, onJump, onSelect }: DigestCardProps) {
       <ul className="activity-digest__highlights">
         {card.highlights.map((entry) => (
           <li key={entry.sequence}>
-            <button type="button" className="activity-digest__highlight" onClick={() => onSelect(entry.sequence)}>
-              <span className="activity-digest__severity">{entry.severity}</span>
+            <button
+              type="button"
+              className="activity-digest__highlight"
+              onClick={() => onSelect(entry.sequence)}
+            >
+              <span className="activity-digest__severity">
+                {entry.severity}
+              </span>
               {entry.title}
             </button>
             {entry.jump?.resolvable && (

@@ -67,7 +67,10 @@ export function flattenTree(
   return rows;
 }
 
-export function toggleExpanded(expanded: ReadonlySet<string>, key: string): Set<string> {
+export function toggleExpanded(
+  expanded: ReadonlySet<string>,
+  key: string,
+): Set<string> {
   const next = new Set(expanded);
   if (next.has(key)) {
     next.delete(key);
@@ -81,8 +84,14 @@ export function treeRowHeight(depth: number, base = 30): number {
   return base + Math.min(6, Math.max(0, depth)) * 2;
 }
 
-export function estimateListHeight(count: number, rowHeight: number, headerHeight = 0): number {
-  return Math.max(0, count) * Math.max(0, rowHeight) + Math.max(0, headerHeight);
+export function estimateListHeight(
+  count: number,
+  rowHeight: number,
+  headerHeight = 0,
+): number {
+  return (
+    Math.max(0, count) * Math.max(0, rowHeight) + Math.max(0, headerHeight)
+  );
 }
 
 export function ratioLoaded(rendered: number, total: number): number {

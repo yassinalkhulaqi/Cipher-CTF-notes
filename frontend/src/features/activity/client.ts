@@ -75,7 +75,9 @@ export class ActivityClient {
   }
 
   async validate(query: string): Promise<FilterValidation> {
-    return this.client.data<FilterValidation>("activity", ROUTES.validate, { query });
+    return this.client.data<FilterValidation>("activity", ROUTES.validate, {
+      query,
+    });
   }
 
   async digest(body: ActivityRequestBody = {}): Promise<DigestCollection> {
@@ -106,21 +108,30 @@ export class ActivityClient {
     end: number,
     topLimit = 5,
   ): Promise<RetrospectiveSummary> {
-    return this.client.data<RetrospectiveSummary>("activity", ROUTES.retrospective, {
-      start,
-      end,
-      top_limit: topLimit,
-    });
+    return this.client.data<RetrospectiveSummary>(
+      "activity",
+      ROUTES.retrospective,
+      {
+        start,
+        end,
+        top_limit: topLimit,
+      },
+    );
   }
 
   async redact(
     payload: Record<string, unknown>,
-  ): Promise<{ payload: Record<string, unknown>; report: RedactionReportData }> {
+  ): Promise<{
+    payload: Record<string, unknown>;
+    report: RedactionReportData;
+  }> {
     return this.client.data("activity", ROUTES.redact, { payload });
   }
 
   async entry(sequence: number): Promise<ActivityEntry> {
-    return this.client.data<ActivityEntry>("activity", ROUTES.entry, { sequence });
+    return this.client.data<ActivityEntry>("activity", ROUTES.entry, {
+      sequence,
+    });
   }
 
   async stats(): Promise<ActivityStats> {
@@ -136,6 +147,8 @@ export class ActivityClient {
   }
 }
 
-export function makeActivityClient(options: ConstructorParameters<typeof V3Client>[0] = {}): ActivityClient {
+export function makeActivityClient(
+  options: ConstructorParameters<typeof V3Client>[0] = {},
+): ActivityClient {
   return new ActivityClient(new V3Client(options));
 }

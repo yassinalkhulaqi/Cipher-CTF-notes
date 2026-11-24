@@ -96,7 +96,8 @@
   font-size: var(--v3-font-sm);
   font-weight: 600;
   padding: var(--v3-space-2) var(--v3-space-4);
-  transition: background var(--v3-motion-fast) var(--v3-ease),
+  transition:
+    background var(--v3-motion-fast) var(--v3-ease),
     transform var(--v3-motion-fast) var(--v3-ease);
 }
 

@@ -30,7 +30,11 @@ export interface ActivityFeatureProps {
 
 const TABS: ActivityTab[] = ["stream", "digest", "retrospective"];
 
-export function ActivityFeature({ client, identity = "local", onNavigate }: ActivityFeatureProps) {
+export function ActivityFeature({
+  client,
+  identity = "local",
+  onNavigate,
+}: ActivityFeatureProps) {
   const [state, dispatch] = useReducer(activityReducer, undefined, () =>
     initialActivityState({ now: Math.floor(Date.now() / 1000) }),
   );
@@ -59,7 +63,10 @@ export function ActivityFeature({ client, identity = "local", onNavigate }: Acti
         dispatch({ type: "since", value: since });
       } catch (error) {
         if (!cancelled) {
-          dispatch({ type: "error", value: error instanceof Error ? error.message : String(error) });
+          dispatch({
+            type: "error",
+            value: error instanceof Error ? error.message : String(error),
+          });
         }
       }
     };
@@ -100,11 +107,18 @@ export function ActivityFeature({ client, identity = "local", onNavigate }: Acti
 
   const markVisited = useCallback(async () => {
     try {
-      await activeClient.mark(identity, "marked from activity", state.stream.total);
+      await activeClient.mark(
+        identity,
+        "marked from activity",
+        state.stream.total,
+      );
       const since = await activeClient.since(identity);
       dispatch({ type: "since", value: since });
     } catch (error) {
-      dispatch({ type: "error", value: error instanceof Error ? error.message : String(error) });
+      dispatch({
+        type: "error",
+        value: error instanceof Error ? error.message : String(error),
+      });
     }
   }, [activeClient, identity, state.stream.total]);
 
@@ -115,7 +129,11 @@ export function ActivityFeature({ client, identity = "local", onNavigate }: Acti
       kind="activity"
       density={state.density === "compact" ? "compact" : "comfortable"}
       actions={
-        <button type="button" className="activity-mark" onClick={() => void markVisited()}>
+        <button
+          type="button"
+          className="activity-mark"
+          onClick={() => void markVisited()}
+        >
           Mark visited
         </button>
       }
@@ -130,18 +148,31 @@ export function ActivityFeature({ client, identity = "local", onNavigate }: Acti
             data-active={state.tab === tab ? "true" : "false"}
             onClick={() => dispatch({ type: "tab", value: tab })}
           >
-            {tab === "retrospective" ? "Retrospective" : tab === "digest" ? "Digests" : "Stream"}
+            {tab === "retrospective"
+              ? "Retrospective"
+              : tab === "digest"
+                ? "Digests"
+                : "Stream"}
           </button>
         ))}
       </div>
 
       {state.tab === "stream" && (
-        <ActivityStream state={state} dispatch={dispatch} validation={validation} onJump={jump} />
+        <ActivityStream
+          state={state}
+          dispatch={dispatch}
+          validation={validation}
+          onJump={jump}
+        />
       )}
 
       {state.tab === "digest" && (
         <div className="activity-digests">
-          <div className="activity-periods" role="group" aria-label="Digest period">
+          <div
+            className="activity-periods"
+            role="group"
+            aria-label="Digest period"
+          >
             {PERIOD_OPTIONS.map((period) => (
               <button
                 key={period}
@@ -159,7 +190,9 @@ export function ActivityFeature({ client, identity = "local", onNavigate }: Acti
                 key={`${digest.period}-${digest.key}`}
                 digest={digest}
                 onJump={jump}
-                onSelect={(sequence) => dispatch({ type: "select", value: sequence })}
+                onSelect={(sequence) =>
+                  dispatch({ type: "select", value: sequence })
+                }
               />
             ))
           ) : (

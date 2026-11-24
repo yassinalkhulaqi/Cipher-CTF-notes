@@ -19,7 +19,10 @@ function ChangeRow({ change }: { change: ChangeView }) {
   return (
     <tr className="portability-change">
       <td>
-        <span className="portability-badge" data-tone={actionTone(change.action)}>
+        <span
+          className="portability-badge"
+          data-tone={actionTone(change.action)}
+        >
           {change.action}
         </span>
       </td>
@@ -30,16 +33,29 @@ function ChangeRow({ change }: { change: ChangeView }) {
   );
 }
 
-export function DryRunPreviewPanel({ report, vector, onConfirm, onBack }: Props) {
+export function DryRunPreviewPanel({
+  report,
+  vector,
+  onConfirm,
+  onBack,
+}: Props) {
   const actions = changesByAction(report);
   return (
-    <section className="portability-card portability-preview" aria-label="Dry-run preview">
+    <section
+      className="portability-card portability-preview"
+      aria-label="Dry-run preview"
+    >
       <header className="portability-card__header">
         <div>
           <h3>Dry-run preview</h3>
-          <p className="portability-card__subtitle">{summarizeDryRun(report)}</p>
+          <p className="portability-card__subtitle">
+            {summarizeDryRun(report)}
+          </p>
         </div>
-        <span className="portability-badge" data-tone={report?.valid ? "good" : "warn"}>
+        <span
+          className="portability-badge"
+          data-tone={report?.valid ? "good" : "warn"}
+        >
           {report?.valid ? "Safe to apply" : "Needs decisions"}
         </span>
       </header>
@@ -58,7 +74,10 @@ export function DryRunPreviewPanel({ report, vector, onConfirm, onBack }: Props)
       </div>
 
       {vector && (
-        <div className="portability-vector" data-tone={vectorTone(vector.relation)}>
+        <div
+          className="portability-vector"
+          data-tone={vectorTone(vector.relation)}
+        >
           <strong>{vectorRelationLabel(vector.relation)}</strong>
           <span>{vectorSummary(vector)}</span>
         </div>
@@ -84,15 +103,24 @@ export function DryRunPreviewPanel({ report, vector, onConfirm, onBack }: Props)
           </thead>
           <tbody>
             {(report?.changes ?? []).map((change) => (
-              <ChangeRow key={`${change.action}-${change.ref}`} change={change} />
+              <ChangeRow
+                key={`${change.action}-${change.ref}`}
+                change={change}
+              />
             ))}
           </tbody>
         </table>
-        {!report?.changes.length && <p className="portability-empty">No preview changes yet.</p>}
+        {!report?.changes.length && (
+          <p className="portability-empty">No preview changes yet.</p>
+        )}
       </div>
 
       <footer className="portability-card__footer">
-        <button type="button" className="portability-button portability-button--ghost" onClick={onBack}>
+        <button
+          type="button"
+          className="portability-button portability-button--ghost"
+          onClick={onBack}
+        >
           Back
         </button>
         <button

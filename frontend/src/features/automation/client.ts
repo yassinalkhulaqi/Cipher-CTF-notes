@@ -90,7 +90,10 @@ export class AutomationClient {
     this.client = options.client ?? new V3Client();
   }
 
-  validate(playbook: Playbook, values: Record<string, unknown>): Promise<ValidateResult> {
+  validate(
+    playbook: Playbook,
+    values: Record<string, unknown>,
+  ): Promise<ValidateResult> {
     return this.client.data("automation", "validate", { playbook, values });
   }
 
@@ -98,11 +101,22 @@ export class AutomationClient {
     return this.client.data("automation", "compile", { playbook });
   }
 
-  connect(playbook: Playbook, source: string, target: string): Promise<ConnectResult> {
-    return this.client.data("automation", "connect", { playbook, source, target });
+  connect(
+    playbook: Playbook,
+    source: string,
+    target: string,
+  ): Promise<ConnectResult> {
+    return this.client.data("automation", "connect", {
+      playbook,
+      source,
+      target,
+    });
   }
 
-  dryRun(playbook: Playbook, values: Record<string, unknown>): Promise<DryRunResult> {
+  dryRun(
+    playbook: Playbook,
+    values: Record<string, unknown>,
+  ): Promise<DryRunResult> {
     return this.client.data("automation", "dry_run", { playbook, values });
   }
 
@@ -121,7 +135,10 @@ export class AutomationClient {
     return this.client.data("automation", "run_get", { run_id: runId });
   }
 
-  replay(runId: string, values: Record<string, unknown> = {}): Promise<ReplayResult> {
+  replay(
+    runId: string,
+    values: Record<string, unknown> = {},
+  ): Promise<ReplayResult> {
     return this.client.data("automation", "replay", { run_id: runId, values });
   }
 
@@ -129,8 +146,18 @@ export class AutomationClient {
     return this.client.data("automation", "rollback", { run_id: runId });
   }
 
-  recurrence(rule: RecurrenceRule, after: number, before: number, limit = 20): Promise<RecurrenceResult> {
-    return this.client.data("automation", "recurrence", { rule, after, before, limit });
+  recurrence(
+    rule: RecurrenceRule,
+    after: number,
+    before: number,
+    limit = 20,
+  ): Promise<RecurrenceResult> {
+    return this.client.data("automation", "recurrence", {
+      rule,
+      after,
+      before,
+      limit,
+    });
   }
 
   diff(left: string, right: string): Promise<{ differences: DiffEntry[] }> {

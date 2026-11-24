@@ -5,10 +5,7 @@ import { useReducer } from "react";
 import { V3Panel, V3Stat } from "../../v3/components/V3Panel";
 import { GOLDEN_PHASES, ONBOARDING_STEPS, RELEASE_SURFACES } from "./config";
 import { formatPercent, releaseSnapshot } from "./pure";
-import {
-  initialReleasePolishState,
-  releasePolishReducer,
-} from "./state";
+import { initialReleasePolishState, releasePolishReducer } from "./state";
 import type { ReleaseCounts } from "./types";
 import { AnimationAuditView } from "./components/AnimationAuditView";
 import { DesignSystemShowcase } from "./components/DesignSystemShowcase";
@@ -23,7 +20,12 @@ export interface ReleasePolishFeatureProps {
   width?: number;
 }
 
-const EMPTY_COUNTS: ReleaseCounts = { notes: 0, findings: 0, evidence: 0, reports: 0 };
+const EMPTY_COUNTS: ReleaseCounts = {
+  notes: 0,
+  findings: 0,
+  evidence: 0,
+  reports: 0,
+};
 
 export function ReleasePolishFeature({
   counts = EMPTY_COUNTS,
@@ -35,7 +37,12 @@ export function ReleasePolishFeature({
     width,
     initialReleasePolishState,
   );
-  const snapshot = releaseSnapshot(state.completed, state.checked, counts, state.width);
+  const snapshot = releaseSnapshot(
+    state.completed,
+    state.checked,
+    counts,
+    state.width,
+  );
 
   return (
     <section
@@ -64,9 +71,17 @@ export function ReleasePolishFeature({
           <V3Stat
             label="Motion"
             value={formatPercent(snapshot.animation.percent)}
-            hint={snapshot.animation.unsafe.length ? "review open items" : "all safe"}
+            hint={
+              snapshot.animation.unsafe.length
+                ? "review open items"
+                : "all safe"
+            }
           />
-          <V3Stat label="First run" value={snapshot.firstRun} hint={snapshot.breakpoint} />
+          <V3Stat
+            label="First run"
+            value={snapshot.firstRun}
+            hint={snapshot.breakpoint}
+          />
         </div>
         <div className="release-polish__phases" data-role="phase-strip">
           {GOLDEN_PHASES.map((phase, index) => (
@@ -100,13 +115,18 @@ export function ReleasePolishFeature({
           counts={counts}
           surface={state.selectedSurface}
           dismissed={state.dismissed}
-          onAction={(route) => dispatch({ type: "select-surface", surface: route })}
+          onAction={(route) =>
+            dispatch({ type: "select-surface", surface: route })
+          }
           onDismiss={(surface) => dispatch({ type: "dismiss", surface })}
         />
         <DesignSystemShowcase
           density={state.width < 768 ? "compact" : "comfortable"}
           onDensityChange={(value) =>
-            dispatch({ type: "resize", width: value === "compact" ? 480 : 1280 })
+            dispatch({
+              type: "resize",
+              width: value === "compact" ? 480 : 1280,
+            })
           }
         />
         <IconographyAudit />
