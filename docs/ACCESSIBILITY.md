@@ -91,3 +91,10 @@ Contrast ratios verified with the WCAG 2.x relative-luminance formula; see
 4. Lighthouse a11y audit on the built app (target ≥ 95).
 5. With the QA branch merged: `npm test` runs the axe-scanned component
    suite.
+
+## V3 refinement (B12)
+
+V3 adds WCAG 2.2 audits, automated contrast repair, six additional locale
+catalogs, RTL pane metadata, a complete keyboard map, and synchronized
+preferences with one unified theme/motion control. See
+`docs/v3/a11y-i18n.md` for the contracts, routes, components, and gates.
