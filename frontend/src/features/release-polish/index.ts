@@ -3,9 +3,7 @@
 import "../../styles/tokens-v3.css";
 import "./release-polish.css";
 
-export {
-  ReleasePolishClient,
-} from "./client";
+export { ReleasePolishClient } from "./client";
 export type {
   DocsEnvelope,
   GateEnvelope,
@@ -46,14 +44,8 @@ export {
   resolveBreakpoint,
   responsiveRisk,
 } from "./pure";
-export {
-  initialReleasePolishState,
-  releasePolishReducer,
-} from "./state";
-export type {
-  ReleasePolishAction,
-  ReleasePolishState,
-} from "./state";
+export { initialReleasePolishState, releasePolishReducer } from "./state";
+export type { ReleasePolishAction, ReleasePolishState } from "./state";
 export { ReleasePolishFeature } from "./ReleasePolishFeature";
 export type { ReleasePolishFeatureProps } from "./ReleasePolishFeature";
 export { OnboardingFlow } from "./components/OnboardingFlow";

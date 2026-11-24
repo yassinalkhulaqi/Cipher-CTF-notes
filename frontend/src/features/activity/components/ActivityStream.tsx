@@ -2,7 +2,12 @@
 
 import type { Dispatch } from "react";
 
-import { densityLabel, formatCount, severitySummary, summarizeFacets } from "../format";
+import {
+  densityLabel,
+  formatCount,
+  severitySummary,
+  summarizeFacets,
+} from "../format";
 import { DENSITY_OPTIONS } from "../format";
 import type { FilterValidation, JumpTarget } from "../types";
 import type { ActivityAction, ActivityState } from "../state";
@@ -16,7 +21,12 @@ export interface ActivityStreamProps {
   onJump: (target: JumpTarget) => void;
 }
 
-export function ActivityStream({ state, dispatch, validation, onJump }: ActivityStreamProps) {
+export function ActivityStream({
+  state,
+  dispatch,
+  validation,
+  onJump,
+}: ActivityStreamProps) {
   const since = state.since;
   return (
     <div className="activity-stream">
@@ -27,10 +37,16 @@ export function ActivityStream({ state, dispatch, validation, onJump }: Activity
             type="search"
             value={state.query}
             placeholder="kind:finding.created actor:alice"
-            onChange={(event) => dispatch({ type: "query", value: event.target.value })}
+            onChange={(event) =>
+              dispatch({ type: "query", value: event.target.value })
+            }
           />
         </label>
-        <div className="activity-stream__densities" role="group" aria-label="Density">
+        <div
+          className="activity-stream__densities"
+          role="group"
+          aria-label="Density"
+        >
           {DENSITY_OPTIONS.map((density) => (
             <button
               key={density}
@@ -46,7 +62,8 @@ export function ActivityStream({ state, dispatch, validation, onJump }: Activity
 
       {since && since.count > 0 && (
         <div className="activity-stream__since" role="status">
-          {formatCount(since.count)} new event{since.count === 1 ? "" : "s"} since your last visit
+          {formatCount(since.count)} new event{since.count === 1 ? "" : "s"}{" "}
+          since your last visit
         </div>
       )}
 
@@ -59,7 +76,8 @@ export function ActivityStream({ state, dispatch, validation, onJump }: Activity
       />
 
       <p className="activity-stream__summary">
-        {formatCount(state.stream.total)} events · {summarizeFacets(state.stream.facets)} ·{" "}
+        {formatCount(state.stream.total)} events ·{" "}
+        {summarizeFacets(state.stream.facets)} ·{" "}
         {severitySummary(state.stream.facets)}
       </p>
 
@@ -72,7 +90,9 @@ export function ActivityStream({ state, dispatch, validation, onJump }: Activity
       {state.error && <p className="activity-stream__error">{state.error}</p>}
 
       {state.stream.entries.length === 0 ? (
-        <div className="activity-stream__empty">No activity matches this view.</div>
+        <div className="activity-stream__empty">
+          No activity matches this view.
+        </div>
       ) : (
         state.stream.groups.map((group) => (
           <DateGroupView
@@ -81,7 +101,9 @@ export function ActivityStream({ state, dispatch, validation, onJump }: Activity
             density={state.density}
             now={state.now}
             selectedSequence={state.selectedSequence}
-            onSelect={(sequence) => dispatch({ type: "select", value: sequence })}
+            onSelect={(sequence) =>
+              dispatch({ type: "select", value: sequence })
+            }
             onJump={onJump}
           />
         ))

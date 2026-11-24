@@ -8,7 +8,9 @@ export interface IconographyAuditProps {
   icons?: typeof ICON_LABELS;
 }
 
-export function IconographyAudit({ icons = ICON_LABELS }: IconographyAuditProps) {
+export function IconographyAudit({
+  icons = ICON_LABELS,
+}: IconographyAuditProps) {
   const issues = labelConsistencyIssues(icons, KIND_LABELS);
   return (
     <V3Panel
@@ -24,7 +26,9 @@ export function IconographyAudit({ icons = ICON_LABELS }: IconographyAuditProps)
       >
         <div className="release-icons__header" data-role="icon-audit-header">
           <p data-role="issue-count" data-issues={issues.length}>
-            {issues.length === 0 ? "All labels consistent" : `${issues.length} inconsistencies`}
+            {issues.length === 0
+              ? "All labels consistent"
+              : `${issues.length} inconsistencies`}
           </p>
           <button
             aria-label="Re-check icon and label consistency"
@@ -50,12 +54,18 @@ export function IconographyAudit({ icons = ICON_LABELS }: IconographyAuditProps)
               >
                 {entry.icon}
               </span>
-              <span aria-label={`${entry.label} entity kind`}>{entry.label}</span>
+              <span aria-label={`${entry.label} entity kind`}>
+                {entry.label}
+              </span>
             </li>
           ))}
         </ul>
         {issues.length > 0 && (
-          <ul className="release-icons__issues" data-role="label-issues" aria-live="polite">
+          <ul
+            className="release-icons__issues"
+            data-role="label-issues"
+            aria-live="polite"
+          >
             {issues.map((issue) => (
               <li key={issue}>{issue}</li>
             ))}
