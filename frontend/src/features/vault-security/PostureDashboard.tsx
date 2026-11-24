@@ -35,7 +35,10 @@ export function PostureDashboard({
       }
     >
       <div className="vs-posture__headline" data-tone={tone}>
-        <div className="vs-posture__gauge" aria-label={`Posture score ${report.score}`}>
+        <div
+          className="vs-posture__gauge"
+          aria-label={`Posture score ${report.score}`}
+        >
           <strong>{posturePercent(report.score)}</strong>
           <span>/ 100</span>
         </div>
@@ -54,7 +57,11 @@ export function PostureDashboard({
       <div className="vs-stats">
         <V3Stat label="Score" value={report.score} tone={tone} />
         <V3Stat label="Passed" value={report.passed} tone="good" />
-        <V3Stat label="Gaps" value={report.gap_ids.length} tone={report.gap_ids.length ? "bad" : "neutral"} />
+        <V3Stat
+          label="Gaps"
+          value={report.gap_ids.length}
+          tone={report.gap_ids.length ? "bad" : "neutral"}
+        />
       </div>
       <ul className="vs-checks">
         {checks.map((check) => (

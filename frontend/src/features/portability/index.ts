@@ -5,10 +5,7 @@ import { registerFeature } from "../../v3/registry";
 export { BundleWizard } from "./components/BundleWizard";
 export { ConflictWorkbench } from "./components/ConflictWorkbench";
 export { DryRunPreviewPanel } from "./components/DryRunPreviewPanel";
-export {
-  PortabilityFeature,
-  default,
-} from "./components/PortabilityFeature";
+export { PortabilityFeature, default } from "./components/PortabilityFeature";
 export { TransferProgress } from "./components/TransferProgress";
 export { VerificationReceiptView } from "./components/VerificationReceiptView";
 export {

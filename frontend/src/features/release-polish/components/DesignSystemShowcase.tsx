@@ -27,7 +27,11 @@ export function DesignSystemShowcase({
         aria-label="Design system showcase"
       >
         <div className="release-showcase__stats" data-role="showcase-stats">
-          <V3Stat label="Tokens" value={tokens.length} hint="semantic + foundations" />
+          <V3Stat
+            label="Tokens"
+            value={tokens.length}
+            hint="semantic + foundations"
+          />
           <V3Stat label="Kinds" value={12} hint="with fallback" tone="good" />
           <V3Stat label="Density" value={density} hint="row height token" />
         </div>

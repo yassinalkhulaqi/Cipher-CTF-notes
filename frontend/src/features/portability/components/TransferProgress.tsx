@@ -10,7 +10,10 @@ interface Props {
 export function TransferProgress({ progress, onCancel, onResume }: Props) {
   const percent = progress?.percent ?? 0;
   return (
-    <section className="portability-card portability-progress" aria-label="Transfer progress">
+    <section
+      className="portability-card portability-progress"
+      aria-label="Transfer progress"
+    >
       <header className="portability-card__header">
         <div>
           <h3>Transfer progress</h3>
@@ -18,7 +21,10 @@ export function TransferProgress({ progress, onCancel, onResume }: Props) {
             {progressLabel(progress)}
           </p>
         </div>
-        <span className="portability-badge" data-tone={statusTone(progress?.phase ?? "idle")}>
+        <span
+          className="portability-badge"
+          data-tone={statusTone(progress?.phase ?? "idle")}
+        >
           {progress?.phase ?? "idle"}
         </span>
       </header>
@@ -30,7 +36,10 @@ export function TransferProgress({ progress, onCancel, onResume }: Props) {
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        <div className="portability-progress__fill" style={{ width: `${percent}%` }} />
+        <div
+          className="portability-progress__fill"
+          style={{ width: `${percent}%` }}
+        />
       </div>
 
       {progress && (
@@ -55,7 +64,11 @@ export function TransferProgress({ progress, onCancel, onResume }: Props) {
       {progress?.missingChunks.length ? (
         <div className="portability-chunks" aria-label="Missing chunks">
           {progress.missingChunks.slice(0, 24).map((index) => (
-            <span key={index} className="portability-chunk" data-state="missing">
+            <span
+              key={index}
+              className="portability-chunk"
+              data-state="missing"
+            >
               {index}
             </span>
           ))}

@@ -30,7 +30,11 @@ function MetricGroup({
   disabled,
 }: {
   title: string;
-  metrics: Array<{ code: string; label: string; values: Array<{ code: string; label: string }> }>;
+  metrics: Array<{
+    code: string;
+    label: string;
+    values: Array<{ code: string; label: string }>;
+  }>;
   values: Record<string, string>;
   onSelect: (code: string, value: string) => void;
   disabled: boolean;
@@ -39,11 +43,19 @@ function MetricGroup({
     <fieldset className="cvss-group" data-testid={`cvss-group-${title}`}>
       <legend>{title}</legend>
       {metrics.map((metric) => (
-        <div className="cvss-metric" key={metric.code} data-metric={metric.code}>
+        <div
+          className="cvss-metric"
+          key={metric.code}
+          data-metric={metric.code}
+        >
           <span className="cvss-metric__label" title={metric.label}>
             {metric.code}
           </span>
-          <div className="cvss-metric__options" role="group" aria-label={metric.label}>
+          <div
+            className="cvss-metric__options"
+            role="group"
+            aria-label={metric.label}
+          >
             {metric.values.map((option) => (
               <button
                 type="button"
@@ -98,7 +110,11 @@ export function CvssCalculator({
   const liveBand = preview?.severity ?? scoreBand(liveScore);
 
   return (
-    <section className="cvss-calculator" data-testid="cvss-calculator" data-complete={missing.length === 0}>
+    <section
+      className="cvss-calculator"
+      data-testid="cvss-calculator"
+      data-complete={missing.length === 0}
+    >
       <header className="cvss-calculator__header">
         <div>
           <h3>CVSS v4.0 calculator</h3>
@@ -106,7 +122,10 @@ export function CvssCalculator({
             {vector || "No vector selected"}
           </p>
         </div>
-        <div className="cvss-calculator__score" data-tone={severityTone(liveBand)}>
+        <div
+          className="cvss-calculator__score"
+          data-tone={severityTone(liveBand)}
+        >
           <strong>{formatScore(liveScore)}</strong>
           <span>{liveBand}</span>
         </div>
@@ -143,7 +162,9 @@ export function CvssCalculator({
       </div>
 
       <footer className="cvss-calculator__footer">
-        <span data-testid="cvss-nomenclature">{preview?.nomenclature ?? "CVSS-B"}</span>
+        <span data-testid="cvss-nomenclature">
+          {preview?.nomenclature ?? "CVSS-B"}
+        </span>
         <span data-testid="cvss-macro">{preview?.macro_vector ?? "—"}</span>
         <span>{BASE_METRIC_CODES.length} base metrics</span>
       </footer>
