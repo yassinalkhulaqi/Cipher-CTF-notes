@@ -22,9 +22,7 @@ export function Accordion({
   className,
 }: AccordionProps) {
   const baseId = useId();
-  const [open, setOpen] = useState<string[]>(
-    defaultOpen ? [defaultOpen] : [],
-  );
+  const [open, setOpen] = useState<string[]>(defaultOpen ? [defaultOpen] : []);
 
   const toggle = (id: string): void => {
     setOpen((current) => {
@@ -57,10 +55,7 @@ export function Accordion({
               >
                 <span className="ui-accordion__title">{item.title}</span>
                 <span
-                  className={cx(
-                    "ui-accordion__chevron",
-                    expanded && "is-open",
-                  )}
+                  className={cx("ui-accordion__chevron", expanded && "is-open")}
                   aria-hidden="true"
                 >
                   ⌄

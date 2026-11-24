@@ -1,0 +1,179 @@
+/* Design system v3 foundations. Imported by every feature branch. */
+
+:root {
+  --v3-space-0: 0;
+  --v3-space-1: 4px;
+  --v3-space-2: 8px;
+  --v3-space-3: 12px;
+  --v3-space-4: 16px;
+  --v3-space-5: 24px;
+  --v3-space-6: 32px;
+  --v3-space-7: 48px;
+
+  --v3-font-xs: 11px;
+  --v3-font-sm: 12px;
+  --v3-font-md: 14px;
+  --v3-font-lg: 16px;
+  --v3-font-xl: 20px;
+  --v3-font-2xl: 28px;
+
+  --v3-radius-sm: 4px;
+  --v3-radius-md: 8px;
+  --v3-radius-lg: 12px;
+  --v3-radius-pill: 999px;
+
+  --v3-elev-0: none;
+  --v3-elev-1: 0 1px 2px rgb(0 0 0 / 12%);
+  --v3-elev-2: 0 4px 12px rgb(0 0 0 / 16%);
+  --v3-elev-3: 0 12px 32px rgb(0 0 0 / 24%);
+
+  --v3-surface: var(--surface, #111827);
+  --v3-surface-raised: var(--surface-raised, #1f2937);
+  --v3-surface-sunken: var(--surface-sunken, #0b1220);
+  --v3-border: var(--border, #334155);
+  --v3-text: var(--text, #e5e7eb);
+  --v3-text-muted: var(--text-muted, #94a3b8);
+  --v3-accent: #38bdf8;
+  --v3-focus: #facc15;
+
+  --v3-good: #34d399;
+  --v3-warn: #fbbf24;
+  --v3-bad: #fb7185;
+  --v3-info: #60a5fa;
+
+  --v3-kind-note: #38bdf8;
+  --v3-kind-folder: #a78bfa;
+  --v3-kind-target: #f472b6;
+  --v3-kind-finding: #fb7185;
+  --v3-kind-evidence: #34d399;
+  --v3-kind-playbook: #fbbf24;
+  --v3-kind-run: #f59e0b;
+  --v3-kind-report: #60a5fa;
+  --v3-kind-section: #94a3b8;
+  --v3-kind-activity: #22d3ee;
+  --v3-kind-extension: #c084fc;
+  --v3-kind-snippet: #4ade80;
+  --v3-kind-default: #64748b;
+
+  --v3-motion-fast: 120ms;
+  --v3-motion-normal: 220ms;
+  --v3-motion-slow: 380ms;
+  --v3-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+[data-density="compact"] {
+  --v3-panel-pad: var(--v3-space-2);
+  --v3-row-height: 28px;
+}
+
+[data-density="comfortable"] {
+  --v3-panel-pad: var(--v3-space-4);
+  --v3-row-height: 36px;
+}
+
+.v3-panel {
+  background: var(--v3-surface);
+  border: 1px solid var(--v3-border);
+  border-radius: var(--v3-radius-lg);
+  box-shadow: var(--v3-elev-1);
+  overflow: hidden;
+}
+
+.v3-panel__header {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--v3-border);
+  border-left: 3px solid var(--v3-accent, var(--v3-kind-default));
+  display: flex;
+  gap: var(--v3-space-3);
+  justify-content: space-between;
+  padding: var(--v3-panel-pad, var(--v3-space-4));
+}
+
+.v3-panel__title {
+  color: var(--v3-text);
+  font-size: var(--v3-font-lg);
+  font-weight: 650;
+  margin: 0;
+}
+
+.v3-panel__subtitle {
+  color: var(--v3-text-muted);
+  font-size: var(--v3-font-sm);
+  margin: var(--v3-space-1) 0 0;
+}
+
+.v3-panel__actions {
+  align-items: center;
+  display: flex;
+  gap: var(--v3-space-2);
+}
+
+.v3-panel__body {
+  padding: var(--v3-panel-pad, var(--v3-space-4));
+}
+
+.v3-stat {
+  background: var(--v3-surface-raised);
+  border: 1px solid var(--v3-border);
+  border-radius: var(--v3-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--v3-space-1);
+  min-width: 96px;
+  padding: var(--v3-space-3);
+}
+
+.v3-stat__label {
+  color: var(--v3-text-muted);
+  font-size: var(--v3-font-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.v3-stat__value {
+  color: var(--v3-text);
+  font-size: var(--v3-font-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.v3-stat__hint {
+  color: var(--v3-text-muted);
+  font-size: var(--v3-font-xs);
+}
+
+.v3-stat[data-tone="good"] .v3-stat__value {
+  color: var(--v3-good);
+}
+.v3-stat[data-tone="warn"] .v3-stat__value {
+  color: var(--v3-warn);
+}
+.v3-stat[data-tone="bad"] .v3-stat__value {
+  color: var(--v3-bad);
+}
+
+.v3-pill {
+  background: var(--v3-surface-raised);
+  border: 1px solid var(--v3-border);
+  border-radius: var(--v3-radius-pill);
+  color: var(--v3-text-muted);
+  display: inline-flex;
+  font-size: var(--v3-font-xs);
+  padding: 2px var(--v3-space-2);
+}
+
+.v3-pill[data-tone="accent"] {
+  border-color: var(--v3-accent);
+  color: var(--v3-accent);
+}
+
+.v3-focusable:focus-visible {
+  outline: 2px solid var(--v3-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v3-panel,
+  .v3-stat {
+    transition: none;
+  }
+}

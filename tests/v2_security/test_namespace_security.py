@@ -43,7 +43,8 @@ def test_registration_is_additive_and_introspectable(vault: Vault) -> None:
     assert namespace.service.vault is vault
     assert all(spec["description"] for spec in route_specs())
     assert all("action" in spec for spec in route_specs())
-    assert set(ApiV2(vault).routes) == set(api.routes)
+    assert set(names) <= set(api.routes)
+    assert set(names).isdisjoint(set(ApiV2(vault).routes))
     standalone = register_with_vault(vault)
     assert standalone.handlers.health({}).data["namespace"] == "security"
 

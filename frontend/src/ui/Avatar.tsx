@@ -1,4 +1,9 @@
-import { forwardRef, type CSSProperties, type HTMLAttributes, type ReactNode } from "react";
+import {
+  forwardRef,
+  type CSSProperties,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react";
 import { cx, hashHue, initials, styleVars } from "./componentUtils";
 
 export type AvatarSize = "xs" | "sm" | "md" | "lg";
@@ -32,11 +37,11 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
       {src ? (
         <img className="ui-avatar__image" src={src} alt={name} />
       ) : (
-        fallback ?? (
+        (fallback ?? (
           <span className="ui-avatar__initials" aria-hidden="true">
             {initials(name)}
           </span>
-        )
+        ))
       )}
       {status ? (
         <span className={cx("ui-avatar__status", `is-${status}`)}>
@@ -57,7 +62,11 @@ export function AvatarGroup({ names, max = 4, size = "sm" }: AvatarGroupProps) {
   const shown = names.slice(0, max);
   const remaining = names.length - shown.length;
   return (
-    <div className="ui-avatar-group" role="group" aria-label={`${names.length} people`}>
+    <div
+      className="ui-avatar-group"
+      role="group"
+      aria-label={`${names.length} people`}
+    >
       {shown.map((name) => (
         <Avatar key={name} name={name} size={size} />
       ))}

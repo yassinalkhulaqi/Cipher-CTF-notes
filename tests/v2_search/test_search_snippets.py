@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from tests.v2_search.conftest import make_document
-
 from redscribe.v2.search.models import SortKey
 from redscribe.v2.search.query import QueryParser
 from redscribe.v2.search.snippets import (
@@ -14,6 +12,7 @@ from redscribe.v2.search.snippets import (
     token_offsets,
 )
 from redscribe.v2.search.synonyms import SynonymSet
+from tests.v2_search.conftest import make_document
 
 
 def test_find_term_spans_matches_offsets() -> None:

@@ -133,12 +133,15 @@ def collect(base: str) -> list[FileChange]:
 def summarize(changes: list[FileChange]) -> dict[str, int]:
     code = [change for change in changes if change.is_code]
     tests = [change for change in changes if change.is_test]
+    added = sum(change.added for change in changes)
+    deleted = sum(change.deleted for change in changes)
     return {
         "files": len(changes),
         "code_files": len(code),
         "test_files": len(tests),
-        "added": sum(change.added for change in changes),
-        "deleted": sum(change.deleted for change in changes),
+        "added": added,
+        "deleted": deleted,
+        "net": added - deleted,
         "code_added": sum(change.added for change in code),
         "code_deleted": sum(change.deleted for change in code),
         "tests_added": sum(change.added for change in tests),
@@ -146,27 +149,115 @@ def summarize(changes: list[FileChange]) -> dict[str, int]:
     }
 
 
-def evaluate(summary: dict[str, int], min_added: int, min_tests: int) -> list[str]:
+def evaluate(
+    summary: dict[str, int],
+    min_added: int,
+    min_tests: int,
+    min_net: int = 0,
+) -> list[str]:
     failures: list[str] = []
     if summary["added"] < min_added:
         failures.append(f"added {summary['added']} lines, need at least {min_added}")
     if summary["tests_added"] < min_tests:
         failures.append(f"added {summary['tests_added']} test lines, need at least {min_tests}")
+    if min_net and summary["net"] < min_net:
+        failures.append(f"net {summary['net']} lines, need at least {min_net}")
     return failures
+
+
+def collect_against(ref: str, baseline: str) -> list[FileChange]:
+    """Collect committed changes between an exact baseline and a branch ref."""
+    return parse_numstat(_git("diff", "--numstat", baseline, ref, "--"))
+
+
+def aggregate(branches: list[str], baseline: str) -> tuple[list[dict[str, int]], dict[str, int]]:
+    """Summarize each branch and the whole program against one baseline."""
+    rows: list[dict[str, int]] = []
+    for branch in branches:
+        summary = summarize(collect_against(branch, baseline))
+        summary["net"] = summary["added"] - summary["deleted"]
+        rows.append(summary)
+    totals = {
+        key: sum(row[key] for row in rows)
+        for key in (
+            "files",
+            "code_files",
+            "test_files",
+            "added",
+            "deleted",
+            "net",
+            "code_added",
+            "code_deleted",
+            "tests_added",
+            "tests_deleted",
+        )
+    }
+    return rows, totals
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Enforce per-branch LOC budgets.")
     parser.add_argument("--base", default="origin/main")
+    parser.add_argument("--baseline", default="", help="Exact V3 baseline ref.")
     parser.add_argument("--min-added", type=int, default=4000)
     parser.add_argument("--min-tests", type=int, default=500)
+    parser.add_argument("--min-net", type=int, default=0)
+    parser.add_argument("--min-test-loc", type=int, default=0)
+    parser.add_argument("--aggregate", action="store_true", help="Aggregate all branches.")
+    parser.add_argument("--branches", default="", help="Comma-separated branch refs.")
+    parser.add_argument("--program-min-net", type=int, default=0)
     parser.add_argument("--json", action="store_true", help="Emit a JSON summary.")
     args = parser.parse_args(argv)
 
-    changes = collect(args.base)
+    if args.aggregate:
+        baseline = args.baseline or resolve_base(args.base)
+        branch_list = [item.strip() for item in args.branches.split(",") if item.strip()]
+        rows, totals = aggregate(branch_list, baseline)
+        failures: list[str] = []
+        for branch, row in zip(branch_list, rows, strict=True):
+            row["branch"] = branch
+            if row["net"] < args.min_net:
+                failures.append(f"{branch}: net {row['net']} < {args.min_net}")
+            if row["tests_added"] < (args.min_test_loc or args.min_tests):
+                failures.append(
+                    f"{branch}: test lines {row['tests_added']} < "
+                    f"{args.min_test_loc or args.min_tests}"
+                )
+        if totals["net"] < args.program_min_net:
+            failures.append(f"program net {totals['net']} < {args.program_min_net}")
+        payload = {
+            "baseline": baseline,
+            "branches": rows,
+            "totals": totals,
+            "ok": not failures,
+            "failures": failures,
+        }
+        if args.json:
+            emit(json.dumps(payload, indent=2, sort_keys=True))
+        else:
+            emit(f"V3 program LOC gate vs {baseline[:12]}")
+            for row in rows:
+                emit(
+                    f"  {row['branch']}: net {row['net']} "
+                    f"(added {row['added']}, tests {row['tests_added']})"
+                )
+            emit(f"  TOTAL net: {totals['net']} / {args.program_min_net} ({len(rows)} branches)")
+            for failure in failures:
+                emit(f"  FAIL: {failure}")
+            if not failures:
+                emit("  PASS")
+        return 1 if failures else 0
+
+    base_ref = args.baseline or args.base
+    changes = collect(base_ref)
     summary = summarize(changes)
-    failures = evaluate(summary, args.min_added, args.min_tests)
-    summary["base"] = resolve_base(args.base)
+    failures = evaluate(
+        summary,
+        args.min_added,
+        args.min_tests or args.min_test_loc,
+        args.min_net,
+    )
+    summary["base"] = resolve_base(base_ref) if not args.baseline else base_ref
     summary["ok"] = not failures
     summary["failures"] = failures
 
@@ -179,7 +270,9 @@ def main(argv: list[str] | None = None) -> int:
             f"(code {summary['code_files']}, tests {summary['test_files']})"
         )
         emit(f"  added: {summary['added']} / {args.min_added}")
-        emit(f"  test lines: {summary['tests_added']} / {args.min_tests}")
+        if args.min_net:
+            emit(f"  net: {summary['net']} / {args.min_net}")
+        emit(f"  test lines: {summary['tests_added']} / {args.min_tests or args.min_test_loc}")
         emit(f"  deleted: {summary['deleted']}")
         if failures:
             for failure in failures:

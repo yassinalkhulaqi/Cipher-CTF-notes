@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-from tests.v2_search.conftest import make_document
 
 from redscribe.v2.search.filters import (
     apply_filters,
@@ -17,6 +16,7 @@ from redscribe.v2.search.filters import (
     validate_filter_clause,
 )
 from redscribe.v2.search.models import FilterClause
+from tests.v2_search.conftest import make_document
 
 
 def test_parse_filter_token_supports_operators() -> None:

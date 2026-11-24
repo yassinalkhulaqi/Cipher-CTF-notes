@@ -26,7 +26,9 @@ export function Slider({
 }: SliderProps) {
   const id = useId();
   const fill = percentage(value, min, max);
-  const trackStyle = styleVars({ "--slider-fill": `${fill}%` }) as CSSProperties;
+  const trackStyle = styleVars({
+    "--slider-fill": `${fill}%`,
+  }) as CSSProperties;
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
     onChange(Number(event.target.value));

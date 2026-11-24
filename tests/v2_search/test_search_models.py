@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import json
 
-from tests.v2_search.conftest import make_document
-
 from redscribe.v2.search.models import (
     DEFAULT_FIELD_BOOSTS,
     MAX_QUERY_LENGTH,
@@ -21,6 +19,7 @@ from redscribe.v2.search.models import (
     Token,
     utc_now,
 )
+from tests.v2_search.conftest import make_document
 
 
 def test_field_boosts_cover_every_search_field() -> None:

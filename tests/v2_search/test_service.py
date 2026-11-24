@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import pytest
-from tests.v2_search.conftest import seed_vault
 
 from redscribe.storage.db import Vault
 from redscribe.v2.search.models import FilterClause
 from redscribe.v2.search.service import SearchService, create_search_service, document_summaries
 from redscribe.v2.search.synonyms import SynonymSet
+from tests.v2_search.conftest import seed_vault
 
 
 def service(vault: Vault) -> SearchService:
