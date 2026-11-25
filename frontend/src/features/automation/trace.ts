@@ -173,7 +173,12 @@ export function traceSummary(trace: DryRunTrace): Record<string, number> {
 }
 
 export function traceVerdict(trace: DryRunTrace): "clean" | "attention" {
-  if (trace.writes > 0 && trace.mode === "dry_run") return "attention";
+  if (
+    trace.mode === "dry_run" &&
+    (trace.writes > 0 ||
+      trace.entries.some((entry) => entry.status === "executed"))
+  )
+    return "attention";
   return trace.entries.some((entry) => entry.status === "failed")
     ? "attention"
     : "clean";
