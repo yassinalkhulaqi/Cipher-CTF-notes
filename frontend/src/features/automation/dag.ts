@@ -6,7 +6,9 @@ import { issue } from "./types";
 export function dependencyGraph(steps: StepDef[]): Record<string, string[]> {
   const graph: Record<string, string[]> = {};
   for (const step of steps) {
-    graph[step.id] = Array.from(new Set(step.depends_on ?? []))
+    graph[step.id] = Array.from(
+      new Set([...(graph[step.id] ?? []), ...(step.depends_on ?? [])]),
+    )
       .filter((dependency) => dependency !== step.id)
       .sort();
   }
@@ -224,8 +226,12 @@ export function compileDag(steps: StepDef[]): DagCompilation {
     let cursor: string | undefined = end;
     while (cursor && !chain.includes(cursor)) {
       chain.unshift(cursor);
-      const parents = (graph[cursor] ?? []).filter((parent) => parent in depth);
-      cursor = parents.sort((a, b) => (depth[b] ?? 0) - (depth[a] ?? 0))[0];
+      const parents = (graph[cursor] ?? []).filter(
+        (parent: string) => parent in depth,
+      );
+      cursor = parents.sort(
+        (a: string, b: string) => (depth[b] ?? 0) - (depth[a] ?? 0),
+      )[0];
     }
     criticalPath = chain;
   }

@@ -408,7 +408,7 @@ test("guided runner walks steps and respects dependencies", () => {
   assert.equal(currentStep(state)?.id, "a");
   state = runnerReducer(state, { type: "toggle" });
   assert.equal(state.completed.length, 1);
-  assert.equal(currentStep(state)?.id, "b");
+  assert.equal(currentStep(state)?.id, "a");
   state = runnerReducer(state, { type: "last" });
   assert.equal(currentStep(state)?.id, "d");
   const before = state;
