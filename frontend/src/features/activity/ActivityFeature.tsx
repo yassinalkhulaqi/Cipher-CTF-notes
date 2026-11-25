@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 
 import { makeActivityClient, type ActivityClient } from "./client";
-import { validateFilterQuery } from "./filters";
 import { PERIOD_OPTIONS } from "./format";
 import {
   activityReducer,

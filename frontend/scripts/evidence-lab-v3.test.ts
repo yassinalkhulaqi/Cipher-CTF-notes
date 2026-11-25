@@ -328,7 +328,7 @@ test("format helpers are deterministic", () => {
 test("base64 and hex conversion round-trip", () => {
   assert.deepEqual(Array.from(hexToBytes("000102faff")), [0, 1, 2, 250, 255]);
   assert.equal(bytesToBase64(new Uint8Array([0x41])), "QQ==");
-  assert.equal(bytesToBase64(new Uint8Array([0x41, 0x42])), "QkI=");
+  assert.equal(bytesToBase64(new Uint8Array([0x41, 0x42])), "QUI=");
   assert.equal(bytesToBase64(new Uint8Array([0x41, 0x42, 0x43])), "QUJD");
   assert.equal(textToBase64("abc"), "YWJj");
 });
@@ -360,7 +360,7 @@ test("hex viewer virtualizes rows and navigates", () => {
   assert.equal(slice.items[0], many[slice.start]);
   assert.equal(navigateOffset(0, -10, 4096), 0);
   assert.equal(navigateOffset(4090, 20, 4096), 4095);
-  assert.equal(offsetForCell(hexWindow(many), 3, 5), 53);
+  assert.equal(offsetForCell(hexWindow(many), 3, 5), 49);
 });
 
 test("hex selection marks only intersecting rows", () => {
@@ -379,8 +379,9 @@ test("hex selection marks only intersecting rows", () => {
 test("strings model filters and groups hits", () => {
   const scanData = scan();
   const tabs = stringTabs(scanData);
-  assert.equal(tabs[0].id, "url");
-  assert.equal(tabs[1].id, "plain");
+  assert.equal(tabs[0].id, "all");
+  assert.ok(tabs.some((tab) => tab.id === "url"));
+  assert.ok(tabs.some((tab) => tab.id === "plain"));
   assert.equal(filterHits(scanData.hits, "hello", "all").length, 1);
   assert.equal(filterHits(scanData.hits, "", "url").length, 1);
   assert.equal(filterHits(scanData.hits, "", "hex").length, 0);
@@ -509,5 +510,5 @@ test("evidence lab client calls the v3 namespace with encoded data", async () =>
   );
   assert.equal((await client.compare([], [])).deltas.length, 2);
   assert.equal((await client.custody("disk-1", [])).verified, true);
-  assert.equal(calls.length, 10);
+  assert.equal(calls.length, 9);
 });

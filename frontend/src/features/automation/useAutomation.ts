@@ -126,7 +126,7 @@ export function useAutomation(v3Client?: V3Client): AutomationController {
       return {
         ...current,
         steps: [...current.steps, step],
-        version: current.version + 1,
+        version: (current.version ?? 0) + 1,
       };
     });
   }, []);
@@ -137,7 +137,7 @@ export function useAutomation(v3Client?: V3Client): AutomationController {
       steps: current.steps.map((step) =>
         step.id === id ? { ...step, ...changes } : step,
       ),
-      version: current.version + 1,
+      version: (current.version ?? 0) + 1,
     }));
   }, []);
 
@@ -150,7 +150,7 @@ export function useAutomation(v3Client?: V3Client): AutomationController {
           ...step,
           depends_on: (step.depends_on ?? []).filter((value) => value !== id),
         })),
-      version: current.version + 1,
+      version: (current.version ?? 0) + 1,
     }));
   }, []);
 
@@ -165,7 +165,7 @@ export function useAutomation(v3Client?: V3Client): AutomationController {
       setPlaybook((current) => ({
         ...current,
         steps: result.steps,
-        version: current.version + 1,
+        version: (current.version ?? 0) + 1,
       }));
     },
     [playbook.steps],

@@ -9,8 +9,9 @@ import { RecoveryFlow } from "./RecoveryFlow";
 import { SetupWizard } from "./SetupWizard";
 import { createVaultSecurityClient } from "./client";
 import { canShowContent, lockedMessage, needsUnlock } from "./pure";
+import type { AuditFilterState } from "./pure";
 import { useVaultSecurityStore } from "./store";
-import type { AuditFilterState, PolicyPreview, PolicyRule } from "./types";
+import type { PolicyPreview, PolicyRule } from "./types";
 
 export interface SecurityFeatureProps {
   basePath?: string;

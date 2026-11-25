@@ -4,7 +4,8 @@ import { useState } from "react";
 
 import { V3Panel } from "../../v3/components/V3Panel";
 import { auditCounts, filterAudit, formatTimestamp } from "./pure";
-import type { AuditEntry, AuditFilterState } from "./types";
+import type { AuditFilterState } from "./pure";
+import type { AuditEntry } from "./types";
 
 export interface AuditViewerProps {
   entries: AuditEntry[];

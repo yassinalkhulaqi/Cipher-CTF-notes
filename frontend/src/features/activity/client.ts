@@ -67,7 +67,11 @@ export class ActivityClient {
   constructor(private readonly client: V3Client) {}
 
   async stream(body: ActivityRequestBody = {}): Promise<StreamResult> {
-    return this.client.data<StreamResult>("activity", ROUTES.stream, body);
+    return this.client.data<StreamResult>(
+      "activity",
+      ROUTES.stream,
+      body as unknown as Record<string, unknown>,
+    );
   }
 
   async filters(): Promise<FilterMetadata> {
@@ -81,7 +85,11 @@ export class ActivityClient {
   }
 
   async digest(body: ActivityRequestBody = {}): Promise<DigestCollection> {
-    return this.client.data<DigestCollection>("activity", ROUTES.digest, body);
+    return this.client.data<DigestCollection>(
+      "activity",
+      ROUTES.digest,
+      body as unknown as Record<string, unknown>,
+    );
   }
 
   async since(identity: string, limit?: number): Promise<SinceLastVisit> {
@@ -119,9 +127,7 @@ export class ActivityClient {
     );
   }
 
-  async redact(
-    payload: Record<string, unknown>,
-  ): Promise<{
+  async redact(payload: Record<string, unknown>): Promise<{
     payload: Record<string, unknown>;
     report: RedactionReportData;
   }> {
