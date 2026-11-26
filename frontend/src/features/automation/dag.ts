@@ -226,7 +226,7 @@ export function compileDag(steps: StepDef[]): DagCompilation {
     let cursor: string | undefined = end;
     while (cursor && !chain.includes(cursor)) {
       chain.unshift(cursor);
-      const parents = (graph[cursor] ?? []).filter(
+      const parents: string[] = (graph[cursor] ?? []).filter(
         (parent: string) => parent in depth,
       );
       cursor = parents.sort(
