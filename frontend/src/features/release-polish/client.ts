@@ -39,7 +39,12 @@ export interface DocsEnvelope {
 export interface ReleaseEnvelope {
   version: string;
   released_on: string;
-  entries: Array<{ version: string; category: string; title: string; detail: string }>;
+  entries: Array<{
+    version: string;
+    category: string;
+    title: string;
+    detail: string;
+  }>;
   rendered: string;
 }
 
@@ -78,29 +83,49 @@ export class ReleasePolishClient {
   }
 
   async manifest(): Promise<ReleaseManifestData> {
-    return this.client.data<ReleaseManifestData>(RELEASE_NAMESPACE_NAME, RELEASE_ROUTES.manifest);
+    return this.client.data<ReleaseManifestData>(
+      RELEASE_NAMESPACE_NAME,
+      RELEASE_ROUTES.manifest,
+    );
   }
 
   async golden(name?: string): Promise<GoldenEnvelope> {
-    return this.client.data<GoldenEnvelope>(RELEASE_NAMESPACE_NAME, RELEASE_ROUTES.golden, {
-      name: name ?? "",
-    });
+    return this.client.data<GoldenEnvelope>(
+      RELEASE_NAMESPACE_NAME,
+      RELEASE_ROUTES.golden,
+      {
+        name: name ?? "",
+      },
+    );
   }
 
   async smoke(): Promise<SmokeEnvelope> {
-    return this.client.data<SmokeEnvelope>(RELEASE_NAMESPACE_NAME, RELEASE_ROUTES.smoke);
+    return this.client.data<SmokeEnvelope>(
+      RELEASE_NAMESPACE_NAME,
+      RELEASE_ROUTES.smoke,
+    );
   }
 
   async gates(): Promise<GateEnvelope> {
-    return this.client.data<GateEnvelope>(RELEASE_NAMESPACE_NAME, RELEASE_ROUTES.gates);
+    return this.client.data<GateEnvelope>(
+      RELEASE_NAMESPACE_NAME,
+      RELEASE_ROUTES.gates,
+    );
   }
 
   async docs(rendered = false): Promise<DocsEnvelope> {
-    return this.client.data<DocsEnvelope>(RELEASE_NAMESPACE_NAME, RELEASE_ROUTES.docs, { rendered });
+    return this.client.data<DocsEnvelope>(
+      RELEASE_NAMESPACE_NAME,
+      RELEASE_ROUTES.docs,
+      { rendered },
+    );
   }
 
   async changelog(): Promise<ReleaseEnvelope> {
-    return this.client.data<ReleaseEnvelope>(RELEASE_NAMESPACE_NAME, RELEASE_ROUTES.changelog);
+    return this.client.data<ReleaseEnvelope>(
+      RELEASE_NAMESPACE_NAME,
+      RELEASE_ROUTES.changelog,
+    );
   }
 
   async migrationNotes(): Promise<MigrationEnvelope> {
@@ -110,7 +135,9 @@ export class ReleasePolishClient {
     );
   }
 
-  async readiness(gatesEvaluated = false): Promise<{ ready: boolean; verdict: string }> {
+  async readiness(
+    gatesEvaluated = false,
+  ): Promise<{ ready: boolean; verdict: string }> {
     return this.client.data<{ ready: boolean; verdict: string }>(
       RELEASE_NAMESPACE_NAME,
       RELEASE_ROUTES.readiness,
@@ -119,15 +146,24 @@ export class ReleasePolishClient {
   }
 
   async onboarding(): Promise<OnboardingEnvelope> {
-    return this.client.data<OnboardingEnvelope>(RELEASE_NAMESPACE_NAME, RELEASE_ROUTES.onboarding);
+    return this.client.data<OnboardingEnvelope>(
+      RELEASE_NAMESPACE_NAME,
+      RELEASE_ROUTES.onboarding,
+    );
   }
 
   async showcase(): Promise<ShowcaseEnvelope> {
-    return this.client.data<ShowcaseEnvelope>(RELEASE_NAMESPACE_NAME, RELEASE_ROUTES.showcase);
+    return this.client.data<ShowcaseEnvelope>(
+      RELEASE_NAMESPACE_NAME,
+      RELEASE_ROUTES.showcase,
+    );
   }
 
   async polish(): Promise<PolishEnvelope> {
-    return this.client.data<PolishEnvelope>(RELEASE_NAMESPACE_NAME, RELEASE_ROUTES.polish);
+    return this.client.data<PolishEnvelope>(
+      RELEASE_NAMESPACE_NAME,
+      RELEASE_ROUTES.polish,
+    );
   }
 }
 

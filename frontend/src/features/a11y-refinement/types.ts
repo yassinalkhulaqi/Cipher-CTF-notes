@@ -225,5 +225,9 @@ export interface A11yDashboardView {
     appearance: UnifiedAppearanceView;
     css: Record<string, string>;
   };
-  motion: { mode: MotionMode; content_hidden: boolean; equivalent_focus_order: boolean };
+  motion: {
+    mode: MotionMode;
+    content_hidden: boolean;
+    equivalent_focus_order: boolean;
+  };
 }

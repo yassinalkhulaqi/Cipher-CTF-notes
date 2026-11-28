@@ -50,16 +50,20 @@ export class FindingsApi {
     tags?: string[];
     targetRef?: string;
   }): Promise<FindingWire> {
-    const data = await this.client.data<{ finding: FindingWire }>("findings", "create", {
-      title: values.title,
-      summary: values.summary ?? "",
-      vector: values.vector ?? "",
-      owner: values.owner ?? "",
-      cwes: values.cwes ?? [],
-      cves: values.cves ?? [],
-      tags: values.tags ?? [],
-      target_ref: values.targetRef ?? "",
-    });
+    const data = await this.client.data<{ finding: FindingWire }>(
+      "findings",
+      "create",
+      {
+        title: values.title,
+        summary: values.summary ?? "",
+        vector: values.vector ?? "",
+        owner: values.owner ?? "",
+        cwes: values.cwes ?? [],
+        cves: values.cves ?? [],
+        tags: values.tags ?? [],
+        target_ref: values.targetRef ?? "",
+      },
+    );
     return data.finding;
   }
 
@@ -68,7 +72,9 @@ export class FindingsApi {
   }
 
   async preview(vector: string): Promise<ScorePreview> {
-    return this.client.data<ScorePreview>("findings", "score_preview", { vector });
+    return this.client.data<ScorePreview>("findings", "score_preview", {
+      vector,
+    });
   }
 
   async setScore(ref: string, vector: string): Promise<FindingDetail> {
@@ -76,7 +82,11 @@ export class FindingsApi {
     return this.detail(ref);
   }
 
-  async transition(ref: string, action: string, note = ""): Promise<FindingDetail> {
+  async transition(
+    ref: string,
+    action: string,
+    note = "",
+  ): Promise<FindingDetail> {
     await this.client.data("findings", "transition", { ref, action, note });
     return this.detail(ref);
   }
@@ -86,8 +96,16 @@ export class FindingsApi {
     return this.detail(ref);
   }
 
-  async updateTask(ref: string, taskId: string, status: string): Promise<FindingDetail> {
-    await this.client.data("findings", "remediation_update", { ref, task_id: taskId, status });
+  async updateTask(
+    ref: string,
+    taskId: string,
+    status: string,
+  ): Promise<FindingDetail> {
+    await this.client.data("findings", "remediation_update", {
+      ref,
+      task_id: taskId,
+      status,
+    });
     return this.detail(ref);
   }
 
@@ -125,8 +143,16 @@ export class FindingsApi {
     return this.detail(ref);
   }
 
-  async markDuplicate(ref: string, canonical: string, note = ""): Promise<FindingDetail> {
-    await this.client.data("findings", "mark_duplicate", { ref, canonical, note });
+  async markDuplicate(
+    ref: string,
+    canonical: string,
+    note = "",
+  ): Promise<FindingDetail> {
+    await this.client.data("findings", "mark_duplicate", {
+      ref,
+      canonical,
+      note,
+    });
     return this.detail(ref);
   }
 
@@ -136,9 +162,13 @@ export class FindingsApi {
   }
 
   async cweCatalog(query = ""): Promise<CweEntry[]> {
-    const data = await this.client.data<{ entries: CweEntry[] }>("findings", "cwe_catalog", {
-      query,
-    });
+    const data = await this.client.data<{ entries: CweEntry[] }>(
+      "findings",
+      "cwe_catalog",
+      {
+        query,
+      },
+    );
     return data.entries;
   }
 

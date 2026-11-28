@@ -6,7 +6,12 @@ import { V3Panel, V3Stat } from "../../v3/components/V3Panel";
 import { SkeletonList } from "./Skeletons";
 import { formatFrameStats } from "./frameMonitor";
 import { freshnessLabel, freshnessTone, shouldRefresh } from "./freshness";
-import type { BudgetView, FixtureSummary, FrameStats, IndexFreshness } from "./types";
+import type {
+  BudgetView,
+  FixtureSummary,
+  FrameStats,
+  IndexFreshness,
+} from "./types";
 
 export interface PerformanceHUDProps {
   frames: FrameStats;
@@ -56,31 +61,64 @@ export function PerformanceHUD({
       }
     >
       <div className="perf-hud__stats">
-        <V3Stat label="Frame avg" value={frames.average.toFixed(2)} hint="ms" tone={frames.tone} />
-        <V3Stat label="Frame p95" value={frames.p95.toFixed(2)} hint="ms" tone={frames.tone} />
-        <V3Stat label="Index age" value={freshness.lagSeconds.toFixed(1)} hint="seconds" tone={freshnessTone(freshness)} />
-        <V3Stat label="Index gen" value={freshness.indexedGeneration} hint={`of ${freshness.generation}`} tone={stale ? "warn" : "good"} />
+        <V3Stat
+          label="Frame avg"
+          value={frames.average.toFixed(2)}
+          hint="ms"
+          tone={frames.tone}
+        />
+        <V3Stat
+          label="Frame p95"
+          value={frames.p95.toFixed(2)}
+          hint="ms"
+          tone={frames.tone}
+        />
+        <V3Stat
+          label="Index age"
+          value={freshness.lagSeconds.toFixed(1)}
+          hint="seconds"
+          tone={freshnessTone(freshness)}
+        />
+        <V3Stat
+          label="Index gen"
+          value={freshness.indexedGeneration}
+          hint={`of ${freshness.generation}`}
+          tone={stale ? "warn" : "good"}
+        />
       </div>
       <p className="perf-hud__frames" title={formatFrameStats(frames)}>
         {formatFrameStats(frames)}
       </p>
-      <div className="perf-hud__freshness" data-tone={freshnessTone(freshness)} data-stale={stale}>
+      <div
+        className="perf-hud__freshness"
+        data-tone={freshnessTone(freshness)}
+        data-stale={stale}
+      >
         {freshnessLabel(freshness)}
       </div>
       <ul className="perf-hud__budgets">
         {budgets.map((budget) => (
           <li key={budget.name} data-tone={toneForBudget(budget)}>
             <span className="perf-hud__budget-name">{budget.name}</span>
-            <span className="perf-hud__budget-value">{budget.measured.toFixed(2)} ms</span>
-            <span className="perf-hud__budget-limit">/ {budget.limit.toFixed(0)} ms</span>
+            <span className="perf-hud__budget-value">
+              {budget.measured.toFixed(2)} ms
+            </span>
+            <span className="perf-hud__budget-limit">
+              / {budget.limit.toFixed(0)} ms
+            </span>
             <span className="perf-hud__budget-bar" aria-hidden="true">
-              <span style={{ width: `${Math.min(100, (budget.measured / budget.limit) * 100)}%` }} />
+              <span
+                style={{
+                  width: `${Math.min(100, (budget.measured / budget.limit) * 100)}%`,
+                }}
+              />
             </span>
           </li>
         ))}
       </ul>
       <footer className="perf-hud__footer">
-        {failed === 0 ? "All budgets passing" : `${failed} budget(s) failing`} · harness {wallMs.toFixed(1)} ms
+        {failed === 0 ? "All budgets passing" : `${failed} budget(s) failing`} ·
+        harness {wallMs.toFixed(1)} ms
       </footer>
     </V3Panel>
   );
