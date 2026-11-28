@@ -43,7 +43,9 @@ export function motionEquivalence(mode: MotionMode): {
   };
 }
 
-export function appearanceFromSnapshot(snapshot: PreferenceSnapshotView): UnifiedAppearanceView {
+export function appearanceFromSnapshot(
+  snapshot: PreferenceSnapshotView,
+): UnifiedAppearanceView {
   const marker = snapshot.shortcuts["v3.motion_mode"] ?? [];
   const motion: MotionMode = marker.includes("off")
     ? "off"
@@ -81,7 +83,9 @@ export function snapshotWithAppearance(
   };
 }
 
-export function appearanceCss(appearance: UnifiedAppearanceView): Record<string, string> {
+export function appearanceCss(
+  appearance: UnifiedAppearanceView,
+): Record<string, string> {
   const durations = MOTION_DURATIONS[appearance.motion];
   return {
     "--v3-theme": appearance.theme,
@@ -106,7 +110,9 @@ export function checksum(snapshot: PreferenceSnapshotView): string {
     String(snapshot.high_contrast),
     String(snapshot.screen_reader_hints),
     String(snapshot.focus_ring_boost),
-    JSON.stringify(Object.entries(snapshot.shortcuts).sort(([a], [b]) => a.localeCompare(b))),
+    JSON.stringify(
+      Object.entries(snapshot.shortcuts).sort(([a], [b]) => a.localeCompare(b)),
+    ),
   ];
   let hash = 2166136261;
   for (const char of fields.join("|")) {
@@ -138,7 +144,9 @@ export function preferenceDiff(
     "shortcuts",
   ];
   return fields
-    .filter((field) => JSON.stringify(local[field]) !== JSON.stringify(remote[field]))
+    .filter(
+      (field) => JSON.stringify(local[field]) !== JSON.stringify(remote[field]),
+    )
     .map((field) => ({ field, local: local[field], remote: remote[field] }));
 }
 
@@ -158,9 +166,14 @@ export function syncSummary(report: SyncReportView): string {
   return parts.join(" · ");
 }
 
-export function directionPreference(snapshot: PreferenceSnapshotView, locale: string): Direction {
+export function directionPreference(
+  snapshot: PreferenceSnapshotView,
+  locale: string,
+): Direction {
   if (snapshot.direction !== "auto") return snapshot.direction;
-  return ["ar", "he", "fa", "ur"].includes(locale.split("-")[0]) ? "rtl" : "ltr";
+  return ["ar", "he", "fa", "ur"].includes(locale.split("-")[0])
+    ? "rtl"
+    : "ltr";
 }
 
 export function recordLabel(record: PreferenceRecordView): string {

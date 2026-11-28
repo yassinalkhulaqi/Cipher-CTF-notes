@@ -3,7 +3,10 @@ import test from "node:test";
 
 import { V3Client } from "../src/v3/apiClient";
 
-import { ActivityClient, makeActivityClient } from "../src/features/activity/client";
+import {
+  ActivityClient,
+  makeActivityClient,
+} from "../src/features/activity/client";
 import {
   FILTER_KEYS,
   chipFromToken,
@@ -68,7 +71,10 @@ import { EMPTY_STREAM } from "../src/features/activity/types";
 const NOW = 1_700_000_000;
 const DAY = 86_400;
 
-function entry(sequence: number, overrides: Partial<ActivityEntry> = {}): ActivityEntry {
+function entry(
+  sequence: number,
+  overrides: Partial<ActivityEntry> = {},
+): ActivityEntry {
   return {
     sequence,
     kind: "finding.created",
@@ -158,42 +164,60 @@ function stream(): StreamResult {
 }
 
 function json(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify({ data, meta: { request_id: "req", api_version: "3.0" } }), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
+  return new Response(
+    JSON.stringify({ data, meta: { request_id: "req", api_version: "3.0" } }),
+    {
+      status,
+      headers: { "Content-Type": "application/json" },
+    },
+  );
 }
 
-function fakeClient(handler: (route: string, body: Record<string, unknown>) => unknown): {
+function fakeClient(
+  handler: (route: string, body: Record<string, unknown>) => unknown,
+): {
   client: ActivityClient;
   calls: Array<{ route: string; body: Record<string, unknown> }>;
 } {
   const calls: Array<{ route: string; body: Record<string, unknown> }> = [];
-  const fetchImpl = (async (input: RequestInfo | URL, init: RequestInit = {}) => {
+  const fetchImpl = (async (
+    input: RequestInfo | URL,
+    init: RequestInit = {},
+  ) => {
     const url = String(input);
     const route = url.slice(url.lastIndexOf("/") + 1);
-    const body = JSON.parse(String(init.body ?? "{}")) as Record<string, unknown>;
+    const body = JSON.parse(String(init.body ?? "{}")) as Record<
+      string,
+      unknown
+    >;
     calls.push({ route, body });
     return json(handler(route, body));
   }) as typeof globalThis.fetch;
   return {
-    client: new ActivityClient(new V3Client({ fetch: fetchImpl, requestId: () => "req_test" })),
+    client: new ActivityClient(
+      new V3Client({ fetch: fetchImpl, requestId: () => "req_test" }),
+    ),
     calls,
   };
 }
 
 test("filter DSL tokenizes quoted values and builds chips", () => {
-  assert.deepEqual(tokenizeFilterQuery('kind:finding.created text:"hello world"'), [
-    "kind:finding.created",
-    "text:hello world",
-  ]);
+  assert.deepEqual(
+    tokenizeFilterQuery('kind:finding.created text:"hello world"'),
+    ["kind:finding.created", "text:hello world"],
+  );
   assert.deepEqual(tokenizeFilterQuery("  a   b\\ c "), ["a", "b c"]);
-  const parsed = parseFilterQuery('kind:finding.created -actor:bob text:"sql injection"');
+  const parsed = parseFilterQuery(
+    'kind:finding.created -actor:bob text:"sql injection"',
+  );
   assert.equal(parsed.errors.length, 0);
   assert.equal(parsed.chips.length, 3);
   assert.equal(parsed.chips[1].operator, "exclude");
   assert.equal(parsed.chips[2].value, "sql injection");
-  assert.equal(parsed.normalized, "kind:finding.created -actor:bob text:sql injection");
+  assert.equal(
+    parsed.normalized,
+    "kind:finding.created -actor:bob text:sql injection",
+  );
   assert.deepEqual(chipFromToken("!kind:note.created")?.operator, "exclude");
   assert.equal(chipFromToken(""), null);
   assert.equal(chipFromToken("kind:"), null);
@@ -212,7 +236,10 @@ test("filter DSL validation reports unknown keys and severities", () => {
 });
 
 test("chip helpers toggle, remove, and render tokens", () => {
-  const chips = [makeChip("kind", "finding.created"), makeChip("actor", "alice", "exclude")];
+  const chips = [
+    makeChip("kind", "finding.created"),
+    makeChip("actor", "alice", "exclude"),
+  ];
   assert.equal(chipsToQuery(chips), "kind:finding.created -actor:alice");
   assert.equal(chips[1].token, "-actor:alice");
   const added = toggleChip(chips, makeChip("severity", "warning"));
@@ -306,18 +333,37 @@ test("grouping sorts entries and builds newest-first date groups", () => {
   assert.deepEqual(uniqueValues(rows, "actor"), ["alice", "bob", "carol"]);
   assert.equal(jumpTargets(rows).length, 3);
   assert.equal(countByKind(rows)["finding.created"], 1);
-  assert.deepEqual(pageSlice(rows, 2, 2).map((item) => item.sequence), [2, 1]);
+  assert.deepEqual(
+    pageSlice(rows, 2, 2).map((item) => item.sequence),
+    [2, 1],
+  );
 });
 
 test("client-side chip filtering handles include and exclude operators", () => {
   const rows = entries();
   assert.equal(filterEntriesByChips(rows, []).length, 4);
-  assert.equal(filterEntriesByChips(rows, [makeChip("kind", "finding.created")]).length, 1);
-  assert.equal(filterEntriesByChips(rows, [makeChip("actor", "bob")]).length, 1);
-  assert.equal(filterEntriesByChips(rows, [makeChip("severity", "warning")]).length, 1);
+  assert.equal(
+    filterEntriesByChips(rows, [makeChip("kind", "finding.created")]).length,
+    1,
+  );
+  assert.equal(
+    filterEntriesByChips(rows, [makeChip("actor", "bob")]).length,
+    1,
+  );
+  assert.equal(
+    filterEntriesByChips(rows, [makeChip("severity", "warning")]).length,
+    1,
+  );
   assert.equal(filterEntriesByChips(rows, [makeChip("tag", "web")]).length, 3);
-  assert.equal(filterEntriesByChips(rows, [makeChip("kind", "finding.created", "exclude")]).length, 3);
-  assert.equal(filterEntriesByChips(rows, [makeChip("text", "sql injection")]).length, 4);
+  assert.equal(
+    filterEntriesByChips(rows, [makeChip("kind", "finding.created", "exclude")])
+      .length,
+    3,
+  );
+  assert.equal(
+    filterEntriesByChips(rows, [makeChip("text", "sql injection")]).length,
+    4,
+  );
   assert.equal(filterEntriesByChips(rows, [makeChip("since", "1")]).length, 4);
 });
 
@@ -344,11 +390,20 @@ test("reducer handles loading, stream, chips, density, and errors", () => {
   assert.equal(state.stream.total, 4);
   state = activityReducer(state, { type: "query", value: "actor:alice" });
   assert.equal(state.query, "actor:alice");
-  state = activityReducer(state, { type: "toggle-chip", value: makeChip("kind", "note.created") });
+  state = activityReducer(state, {
+    type: "toggle-chip",
+    value: makeChip("kind", "note.created"),
+  });
   assert.equal(state.chips.length, 1);
-  state = activityReducer(state, { type: "toggle-chip", value: makeChip("kind", "note.created") });
+  state = activityReducer(state, {
+    type: "toggle-chip",
+    value: makeChip("kind", "note.created"),
+  });
   assert.equal(state.chips.length, 0);
-  state = activityReducer(state, { type: "chips", value: [makeChip("actor", "bob")] });
+  state = activityReducer(state, {
+    type: "chips",
+    value: [makeChip("actor", "bob")],
+  });
   assert.equal(state.chips[0].value, "bob");
   state = activityReducer(state, { type: "remove-chip", value: "actor:bob" });
   assert.equal(state.chips.length, 0);
@@ -374,7 +429,10 @@ test("reducer handles loading, stream, chips, density, and errors", () => {
 test("state request builders derive query and windows", () => {
   let state = initialActivityState({ now: NOW });
   state = activityReducer(state, { type: "query", value: "text:sql" });
-  state = activityReducer(state, { type: "toggle-chip", value: makeChip("kind", "finding.created") });
+  state = activityReducer(state, {
+    type: "toggle-chip",
+    value: makeChip("kind", "finding.created"),
+  });
   assert.equal(effectiveQuery(state), "text:sql kind:finding.created");
   assert.equal(streamRequest(state).size, 100);
   assert.equal(streamRequest(state).density, "comfortable");
@@ -430,7 +488,11 @@ test("client exposes every activity route and forwards bodies", async () => {
   await client.since("alice", 10);
   assert.deepEqual(calls[3].body, { identity: "alice", limit: 10 });
   await client.mark("alice", "note", 7);
-  assert.deepEqual(calls[4].body, { identity: "alice", note: "note", sequence: 7 });
+  assert.deepEqual(calls[4].body, {
+    identity: "alice",
+    note: "note",
+    sequence: 7,
+  });
   await client.retrospective(1, 2, 3);
   assert.deepEqual(calls[5].body, { start: 1, end: 2, top_limit: 3 });
   await client.redact({ token: "x" });
@@ -453,7 +515,16 @@ test("client decodes stream responses and propagates errors", async () => {
 
   const failing = (async () =>
     json(
-      { error: { code: "not_found", message: "missing", field: "", retryable: false, context: {} }, meta: {} },
+      {
+        error: {
+          code: "not_found",
+          message: "missing",
+          field: "",
+          retryable: false,
+          context: {},
+        },
+        meta: {},
+      },
       404,
     )) as typeof globalThis.fetch;
   await assert.rejects(() => makeActivityClient({ fetch: failing }).entry(99));

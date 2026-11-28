@@ -44,7 +44,9 @@ export class VaultSecurityClient {
   }
 
   unlock(passphrase: string): Promise<UnlockResponse> {
-    return this.client.data<UnlockResponse>("security", "unlock", { passphrase });
+    return this.client.data<UnlockResponse>("security", "unlock", {
+      passphrase,
+    });
   }
 
   lock(): Promise<LockedResponse> {

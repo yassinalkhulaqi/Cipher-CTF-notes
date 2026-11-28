@@ -24,24 +24,50 @@ export function RunHistory({
   onRollback,
 }: RunHistoryProps) {
   return (
-    <div className="automation-history" data-automation="run-history" data-density="compact">
+    <div
+      className="automation-history"
+      data-automation="run-history"
+      data-density="compact"
+    >
       <ul className="automation-history__list">
         {runs.map((run) => (
-          <li key={run.id} data-automation="run-row" data-selected={run.id === selectedId ? "true" : "false"}>
-            <button type="button" onClick={() => onSelect(run.id)} aria-pressed={run.id === selectedId}>
+          <li
+            key={run.id}
+            data-automation="run-row"
+            data-selected={run.id === selectedId ? "true" : "false"}
+          >
+            <button
+              type="button"
+              onClick={() => onSelect(run.id)}
+              aria-pressed={run.id === selectedId}
+            >
               <code>{run.id.slice(0, 14)}</code>
               <span data-status={run.status}>{run.status}</span>
-              <span>{new Date(run.started_at * 1000).toISOString().slice(0, 16)}</span>
+              <span>
+                {new Date(run.started_at * 1000).toISOString().slice(0, 16)}
+              </span>
             </button>
           </li>
         ))}
-        {!runs.length && <li className="automation-history__empty">No runs recorded yet.</li>}
+        {!runs.length && (
+          <li className="automation-history__empty">No runs recorded yet.</li>
+        )}
       </ul>
       <div className="automation-history__actions">
-        <button type="button" data-automation="replay-run" onClick={onReplay} disabled={!selectedId}>
+        <button
+          type="button"
+          data-automation="replay-run"
+          onClick={onReplay}
+          disabled={!selectedId}
+        >
           Replay selected
         </button>
-        <button type="button" data-automation="rollback-run" onClick={onRollback} disabled={!selectedId}>
+        <button
+          type="button"
+          data-automation="rollback-run"
+          onClick={onRollback}
+          disabled={!selectedId}
+        >
           Roll back selected
         </button>
         {replayOk !== null && (
@@ -64,7 +90,8 @@ export function RunHistory({
               <div key={`${item.path}-${index}`} data-automation="diff-row">
                 <dt>{item.path}</dt>
                 <dd>
-                  <del>{JSON.stringify(item.before)}</del> → <ins>{JSON.stringify(item.after)}</ins>
+                  <del>{JSON.stringify(item.before)}</del> →{" "}
+                  <ins>{JSON.stringify(item.after)}</ins>
                 </dd>
               </div>
             ))}

@@ -13,7 +13,12 @@ export interface RtlLayoutPaneProps {
   onRegion?: (region: string) => void;
 }
 
-export function RtlLayoutPane({ locale, pane, override, onRegion }: RtlLayoutPaneProps) {
+export function RtlLayoutPane({
+  locale,
+  pane,
+  override,
+  onRegion,
+}: RtlLayoutPaneProps) {
   const layout: PaneLayoutView = layoutFor(pane, locale, override);
   const validation = validateLayout(layout);
   const icons = layout.mirror_icons;
@@ -33,9 +38,15 @@ export function RtlLayoutPane({ locale, pane, override, onRegion }: RtlLayoutPan
       aria-label={`${pane} layout, ${layout.direction}`}
     >
       <header className="a11y-refine__rtl-head">
-        <V3Panel title={pane} subtitle={`${layout.direction} · ${layout.css_class}`} density="compact">
+        <V3Panel
+          title={pane}
+          subtitle={`${layout.direction} · ${layout.css_class}`}
+          density="compact"
+        >
           <span className="a11y-refine__sr-only">
-            {layout.direction === "rtl" ? "Right to left layout" : "Left to right layout"}
+            {layout.direction === "rtl"
+              ? "Right to left layout"
+              : "Left to right layout"}
           </span>
         </V3Panel>
       </header>
@@ -51,7 +62,12 @@ export function RtlLayoutPane({ locale, pane, override, onRegion }: RtlLayoutPan
       <footer className="a11y-refine__rtl-icons" aria-label="Mirrored icons">
         {icons.length ? (
           icons.map((icon) => (
-            <span key={icon} data-icon={icon} data-mirror="true" aria-hidden="true">
+            <span
+              key={icon}
+              data-icon={icon}
+              data-mirror="true"
+              aria-hidden="true"
+            >
               {icon}
             </span>
           ))

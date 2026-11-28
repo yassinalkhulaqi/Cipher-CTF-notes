@@ -40,15 +40,31 @@ export function ListVirtualizer<T>({
   const ratio = ratioLoaded(window.rendered, items.length);
 
   return (
-    <div className="perf-virtual perf-virtual--list" data-testid="list-virtualizer">
+    <div
+      className="perf-virtual perf-virtual--list"
+      data-testid="list-virtualizer"
+    >
       {showRatio && (
-        <div className="perf-virtual__ratio" aria-label={`Rendering ${Math.round(ratio * 100)}% of rows`}>
+        <div
+          className="perf-virtual__ratio"
+          aria-label={`Rendering ${Math.round(ratio * 100)}% of rows`}
+        >
           {window.rendered} / {items.length} rows in DOM
         </div>
       )}
-      <div className="perf-virtual__viewport" style={{ height }} onScroll={onScroll}>
-        <div className="perf-virtual__spacer" style={{ height: window.totalHeight }}>
-          <div className="perf-virtual__slice" style={{ transform: `translateY(${window.offsetTop}px)` }}>
+      <div
+        className="perf-virtual__viewport"
+        style={{ height }}
+        onScroll={onScroll}
+      >
+        <div
+          className="perf-virtual__spacer"
+          style={{ height: window.totalHeight }}
+        >
+          <div
+            className="perf-virtual__slice"
+            style={{ transform: `translateY(${window.offsetTop}px)` }}
+          >
             {visible.map((item, index) => (
               <div
                 className="perf-virtual__row perf-virtual__row--list"

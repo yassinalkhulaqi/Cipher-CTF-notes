@@ -5,7 +5,10 @@ import {
   DuplicateSuggestions,
   type DuplicateSuggestionsProps,
 } from "./DuplicateSuggestions";
-import { RemediationChecklist, type RemediationChecklistProps } from "./RemediationChecklist";
+import {
+  RemediationChecklist,
+  type RemediationChecklistProps,
+} from "./RemediationChecklist";
 import { RetestPanel, type RetestPanelProps } from "./RetestPanel";
 import { nextSection, severityTone, type EditorSection } from "./logic";
 import type { FindingDetail, ScorePreview } from "./types";
@@ -14,7 +17,12 @@ export interface FindingEditorProps {
   detail: FindingDetail;
   preview: ScorePreview | null;
   onPreview: (vector: string) => Promise<void>;
-  onSave: (fields: { title: string; summary: string; owner: string; tags: string[] }) => Promise<void>;
+  onSave: (fields: {
+    title: string;
+    summary: string;
+    owner: string;
+    tags: string[];
+  }) => Promise<void>;
   onVectorChange: (vector: string) => Promise<void>;
   onTransitionAction: (action: string, note: string) => Promise<void>;
   onMarkDuplicate: DuplicateSuggestionsProps["onMark"];
@@ -58,7 +66,14 @@ export function FindingEditor({
     setTags(finding.tags.join(", "));
     setVector(finding.vector);
     setNote("");
-  }, [finding.ref, finding.version, finding.title, finding.summary, finding.owner, finding.vector]);
+  }, [
+    finding.ref,
+    finding.version,
+    finding.title,
+    finding.summary,
+    finding.owner,
+    finding.vector,
+  ]);
 
   const save = async () => {
     try {
@@ -66,18 +81,28 @@ export function FindingEditor({
         title: title.trim() || finding.title,
         summary,
         owner,
-        tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+        tags: tags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean),
       });
       setError("");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not save finding");
+      setError(
+        cause instanceof Error ? cause.message : "Could not save finding",
+      );
     }
   };
 
   const handleKeyboard = (event: KeyboardEvent<HTMLElement>) => {
-    if (event.altKey && (event.key === "ArrowRight" || event.key === "ArrowLeft")) {
+    if (
+      event.altKey &&
+      (event.key === "ArrowRight" || event.key === "ArrowLeft")
+    ) {
       event.preventDefault();
-      setSection((current) => nextSection(current, event.key === "ArrowRight" ? 1 : -1));
+      setSection((current) =>
+        nextSection(current, event.key === "ArrowRight" ? 1 : -1),
+      );
       return;
     }
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
@@ -85,7 +110,11 @@ export function FindingEditor({
       void save();
       return;
     }
-    if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && finding.state === "draft") {
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      event.key === "Enter" &&
+      finding.state === "draft"
+    ) {
       event.preventDefault();
       void onTransitionAction("confirm", note).catch(() => undefined);
       return;
@@ -96,7 +125,10 @@ export function FindingEditor({
     }
   };
 
-  const runTransition = async (action: string, event: FormEvent<HTMLFormElement>) => {
+  const runTransition = async (
+    action: string,
+    event: FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
     if (NOTE_REQUIRED.has(action) && !note.trim()) {
       setError(`A note is required for ${action}.`);
@@ -123,26 +155,42 @@ export function FindingEditor({
       onKeyDown={handleKeyboard}
       aria-label={`Editor for ${finding.title}`}
     >
-      <nav className="finding-editor__tabs" aria-label="Finding editor sections">
-        {(["details", "cvss", "remediation", "retest", "duplicates"] as EditorSection[]).map(
-          (tab) => (
-            <button
-              type="button"
-              key={tab}
-              data-active={section === tab}
-              aria-current={section === tab ? "true" : undefined}
-              onClick={() => setSection(tab)}
-            >
-              {tab}
-            </button>
-          ),
-        )}
+      <nav
+        className="finding-editor__tabs"
+        aria-label="Finding editor sections"
+      >
+        {(
+          [
+            "details",
+            "cvss",
+            "remediation",
+            "retest",
+            "duplicates",
+          ] as EditorSection[]
+        ).map((tab) => (
+          <button
+            type="button"
+            key={tab}
+            data-active={section === tab}
+            aria-current={section === tab ? "true" : undefined}
+            onClick={() => setSection(tab)}
+          >
+            {tab}
+          </button>
+        ))}
       </nav>
 
-      <div className="finding-editor__section" data-section="details" hidden={section !== "details"}>
+      <div
+        className="finding-editor__section"
+        data-section="details"
+        hidden={section !== "details"}
+      >
         <div className="finding-editor__heading">
           <span className="finding-editor__ref">{finding.ref}</span>
-          <span className="finding-editor__severity" data-tone={severityTone(finding.severity)}>
+          <span
+            className="finding-editor__severity"
+            data-tone={severityTone(finding.severity)}
+          >
             {finding.severity} · {finding.score.toFixed(1)}
           </span>
         </div>
@@ -180,7 +228,10 @@ export function FindingEditor({
         <button type="button" onClick={() => void save()} disabled={busy}>
           Save details (Ctrl+S)
         </button>
-        <form className="finding-editor__transitions" onSubmit={(event) => void event.preventDefault()}>
+        <form
+          className="finding-editor__transitions"
+          onSubmit={(event) => void event.preventDefault()}
+        >
           <label htmlFor="finding-note">Transition note</label>
           <input
             id="finding-note"
@@ -196,7 +247,12 @@ export function FindingEditor({
                 key={action}
                 data-action={action}
                 disabled={busy}
-                onClick={(event) => void runTransition(action, event as unknown as FormEvent<HTMLFormElement>)}
+                onClick={(event) =>
+                  void runTransition(
+                    action,
+                    event as unknown as FormEvent<HTMLFormElement>,
+                  )
+                }
               >
                 {action}
               </button>
@@ -205,7 +261,11 @@ export function FindingEditor({
         </form>
       </div>
 
-      <div className="finding-editor__section" data-section="cvss" hidden={section !== "cvss"}>
+      <div
+        className="finding-editor__section"
+        data-section="cvss"
+        hidden={section !== "cvss"}
+      >
         <CvssCalculator
           vector={vector}
           preview={preview}
@@ -213,22 +273,38 @@ export function FindingEditor({
           onChange={(next) => {
             setVector(next);
             void onVectorChange(next).catch((cause: unknown) => {
-              setError(cause instanceof Error ? cause.message : "Could not update vector");
+              setError(
+                cause instanceof Error
+                  ? cause.message
+                  : "Could not update vector",
+              );
             });
           }}
           disabled={busy}
         />
       </div>
 
-      <div className="finding-editor__section" data-section="remediation" hidden={section !== "remediation"}>
+      <div
+        className="finding-editor__section"
+        data-section="remediation"
+        hidden={section !== "remediation"}
+      >
         <RemediationChecklist detail={detail} {...remediation} />
       </div>
 
-      <div className="finding-editor__section" data-section="retest" hidden={section !== "retest"}>
+      <div
+        className="finding-editor__section"
+        data-section="retest"
+        hidden={section !== "retest"}
+      >
         <RetestPanel detail={detail} {...retest} />
       </div>
 
-      <div className="finding-editor__section" data-section="duplicates" hidden={section !== "duplicates"}>
+      <div
+        className="finding-editor__section"
+        data-section="duplicates"
+        hidden={section !== "duplicates"}
+      >
         <DuplicateSuggestions
           detail={detail}
           onMark={onMarkDuplicate}
@@ -237,7 +313,11 @@ export function FindingEditor({
         />
       </div>
 
-      {error && <p className="finding-editor__error" role="alert">{error}</p>}
+      {error && (
+        <p className="finding-editor__error" role="alert">
+          {error}
+        </p>
+      )}
       <p className="finding-editor__hint">
         Alt+←/→ switches sections · Ctrl+S saves · Ctrl+Enter confirms a draft
       </p>

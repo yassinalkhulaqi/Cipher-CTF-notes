@@ -79,10 +79,20 @@ import type {
 } from "../src/features/portability/types";
 
 function plan(overrides: Partial<BundlePlan> = {}): BundlePlan {
-  return { ...defaultPlan(), label: "Test bundle", passphrase: "Str0ng!Passphrase", ...overrides };
+  return {
+    ...defaultPlan(),
+    label: "Test bundle",
+    passphrase: "Str0ng!Passphrase",
+    ...overrides,
+  };
 }
 
-function diff(field: string, base: unknown, local: unknown, remote: unknown): DiffRow {
+function diff(
+  field: string,
+  base: unknown,
+  local: unknown,
+  remote: unknown,
+): DiffRow {
   return {
     field,
     base,
@@ -116,9 +126,27 @@ function dryRun(overrides: Partial<DryRunView> = {}): DryRunView {
     valid: true,
     headline: "2 entities ready to import",
     changes: [
-      { ref: "note:1", action: "update", family: "note", title: "Note", fields: ["title"] },
-      { ref: "note:2", action: "create", family: "note", title: "New", fields: [] },
-      { ref: "note:3", action: "unchanged", family: "note", title: "Same", fields: [] },
+      {
+        ref: "note:1",
+        action: "update",
+        family: "note",
+        title: "Note",
+        fields: ["title"],
+      },
+      {
+        ref: "note:2",
+        action: "create",
+        family: "note",
+        title: "New",
+        fields: [],
+      },
+      {
+        ref: "note:3",
+        action: "unchanged",
+        family: "note",
+        title: "Same",
+        fields: [],
+      },
     ],
     conflicts: [],
     warnings: [],
@@ -152,7 +180,12 @@ function receipt(overrides: Partial<ReceiptView> = {}): ReceiptView {
     ok: true,
     digest: "a".repeat(64),
     checks: [
-      { name: "manifest", passed: true, detail: "manifest v3.1", code: "MANIFEST_OK" },
+      {
+        name: "manifest",
+        passed: true,
+        detail: "manifest v3.1",
+        code: "MANIFEST_OK",
+      },
       { name: "tag", passed: true, detail: "HMAC verified", code: "MAC_OK" },
     ],
     ...overrides,
@@ -221,7 +254,12 @@ test("default plan enables dry runs and four entity families", () => {
 });
 
 test("validate plan reports missing label, scope, and weak key", () => {
-  const problems = validatePlan({ ...defaultPlan(), label: "", passphrase: "a", scope: [] });
+  const problems = validatePlan({
+    ...defaultPlan(),
+    label: "",
+    passphrase: "a",
+    scope: [],
+  });
   assert.equal(problems.length, 3);
   assert.ok(problems[0].includes("label"));
   assert.ok(problems[1].includes("passphrase"));
@@ -285,7 +323,10 @@ test("resolution labels and tones cover every choice", () => {
 
 test("vector view helpers explain causal relations", () => {
   const value = vector();
-  assert.equal(vectorRelationLabel("concurrent"), "Independent edits on both sides");
+  assert.equal(
+    vectorRelationLabel("concurrent"),
+    "Independent edits on both sides",
+  );
   assert.equal(vectorRelationLabel("left_ahead"), "Local history is ahead");
   assert.equal(vectorRelationLabel("custom"), "custom");
   assert.equal(vectorTone("concurrent"), "warn");
@@ -327,7 +368,10 @@ test("filter conflicts by query, reason, and resolution", () => {
     conflict({ ref: "finding:3", resolution: "keep_local" }),
   ];
   assert.equal(filterConflicts(items).length, 3);
-  assert.equal(filterConflicts(items, { reason: "content_divergence" }).length, 1);
+  assert.equal(
+    filterConflicts(items, { reason: "content_divergence" }).length,
+    1,
+  );
   assert.equal(filterConflicts(items, { unresolvedOnly: true }).length, 2);
   assert.equal(filterConflicts(items, { query: "finding" }).length, 1);
   assert.equal(filterConflicts(items, { query: "zzzz-not-present" }).length, 0);
@@ -405,10 +449,22 @@ test("progress helpers clamp, label, and gate controls", () => {
   const active = progress();
   assert.ok(progressLabel(active).includes("50%"));
   assert.equal(progressLabel(null), "No transfer in progress");
-  assert.equal(progressLabel(progress({ phase: "complete" })), "Transfer complete and verified");
-  assert.equal(progressLabel(progress({ phase: "cancelled" })), "Transfer cancelled");
-  assert.equal(progressLabel(progress({ phase: "failed" })), "Transfer failed — resume to retry");
-  assert.equal(progressLabel(progress({ phase: "paused", percent: 25 })), "Paused at 25%");
+  assert.equal(
+    progressLabel(progress({ phase: "complete" })),
+    "Transfer complete and verified",
+  );
+  assert.equal(
+    progressLabel(progress({ phase: "cancelled" })),
+    "Transfer cancelled",
+  );
+  assert.equal(
+    progressLabel(progress({ phase: "failed" })),
+    "Transfer failed — resume to retry",
+  );
+  assert.equal(
+    progressLabel(progress({ phase: "paused", percent: 25 })),
+    "Paused at 25%",
+  );
   assert.equal(canCancel(active), true);
   assert.equal(canCancel(progress({ phase: "complete" })), false);
   assert.equal(canCancel(null), false);
@@ -423,7 +479,9 @@ test("receipt verdicts and failed checks", () => {
   assert.deepEqual(failedChecks(verified), []);
   const broken = receipt({
     ok: false,
-    checks: [{ name: "tag", passed: false, detail: "bad", code: "MAC_MISMATCH" }],
+    checks: [
+      { name: "tag", passed: false, detail: "bad", code: "MAC_MISMATCH" },
+    ],
   });
   assert.equal(failedChecks(broken).length, 1);
   assert.ok(receiptVerdict(broken).includes("Verification failed"));
@@ -451,9 +509,16 @@ test("initial portability state is empty and idle", () => {
 
 test("reducer updates plan, step, and busy state", () => {
   let state = initialPortabilityState();
-  state = portabilityReducer(state, { type: "plan", value: { label: "Handoff" } });
+  state = portabilityReducer(state, {
+    type: "plan",
+    value: { label: "Handoff" },
+  });
   assert.equal(state.plan.label, "Handoff");
-  state = portabilityReducer(state, { type: "step", index: 2, status: "active" });
+  state = portabilityReducer(state, {
+    type: "step",
+    index: 2,
+    status: "active",
+  });
   assert.equal(state.stepIndex, 2);
   assert.equal(selectStep(state)?.id, "dry-run");
   state = portabilityReducer(state, { type: "busy", value: true });
@@ -472,7 +537,10 @@ test("reducer stores dry run, conflicts, vector, progress, and receipt", () => {
   assert.equal(selectProgress(state)?.percent, 50);
   state = portabilityReducer(state, { type: "receipt", value: receipt() });
   assert.equal(selectReceipt(state)?.ok, true);
-  state = portabilityReducer(state, { type: "audit", value: [{ sequence: 1, kind: "x" }] });
+  state = portabilityReducer(state, {
+    type: "audit",
+    value: [{ sequence: 1, kind: "x" }],
+  });
   assert.equal(state.audit.length, 1);
   state = portabilityReducer(state, {
     type: "notice",
@@ -501,14 +569,20 @@ test("reducer resolves conflicts and gates readiness", () => {
 
 test("reducer resets to a fresh state", () => {
   let state = initialPortabilityState();
-  state = portabilityReducer(state, { type: "plan", value: { label: "Changed" } });
+  state = portabilityReducer(state, {
+    type: "plan",
+    value: { label: "Changed" },
+  });
   state = portabilityReducer(state, { type: "reset" });
   assert.equal(state.plan.label, "");
   assert.equal(state.conflicts.length, 0);
 });
 
 test("request builders omit empty values", () => {
-  assert.deepEqual(compact({ a: 1, b: "", c: null, d: undefined, e: 0 }), { a: 1, e: 0 });
+  assert.deepEqual(compact({ a: 1, b: "", c: null, d: undefined, e: 0 }), {
+    a: 1,
+    e: 0,
+  });
   const value = plan();
   const request = bundleCreateRequest(value, [{ id: 1 }], []);
   assert.equal(request.device_id, "local");
@@ -545,7 +619,10 @@ test("preview, resolution, and transfer request builders", () => {
 
 test("client calls the sync namespace with v3 envelopes", async () => {
   const calls: Array<{ url: string; body: unknown }> = [];
-  const fetchImpl = (async (input: RequestInfo | URL, init: RequestInit = {}) => {
+  const fetchImpl = (async (
+    input: RequestInfo | URL,
+    init: RequestInit = {},
+  ) => {
     calls.push({ url: String(input), body: JSON.parse(String(init.body)) });
     return json(envelope({ ok: true }));
   }) as typeof globalThis.fetch;
@@ -556,7 +633,8 @@ test("client calls the sync namespace with v3 envelopes", async () => {
 });
 
 test("client compares vectors and inspects bundles", async () => {
-  const fetchImpl = (async () => json(envelope(vector()))) as typeof globalThis.fetch;
+  const fetchImpl = (async () =>
+    json(envelope(vector()))) as typeof globalThis.fetch;
   const client = new PortabilityClient(
     new (await import("../src/v3/apiClient")).V3Client({ fetch: fetchImpl }),
   );
@@ -580,12 +658,15 @@ test("client verifies bundles and resolves conflicts", async () => {
   const client = createPortabilityClient(fetchImpl);
   const verified = await client.verifyBundle("bundle_1", "Str0ng!Passphrase");
   assert.equal(verified.receipt.ok, true);
-  const resolved = await client.resolveConflicts("preview_1", { "note:1": "keep_local" });
+  const resolved = await client.resolveConflicts("preview_1", {
+    "note:1": "keep_local",
+  });
   assert.equal(resolved.ledger_intact, true);
 });
 
 test("client transfer methods round-trip progress views", async () => {
-  const fetchImpl = (async () => json(envelope(progress()))) as typeof globalThis.fetch;
+  const fetchImpl = (async () =>
+    json(envelope(progress()))) as typeof globalThis.fetch;
   const client = createPortabilityClient(fetchImpl);
   const started = await client.beginTransfer("bundle_1", 128);
   assert.equal(started.transferId, "xfer_1");
