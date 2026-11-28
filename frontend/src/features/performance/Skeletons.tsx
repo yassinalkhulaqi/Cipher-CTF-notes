@@ -12,7 +12,10 @@ function shimmerStyle(width: string): CSSProperties {
   return { width };
 }
 
-export function SkeletonRow({ width = "72%", label = "Loading row" }: SkeletonProps) {
+export function SkeletonRow({
+  width = "72%",
+  label = "Loading row",
+}: SkeletonProps) {
   return (
     <div className="perf-skeleton__row" role="presentation" aria-label={label}>
       <span className="perf-skeleton__bar perf-skeleton__bar--dot" />
@@ -21,11 +24,18 @@ export function SkeletonRow({ width = "72%", label = "Loading row" }: SkeletonPr
   );
 }
 
-export function SkeletonList({ rows = 8, label = "Loading items" }: SkeletonProps) {
+export function SkeletonList({
+  rows = 8,
+  label = "Loading items",
+}: SkeletonProps) {
   return (
     <div className="perf-skeleton" aria-busy="true" aria-label={label}>
       {Array.from({ length: Math.max(0, rows) }, (_, index) => (
-        <SkeletonRow key={index} width={`${52 + ((index * 13) % 40)}%`} label={`${label} ${index + 1}`} />
+        <SkeletonRow
+          key={index}
+          width={`${52 + ((index * 13) % 40)}%`}
+          label={`${label} ${index + 1}`}
+        />
       ))}
     </div>
   );
@@ -33,11 +43,15 @@ export function SkeletonList({ rows = 8, label = "Loading items" }: SkeletonProp
 
 export function SkeletonTree({ rows = 7 }: SkeletonProps) {
   return (
-    <div className="perf-skeleton perf-skeleton--tree" aria-busy="true" aria-label="Loading tree">
+    <div
+      className="perf-skeleton perf-skeleton--tree"
+      aria-busy="true"
+      aria-label="Loading tree"
+    >
       {Array.from({ length: Math.max(0, rows) }, (_, index) => (
         <SkeletonRow
           key={index}
-          width={`${38 + ((index % 4) * 12)}%`}
+          width={`${38 + (index % 4) * 12}%`}
           label={`Loading tree node ${index + 1}`}
         />
       ))}
@@ -45,9 +59,16 @@ export function SkeletonTree({ rows = 7 }: SkeletonProps) {
   );
 }
 
-export function SkeletonTable({ rows = 8, columns = 4 }: SkeletonProps & { columns?: number }) {
+export function SkeletonTable({
+  rows = 8,
+  columns = 4,
+}: SkeletonProps & { columns?: number }) {
   return (
-    <div className="perf-skeleton perf-skeleton--table" aria-busy="true" aria-label="Loading table">
+    <div
+      className="perf-skeleton perf-skeleton--table"
+      aria-busy="true"
+      aria-label="Loading table"
+    >
       {Array.from({ length: Math.max(0, rows) }, (_, row) => (
         <div className="perf-skeleton__grid" key={row}>
           {Array.from({ length: Math.max(1, columns) }, (_, column) => (

@@ -34,7 +34,6 @@ export function rowIndexForOffset(
 ): number {
   if (window.rows.length === 0) return 0;
   const first = window.rows[0].offset;
-  const last = window.rows[window.rows.length - 1];
   return clamp(
     Math.floor((offset - first) / Math.max(1, window.bytes_per_row)),
     0,

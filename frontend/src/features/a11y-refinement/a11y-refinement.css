@@ -427,8 +427,12 @@
 }
 
 @keyframes a11y-refine-shimmer {
-  from { background-position: 200% 0; }
-  to { background-position: -200% 0; }
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }
 
 /* Focus visibility and motion parity with the design system. */

@@ -62,7 +62,9 @@ export function isOnboardingComplete(
   completed: readonly string[] = [],
 ): boolean {
   const doneSet = new Set(completed);
-  return steps.filter((step) => step.required).every((step) => doneSet.has(step.id));
+  return steps
+    .filter((step) => step.required)
+    .every((step) => doneSet.has(step.id));
 }
 
 export function emptyStateFor(
@@ -105,12 +107,23 @@ export function kindColorToken(kind: string): string {
   return `var(--v3-kind-${kind}, var(--v3-kind-default))`;
 }
 
-export function iconForKind(icons: readonly IconLabel[], kind: string): string | undefined {
+export function iconForKind(
+  icons: readonly IconLabel[],
+  kind: string,
+): string | undefined {
   return icons.find((entry) => entry.kind === kind)?.icon;
 }
 
-export function labelForKind(kind: string, labels: Record<string, string> = KIND_LABELS): string {
-  return labels[kind] ?? kind.replace(/(^|-)([a-z])/g, (_match, _sep, letter: string) => letter.toUpperCase());
+export function labelForKind(
+  kind: string,
+  labels: Record<string, string> = KIND_LABELS,
+): string {
+  return (
+    labels[kind] ??
+    kind.replace(/(^|-)([a-z])/g, (_match, _sep, letter: string) =>
+      letter.toUpperCase(),
+    )
+  );
 }
 
 export function labelConsistencyIssues(
@@ -119,16 +132,26 @@ export function labelConsistencyIssues(
 ): string[] {
   return icons
     .filter((entry) => labels[entry.kind] !== entry.label)
-    .map((entry) => `${entry.kind}: expected ${labels[entry.kind] ?? "unknown"}, got ${entry.label}`);
+    .map(
+      (entry) =>
+        `${entry.kind}: expected ${labels[entry.kind] ?? "unknown"}, got ${entry.label}`,
+    );
 }
 
-export function auditAnimations(audits: readonly AnimationAudit[] = ANIMATION_AUDITS): AnimationSummary {
-  const unsafe = audits.filter((audit) => !audit.reducedMotionSafe).map((audit) => audit.surface);
+export function auditAnimations(
+  audits: readonly AnimationAudit[] = ANIMATION_AUDITS,
+): AnimationSummary {
+  const unsafe = audits
+    .filter((audit) => !audit.reducedMotionSafe)
+    .map((audit) => audit.surface);
   return {
     total: audits.length,
     safe: audits.length - unsafe.length,
     unsafe,
-    percent: audits.length === 0 ? 100 : ((audits.length - unsafe.length) / audits.length) * 100,
+    percent:
+      audits.length === 0
+        ? 100
+        : ((audits.length - unsafe.length) / audits.length) * 100,
   };
 }
 
@@ -136,8 +159,12 @@ export function usesMotionToken(token: string): boolean {
   return MOTION_TOKENS.includes(token);
 }
 
-export function animationsWithInvalidTokens(audits: readonly AnimationAudit[]): string[] {
-  return audits.filter((audit) => !usesMotionToken(audit.durationToken)).map((audit) => audit.surface);
+export function animationsWithInvalidTokens(
+  audits: readonly AnimationAudit[],
+): string[] {
+  return audits
+    .filter((audit) => !usesMotionToken(audit.durationToken))
+    .map((audit) => audit.surface);
 }
 
 export function polishProgress(
@@ -148,7 +175,9 @@ export function polishProgress(
     total: checks.length,
     done,
     required: checks.filter((check) => check.severity === "blocker").length,
-    requiredDone: checks.filter((check) => check.severity === "blocker" && check.done).length,
+    requiredDone: checks.filter(
+      (check) => check.severity === "blocker" && check.done,
+    ).length,
     percent: checks.length === 0 ? 100 : (done / checks.length) * 100,
   };
 }
@@ -157,10 +186,14 @@ export function filterPolishByArea(
   checks: readonly PolishCheck[],
   area: PolishArea | "All",
 ): PolishCheck[] {
-  return area === "All" ? [...checks] : checks.filter((check) => check.area === area);
+  return area === "All"
+    ? [...checks]
+    : checks.filter((check) => check.area === area);
 }
 
-export function polishAreas(checks: readonly PolishCheck[] = POLISH_CHECKS): PolishArea[] {
+export function polishAreas(
+  checks: readonly PolishCheck[] = POLISH_CHECKS,
+): PolishArea[] {
   return Array.from(new Set(checks.map((check) => check.area)));
 }
 
@@ -170,9 +203,7 @@ export function withCheckState(
 ): PolishCheck[] {
   const overrides = new Set(checked);
   return checks.map((check) =>
-    overrides.has(check.id)
-      ? check
-      : { ...check, done: false },
+    overrides.has(check.id) ? check : { ...check, done: false },
   );
 }
 
@@ -180,7 +211,9 @@ export function resolveBreakpoint(
   width: number,
   breakpoints: readonly Breakpoint[] = BREAKPOINTS,
 ): string {
-  const sorted = [...breakpoints].sort((left, right) => left.width - right.width);
+  const sorted = [...breakpoints].sort(
+    (left, right) => left.width - right.width,
+  );
   let name = sorted[0]?.name ?? "narrow";
   for (const breakpoint of sorted) {
     if (width >= breakpoint.width) name = breakpoint.name;
@@ -219,7 +252,9 @@ export function releaseSnapshot(
 }
 
 /** Alias used by consumers that only need the safe-surface count. */
-export function auditsSafeCount(audits: readonly AnimationAudit[] = ANIMATION_AUDITS): number {
+export function auditsSafeCount(
+  audits: readonly AnimationAudit[] = ANIMATION_AUDITS,
+): number {
   return auditAnimations(audits).safe;
 }
 

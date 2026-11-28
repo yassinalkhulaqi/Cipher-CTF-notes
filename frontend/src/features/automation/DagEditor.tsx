@@ -13,7 +13,13 @@ export interface DagEditorProps {
   onConnect: (source: string, target: string) => void;
 }
 
-export function DagEditor({ steps, dag, selectedId, onSelect, onConnect }: DagEditorProps) {
+export function DagEditor({
+  steps,
+  dag,
+  selectedId,
+  onSelect,
+  onConnect,
+}: DagEditorProps) {
   const [dragSource, setDragSource] = useState("");
   const [armedSource, setArmedSource] = useState("");
   const layout = layoutDag(steps);
@@ -28,12 +34,19 @@ export function DagEditor({ steps, dag, selectedId, onSelect, onConnect }: DagEd
   };
 
   return (
-    <div className="automation-dag" data-automation="dag-editor" data-density="compact">
+    <div
+      className="automation-dag"
+      data-automation="dag-editor"
+      data-density="compact"
+    >
       <div className="automation-dag__hint" data-automation="dag-hint">
-        Drag from an output handle to an input handle, or select a source and press Enter on a
-        target.
+        Drag from an output handle to an input handle, or select a source and
+        press Enter on a target.
       </div>
-      <div className="automation-dag__canvas" style={{ ["--dag-columns" as string]: String(maxColumn + 1) }}>
+      <div
+        className="automation-dag__canvas"
+        style={{ ["--dag-columns" as string]: String(maxColumn + 1) }}
+      >
         {layout.map((node) => (
           <div
             key={node.step.id}
@@ -67,7 +80,9 @@ export function DagEditor({ steps, dag, selectedId, onSelect, onConnect }: DagEd
             >
               <span className="automation-dag__id">{node.step.id}</span>
               <strong>{node.step.title}</strong>
-              <span className="automation-dag__kind">{STEP_LABELS[node.step.kind]}</span>
+              <span className="automation-dag__kind">
+                {STEP_LABELS[node.step.kind]}
+              </span>
             </button>
             <button
               type="button"
@@ -78,7 +93,9 @@ export function DagEditor({ steps, dag, selectedId, onSelect, onConnect }: DagEd
               onPointerDown={() => setDragSource(node.step.id)}
               onClick={() => {
                 setDragSource("");
-                setArmedSource((current) => (current === node.step.id ? "" : node.step.id));
+                setArmedSource((current) =>
+                  current === node.step.id ? "" : node.step.id,
+                );
               }}
             >
               out

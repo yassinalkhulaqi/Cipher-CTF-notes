@@ -5,12 +5,25 @@ import type { FindingDetail, RetestVerdictValue } from "./types";
 
 export interface RetestPanelProps {
   detail: FindingDetail;
-  onRetest: (verdict: RetestVerdictValue, notes: string, proofRefs: string[]) => Promise<void>;
-  onAddProof: (blockId: string, target: string, excerpt: string) => Promise<void>;
+  onRetest: (
+    verdict: RetestVerdictValue,
+    notes: string,
+    proofRefs: string[],
+  ) => Promise<void>;
+  onAddProof: (
+    blockId: string,
+    target: string,
+    excerpt: string,
+  ) => Promise<void>;
   busy?: boolean;
 }
 
-export function RetestPanel({ detail, onRetest, onAddProof, busy = false }: RetestPanelProps) {
+export function RetestPanel({
+  detail,
+  onRetest,
+  onAddProof,
+  busy = false,
+}: RetestPanelProps) {
   const [verdict, setVerdict] = useState<RetestVerdictValue>("pass");
   const [notes, setNotes] = useState("");
   const [proofTarget, setProofTarget] = useState("");
@@ -21,13 +34,17 @@ export function RetestPanel({ detail, onRetest, onAddProof, busy = false }: Rete
 
   const submitRetest = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const refs = detail.finding.proof_blocks.map((block) => `${block.ref.ref}:${block.block_id}`);
+    const refs = detail.finding.proof_blocks.map(
+      (block) => `${block.ref.ref}:${block.block_id}`,
+    );
     try {
       await onRetest(verdict, notes, refs);
       setNotes("");
       setError("");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not record retest");
+      setError(
+        cause instanceof Error ? cause.message : "Could not record retest",
+      );
     }
   };
 
@@ -44,15 +61,24 @@ export function RetestPanel({ detail, onRetest, onAddProof, busy = false }: Rete
       setProofExcerpt("");
       setError("");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not attach proof");
+      setError(
+        cause instanceof Error ? cause.message : "Could not attach proof",
+      );
     }
   };
 
   return (
-    <section className="retest" data-testid="retest-panel" data-verdict={last?.verdict ?? "none"}>
+    <section
+      className="retest"
+      data-testid="retest-panel"
+      data-verdict={last?.verdict ?? "none"}
+    >
       <header className="retest__header">
         <h3>Retest panel</h3>
-        <span className="retest__proof-count" data-tone={issues > 0 ? "bad" : "good"}>
+        <span
+          className="retest__proof-count"
+          data-tone={issues > 0 ? "bad" : "good"}
+        >
           {detail.proof.verified}/{detail.proof.total} proof verified
         </span>
       </header>
@@ -67,7 +93,10 @@ export function RetestPanel({ detail, onRetest, onAddProof, busy = false }: Rete
         <p className="retest__empty">No retest recorded yet.</p>
       )}
 
-      <form className="retest__form" onSubmit={(event) => void submitRetest(event)}>
+      <form
+        className="retest__form"
+        onSubmit={(event) => void submitRetest(event)}
+      >
         <fieldset className="retest__verdicts">
           <legend>Verdict</legend>
           {RETEST_VERDICTS.map((option) => (
@@ -96,7 +125,10 @@ export function RetestPanel({ detail, onRetest, onAddProof, busy = false }: Rete
         </button>
       </form>
 
-      <form className="retest__proof-form" onSubmit={(event) => void submitProof(event)}>
+      <form
+        className="retest__proof-form"
+        onSubmit={(event) => void submitProof(event)}
+      >
         <label htmlFor="proof-target">Link evidence, note, or section</label>
         <input
           id="proof-target"
@@ -117,7 +149,11 @@ export function RetestPanel({ detail, onRetest, onAddProof, busy = false }: Rete
           Attach proof block
         </button>
       </form>
-      {error && <p className="retest__error" role="alert">{error}</p>}
+      {error && (
+        <p className="retest__error" role="alert">
+          {error}
+        </p>
+      )}
     </section>
   );
 }

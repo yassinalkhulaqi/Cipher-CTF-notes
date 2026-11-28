@@ -33,7 +33,10 @@ export function groupLabel(group: string): string {
   return GROUP_LABELS[group] ?? group.charAt(0).toUpperCase() + group.slice(1);
 }
 
-export function bindingsForGroup(map: KeyboardMapView, group: string): KeyboardBindingView[] {
+export function bindingsForGroup(
+  map: KeyboardMapView,
+  group: string,
+): KeyboardBindingView[] {
   return map.bindings.filter((binding) => binding.group === group);
 }
 
@@ -57,7 +60,10 @@ export function normalizeBinding(value: string | string[]): string[] {
     const key = aliases[part.toLowerCase()] ?? part.toLowerCase();
     if (key && !keys.includes(key)) keys.push(key);
   }
-  return [...order.filter((key) => keys.includes(key)), ...keys.filter((key) => !order.includes(key))];
+  return [
+    ...order.filter((key) => keys.includes(key)),
+    ...keys.filter((key) => !order.includes(key)),
+  ];
 }
 
 export function bindingKey(keys: string[]): string {
@@ -78,9 +84,17 @@ export function findBindings(
   );
 }
 
-export function displayBinding(binding: KeyboardBindingView, platform: string): string {
+export function displayBinding(
+  binding: KeyboardBindingView,
+  platform: string,
+): string {
   if (platform !== "mac") return binding.display;
-  const labels: Record<string, string> = { ctrl: "⌘", alt: "⌥", shift: "⇧", meta: "⌘" };
+  const labels: Record<string, string> = {
+    ctrl: "⌘",
+    alt: "⌥",
+    shift: "⇧",
+    meta: "⌘",
+  };
   return normalizeBinding(binding.keys)
     .map((key) => labels[key] ?? (key.length === 1 ? key.toUpperCase() : key))
     .join("+");
@@ -88,12 +102,18 @@ export function displayBinding(binding: KeyboardBindingView, platform: string): 
 
 export function focusOrder(map: KeyboardMapView, surface = ""): string[] {
   const ordered = [...map.bindings].sort((first, second) => {
-    if (first.group === "navigation" && second.group !== "navigation") return -1;
+    if (first.group === "navigation" && second.group !== "navigation")
+      return -1;
     if (second.group === "navigation" && first.group !== "navigation") return 1;
-    return first.sequence - second.sequence || first.action.localeCompare(second.action);
+    return (
+      first.sequence - second.sequence ||
+      first.action.localeCompare(second.action)
+    );
   });
   const selected = surface
-    ? ordered.filter((item) => item.action.includes(surface) || item.group === surface)
+    ? ordered.filter(
+        (item) => item.action.includes(surface) || item.group === surface,
+      )
     : ordered;
   return selected.map((item) => item.action);
 }
@@ -107,7 +127,10 @@ export function keyboardPass(map: KeyboardMapView): {
   const actions = new Set(map.bindings.map((binding) => binding.action));
   const missing = NAVIGATION_ACTIONS.filter((action) => !actions.has(action));
   return {
-    complete: missing.length === 0 && map.conflicts.length === 0 && map.bindings.length > 0,
+    complete:
+      missing.length === 0 &&
+      map.conflicts.length === 0 &&
+      map.bindings.length > 0,
     missing,
     conflicts: map.conflicts.length,
     enabled: map.bindings.filter((binding) => binding.enabled).length,
@@ -132,9 +155,15 @@ export function summarizeMap(map: KeyboardMapView): {
   };
 }
 
-export function helpLine(binding: KeyboardBindingView, localeTemplate: string, locale: string): string {
+export function helpLine(
+  binding: KeyboardBindingView,
+  localeTemplate: string,
+  locale: string,
+): string {
   const rendered = localeTemplate
     .replace("{action}", binding.label)
     .replace("{binding}", binding.display);
-  return locale === "fa" || locale === "ar" || locale === "ur" ? `\u2067${rendered}\u2069` : rendered;
+  return locale === "fa" || locale === "ar" || locale === "ur"
+    ? `\u2067${rendered}\u2069`
+    : rendered;
 }

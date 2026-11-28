@@ -3,9 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import {
-  ReleasePolishClient,
-} from "../src/features/release-polish/client";
+import { ReleasePolishClient } from "../src/features/release-polish/client";
 import {
   ANIMATION_AUDITS,
   BREAKPOINTS,
@@ -61,10 +59,16 @@ function source(relative: string): string {
 }
 
 function json(data: unknown): Response {
-  return new Response(JSON.stringify({ data, meta: { request_id: "req_test", api_version: "3.0" } }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+  return new Response(
+    JSON.stringify({
+      data,
+      meta: { request_id: "req_test", api_version: "3.0" },
+    }),
+    {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    },
+  );
 }
 
 test("config catalogues mirror the Python release content", () => {
@@ -80,7 +84,10 @@ test("config catalogues mirror the Python release content", () => {
   assert.equal(POLISH_CHECKS.length, 14);
   assert.equal(RELEASE_SURFACES.length, 6);
   assert.equal(Object.keys(RELEASE_ROUTES).length, 12);
-  assert.deepEqual(BREAKPOINTS.map((point) => point.width), [480, 768, 1280]);
+  assert.deepEqual(
+    BREAKPOINTS.map((point) => point.width),
+    [480, 768, 1280],
+  );
 });
 
 test("onboarding progress counts required steps", () => {
@@ -89,7 +96,10 @@ test("onboarding progress counts required steps", () => {
   assert.equal(empty.required, 4);
   assert.equal(empty.requiredDone, 0);
   assert.equal(empty.percent, 0);
-  const partial = onboardingProgress(ONBOARDING_STEPS, ["welcome", "first-capture"]);
+  const partial = onboardingProgress(ONBOARDING_STEPS, [
+    "welcome",
+    "first-capture",
+  ]);
   assert.equal(partial.done, 2);
   assert.equal(partial.requiredDone, 2);
   assert.equal(formatPercent(partial.percent), "40%");
@@ -98,10 +108,21 @@ test("onboarding progress counts required steps", () => {
 
 test("next onboarding step skips done required steps", () => {
   assert.equal(nextOnboardingStep()?.id, "welcome");
-  assert.equal(nextOnboardingStep(ONBOARDING_STEPS, ["welcome"])?.id, "first-capture");
-  assert.equal(nextOnboardingStep(ONBOARDING_STEPS, ONBOARDING_STEPS.map((step) => step.id)), undefined);
+  assert.equal(
+    nextOnboardingStep(ONBOARDING_STEPS, ["welcome"])?.id,
+    "first-capture",
+  );
+  assert.equal(
+    nextOnboardingStep(
+      ONBOARDING_STEPS,
+      ONBOARDING_STEPS.map((step) => step.id),
+    ),
+    undefined,
+  );
   assert.equal(isOnboardingComplete(), false);
-  const required = ONBOARDING_STEPS.filter((step) => step.required).map((step) => step.id);
+  const required = ONBOARDING_STEPS.filter((step) => step.required).map(
+    (step) => step.id,
+  );
   assert.equal(isOnboardingComplete(ONBOARDING_STEPS, required), true);
 });
 
@@ -110,22 +131,38 @@ test("first-run state selects the earliest missing surface", () => {
   assert.equal(firstRunSurface(empty), "notes");
   assert.equal(firstRunState(empty)?.actionRoute, "capture.create");
   assert.equal(firstRunSurface({ ...empty, notes: 1 }), "findings");
-  assert.equal(firstRunSurface({ ...empty, notes: 1, findings: 1 }), "evidence");
-  assert.equal(firstRunSurface({ ...empty, notes: 1, findings: 1, evidence: 1 }), "report");
-  assert.equal(firstRunSurface({ notes: 1, findings: 1, evidence: 1, reports: 1 }), "ready");
+  assert.equal(
+    firstRunSurface({ ...empty, notes: 1, findings: 1 }),
+    "evidence",
+  );
+  assert.equal(
+    firstRunSurface({ ...empty, notes: 1, findings: 1, evidence: 1 }),
+    "report",
+  );
+  assert.equal(
+    firstRunSurface({ notes: 1, findings: 1, evidence: 1, reports: 1 }),
+    "ready",
+  );
   assert.equal(emptyStateFor("missing"), undefined);
 });
 
 test("showcase and icon helpers resolve kinds", () => {
   assert.equal(showcaseByKind(SHOWCASE_ENTRIES, "finding").length, 2);
   assert.equal(showcaseTokens(SHOWCASE_ENTRIES).length, 12);
-  assert.equal(kindColorToken("finding"), "var(--v3-kind-finding, var(--v3-kind-default))");
+  assert.equal(
+    kindColorToken("finding"),
+    "var(--v3-kind-finding, var(--v3-kind-default))",
+  );
   assert.equal(iconForKind(ICON_LABELS, "evidence"), "paperclip");
   assert.equal(iconForKind(ICON_LABELS, "unknown"), undefined);
   assert.equal(labelForKind("finding"), "Finding");
   assert.equal(labelForKind("extra-kind"), "ExtraKind");
   assert.deepEqual(labelConsistencyIssues(ICON_LABELS, KIND_LABELS), []);
-  assert.equal(labelConsistencyIssues([{ icon: "x", label: "Wrong", kind: "note" }]).length, 1);
+  assert.equal(
+    labelConsistencyIssues([{ icon: "x", label: "Wrong", kind: "note" }])
+      .length,
+    1,
+  );
 });
 
 test("animation audit reports unsafe surfaces and invalid tokens", () => {
@@ -148,7 +185,12 @@ test("polish checklist helpers filter and compute progress", () => {
   assert.equal(progress.required, 2);
   assert.equal(filterPolishByArea(POLISH_CHECKS, "Animation").length, 2);
   assert.equal(filterPolishByArea(POLISH_CHECKS, "All").length, 14);
-  assert.equal(withCheckState(POLISH_CHECKS, ["onboarding.steps"]).filter((item) => item.done).length, 1);
+  assert.equal(
+    withCheckState(POLISH_CHECKS, ["onboarding.steps"]).filter(
+      (item) => item.done,
+    ).length,
+    1,
+  );
 });
 
 test("responsive helpers resolve breakpoints", () => {
@@ -162,7 +204,12 @@ test("responsive helpers resolve breakpoints", () => {
 });
 
 test("release snapshot combines all audits", () => {
-  const snapshot = releaseSnapshot(["welcome"], [], { notes: 1, findings: 1, evidence: 1, reports: 1 }, 900);
+  const snapshot = releaseSnapshot(
+    ["welcome"],
+    [],
+    { notes: 1, findings: 1, evidence: 1, reports: 1 },
+    900,
+  );
   assert.equal(snapshot.onboarding.done, 1);
   assert.equal(snapshot.polish.done, 0);
   assert.equal(snapshot.animation.unsafe.length, 1);
@@ -175,27 +222,61 @@ test("state reducer is additive and reversible", () => {
   const initial = initialReleasePolishState(1000);
   assert.equal(initial.width, 1000);
   assert.equal(initial.checked.length, POLISH_CHECKS.length);
-  const completed = releasePolishReducer(initial, { type: "complete", step: "welcome" });
+  const completed = releasePolishReducer(initial, {
+    type: "complete",
+    step: "welcome",
+  });
   assert.equal(activeStep(completed), "first-capture");
-  assert.equal(releasePolishReducer(completed, { type: "complete", step: "welcome" }), completed);
+  assert.equal(
+    releasePolishReducer(completed, { type: "complete", step: "welcome" }),
+    completed,
+  );
   assert.equal(completionLabel(completed), "In progress");
-  const dismissed = releasePolishReducer(completed, { type: "dismiss", surface: "notes" });
+  const dismissed = releasePolishReducer(completed, {
+    type: "dismiss",
+    surface: "notes",
+  });
   assert.deepEqual(dismissed.dismissed, ["notes"]);
-  const unchecked = releasePolishReducer(dismissed, { type: "toggle-check", check: "onboarding.steps" });
+  const unchecked = releasePolishReducer(dismissed, {
+    type: "toggle-check",
+    check: "onboarding.steps",
+  });
   assert.equal(unchecked.checked.length, POLISH_CHECKS.length - 1);
   assert.equal(polishLabel(unchecked), "13/14");
-  const resized = releasePolishReducer(unchecked, { type: "resize", width: -10 });
+  const resized = releasePolishReducer(unchecked, {
+    type: "resize",
+    width: -10,
+  });
   assert.equal(resized.width, 0);
-  assert.deepEqual(releasePolishReducer(resized, { type: "reset" }), initialReleasePolishState(0));
+  assert.deepEqual(
+    releasePolishReducer(resized, { type: "reset" }),
+    initialReleasePolishState(0),
+  );
 });
 
 test("state reducer validates phase selection", () => {
   const initial = initialReleasePolishState();
-  const selected = releasePolishReducer(initial, { type: "select-phase", phase: "merge" });
+  const selected = releasePolishReducer(initial, {
+    type: "select-phase",
+    phase: "merge",
+  });
   assert.equal(selected.selectedPhase, "merge");
-  assert.equal(releasePolishReducer(initial, { type: "select-phase", phase: "bogus" }), initial);
-  assert.equal(releasePolishReducer(initial, { type: "select-area", area: "Animation" }).selectedArea, "Animation");
-  assert.equal(releasePolishReducer(initial, { type: "select-surface", surface: "evidence" }).selectedSurface, "evidence");
+  assert.equal(
+    releasePolishReducer(initial, { type: "select-phase", phase: "bogus" }),
+    initial,
+  );
+  assert.equal(
+    releasePolishReducer(initial, { type: "select-area", area: "Animation" })
+      .selectedArea,
+    "Animation",
+  );
+  assert.equal(
+    releasePolishReducer(initial, {
+      type: "select-surface",
+      surface: "evidence",
+    }).selectedSurface,
+    "evidence",
+  );
 });
 
 test("client targets every release route", async () => {
@@ -204,7 +285,10 @@ test("client targets every release route", async () => {
     calls.push(String(input));
     return json({ ok: true, actions: RELEASE_ROUTES });
   }) as typeof globalThis.fetch;
-  const client = new ReleasePolishClient({ fetch: fetchImpl, requestId: () => "req_test" });
+  const client = new ReleasePolishClient({
+    fetch: fetchImpl,
+    requestId: () => "req_test",
+  });
   await client.manifest();
   await client.golden("capture-to-merge");
   await client.smoke();
@@ -236,8 +320,14 @@ test("components expose stable data and aria attributes", () => {
   ];
   for (const relative of components) {
     const text = source(relative);
-    assert.ok(text.includes("data-"), `${relative} must expose data attributes`);
-    assert.ok(text.includes("aria-"), `${relative} must expose aria attributes`);
+    assert.ok(
+      text.includes("data-"),
+      `${relative} must expose data attributes`,
+    );
+    assert.ok(
+      text.includes("aria-"),
+      `${relative} must expose aria attributes`,
+    );
     assert.ok(text.includes("focusable") || text.includes("focus-visible"));
   }
 });
