@@ -2,7 +2,12 @@
 
 import type { EntityRef } from "../../v3/types";
 
-export type FindingState = "draft" | "confirmed" | "remediated" | "retested" | "closed";
+export type FindingState =
+  | "draft"
+  | "confirmed"
+  | "remediated"
+  | "retested"
+  | "closed";
 
 export type SeverityBand = "none" | "low" | "medium" | "high" | "critical";
 

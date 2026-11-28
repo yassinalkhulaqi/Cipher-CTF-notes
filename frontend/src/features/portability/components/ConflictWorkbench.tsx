@@ -38,15 +38,22 @@ export function ConflictWorkbench({
   const counts = conflictCounts(conflicts);
 
   return (
-    <section className="portability-card portability-workbench" aria-label="Conflict workbench">
+    <section
+      className="portability-card portability-workbench"
+      aria-label="Conflict workbench"
+    >
       <header className="portability-card__header">
         <div>
           <h3>Conflict workbench</h3>
           <p className="portability-card__subtitle">
-            {unresolvedCount(conflicts)} of {conflicts.length} differences need a decision.
+            {unresolvedCount(conflicts)} of {conflicts.length} differences need
+            a decision.
           </p>
         </div>
-        <span className="portability-badge" data-tone={unresolvedCount(conflicts) ? "warn" : "good"}>
+        <span
+          className="portability-badge"
+          data-tone={unresolvedCount(conflicts) ? "warn" : "good"}
+        >
           {unresolvedCount(conflicts) ? "Review required" : "Ready to merge"}
         </span>
       </header>
@@ -76,11 +83,13 @@ export function ConflictWorkbench({
           value={strategy}
           onChange={(event) => onStrategy(event.target.value)}
         >
-          {["manual", "keep_local", "keep_remote", "merge_fields", "skip"].map((choice) => (
-            <option key={choice} value={choice}>
-              Default: {resolutionLabel(choice)}
-            </option>
-          ))}
+          {["manual", "keep_local", "keep_remote", "merge_fields", "skip"].map(
+            (choice) => (
+              <option key={choice} value={choice}>
+                Default: {resolutionLabel(choice)}
+              </option>
+            ),
+          )}
         </select>
       </div>
 
@@ -98,18 +107,34 @@ export function ConflictWorkbench({
               <header className="portability-conflict__header">
                 <div>
                   <h4>{conflict.ref}</h4>
-                  <span className="portability-badge" data-tone={reasonTone(conflict.reason)}>
+                  <span
+                    className="portability-badge"
+                    data-tone={reasonTone(conflict.reason)}
+                  >
                     {reasonLabel(conflict.reason)}
                   </span>
                 </div>
-                <span className="portability-badge" data-tone={resolutionTone(conflict.resolution)}>
+                <span
+                  className="portability-badge"
+                  data-tone={resolutionTone(conflict.resolution)}
+                >
                   {resolutionLabel(conflict.resolution)}
                 </span>
               </header>
-              <p className="portability-conflict__help">{reasonHelp(conflict.reason)}</p>
-              {conflict.detail && <p className="portability-conflict__detail">{conflict.detail}</p>}
+              <p className="portability-conflict__help">
+                {reasonHelp(conflict.reason)}
+              </p>
+              {conflict.detail && (
+                <p className="portability-conflict__detail">
+                  {conflict.detail}
+                </p>
+              )}
 
-              <div className="portability-diff" role="table" aria-label={`Diff for ${conflict.ref}`}>
+              <div
+                className="portability-diff"
+                role="table"
+                aria-label={`Diff for ${conflict.ref}`}
+              >
                 <div className="portability-diff__head" role="row">
                   <span role="columnheader">Field</span>
                   <span role="columnheader">Common ancestor</span>
@@ -133,29 +158,37 @@ export function ConflictWorkbench({
                     </span>
                   </div>
                 ))}
-                {!rows.length && <p className="portability-empty">No field-level diff available.</p>}
+                {!rows.length && (
+                  <p className="portability-empty">
+                    No field-level diff available.
+                  </p>
+                )}
               </div>
 
               <footer className="portability-conflict__footer">
                 <span>Suggested: {resolutionLabel(suggestion)}</span>
                 <div className="portability-choices">
-                  {RESOLUTIONS.filter((choice) => choice !== "unresolved").map((choice) => (
-                    <button
-                      key={choice}
-                      type="button"
-                      className="portability-button portability-button--small"
-                      data-active={conflict.resolution === choice}
-                      onClick={() => onResolve(conflict.ref, choice)}
-                    >
-                      {resolutionLabel(choice)}
-                    </button>
-                  ))}
+                  {RESOLUTIONS.filter((choice) => choice !== "unresolved").map(
+                    (choice) => (
+                      <button
+                        key={choice}
+                        type="button"
+                        className="portability-button portability-button--small"
+                        data-active={conflict.resolution === choice}
+                        onClick={() => onResolve(conflict.ref, choice)}
+                      >
+                        {resolutionLabel(choice)}
+                      </button>
+                    ),
+                  )}
                 </div>
               </footer>
             </article>
           );
         })}
-        {!visible.length && <p className="portability-empty">No conflicts match this filter.</p>}
+        {!visible.length && (
+          <p className="portability-empty">No conflicts match this filter.</p>
+        )}
       </div>
 
       <footer className="portability-card__footer">

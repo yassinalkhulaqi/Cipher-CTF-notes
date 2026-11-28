@@ -1,7 +1,11 @@
 /** Local UI state for the release-polish feature. */
 
 import { GOLDEN_PHASES, ONBOARDING_STEPS, POLISH_CHECKS } from "./config";
-import { isOnboardingComplete, nextOnboardingStep, polishProgress } from "./pure";
+import {
+  isOnboardingComplete,
+  nextOnboardingStep,
+  polishProgress,
+} from "./pure";
 
 export interface ReleasePolishState {
   completed: string[];
@@ -27,7 +31,9 @@ export function initialReleasePolishState(width = 1280): ReleasePolishState {
   return {
     completed: [],
     dismissed: [],
-    checked: POLISH_CHECKS.filter((check) => check.done).map((check) => check.id),
+    checked: POLISH_CHECKS.filter((check) => check.done).map(
+      (check) => check.id,
+    ),
     selectedSurface: "notes",
     selectedArea: "All",
     selectedPhase: GOLDEN_PHASES[0] ?? "capture",
@@ -75,12 +81,17 @@ export function activeStep(state: ReleasePolishState): string {
 }
 
 export function completionLabel(state: ReleasePolishState): string {
-  return isOnboardingComplete(ONBOARDING_STEPS, state.completed) ? "Ready" : "In progress";
+  return isOnboardingComplete(ONBOARDING_STEPS, state.completed)
+    ? "Ready"
+    : "In progress";
 }
 
 export function polishLabel(state: ReleasePolishState): string {
   const progress = polishProgress(
-    POLISH_CHECKS.map((check) => ({ ...check, done: state.checked.includes(check.id) })),
+    POLISH_CHECKS.map((check) => ({
+      ...check,
+      done: state.checked.includes(check.id),
+    })),
   );
   return `${progress.done}/${progress.total}`;
 }

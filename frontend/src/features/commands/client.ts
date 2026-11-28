@@ -42,11 +42,19 @@ export class CommandsClient {
   list(
     body: ContextBody = {},
   ): Promise<{ commands: CommandSpec[]; context: CommandContext }> {
-    return this.client.data("commands", "list", body);
+    return this.client.data(
+      "commands",
+      "list",
+      body as unknown as Record<string, unknown>,
+    );
   }
 
   context(body: ContextBody = {}): Promise<{ context: CommandContext }> {
-    return this.client.data("commands", "context", body);
+    return this.client.data(
+      "commands",
+      "context",
+      body as unknown as Record<string, unknown>,
+    );
   }
 
   suggest(

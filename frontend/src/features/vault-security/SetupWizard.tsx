@@ -112,7 +112,9 @@ export function SetupWizard({
             checked={acknowledged}
             onChange={(event) => setAcknowledged(event.target.checked)}
           />
-          <span>I understand the passphrase cannot be recovered without a code.</span>
+          <span>
+            I understand the passphrase cannot be recovered without a code.
+          </span>
         </label>
         <button type="submit" disabled={!check.valid || !acknowledged || busy}>
           {isSetup ? "Encrypt vault" : "Rotate key"}
@@ -137,7 +139,9 @@ export function SetupWizard({
           <div className="vs-wizard__code-actions">
             <button
               type="button"
-              onClick={() => void navigator.clipboard?.writeText(printableCodes(codes))}
+              onClick={() =>
+                void navigator.clipboard?.writeText(printableCodes(codes))
+              }
             >
               Copy codes
             </button>
