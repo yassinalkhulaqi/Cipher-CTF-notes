@@ -3,7 +3,11 @@ import { useReducer, useState } from "react";
 import { V3Panel } from "../../../v3/components/V3Panel";
 import type { PortabilityClient } from "../client";
 import { noticeForError, noticeForSuccess, toErrorMessage } from "../pure";
-import { initialPortabilityState, portabilityReducer, selectUnresolved } from "../state";
+import {
+  initialPortabilityState,
+  portabilityReducer,
+  selectUnresolved,
+} from "../state";
 import type { Resolution, VectorView } from "../types";
 import { BundleWizard } from "./BundleWizard";
 import { ConflictWorkbench } from "./ConflictWorkbench";
@@ -27,7 +31,11 @@ export function PortabilityFeature({
   base = [],
   local = [],
 }: Props) {
-  const [state, dispatch] = useReducer(portabilityReducer, undefined, initialPortabilityState);
+  const [state, dispatch] = useReducer(
+    portabilityReducer,
+    undefined,
+    initialPortabilityState,
+  );
   const [bundleId, setBundleId] = useState("");
   const [previewId, setPreviewId] = useState("");
   const [strategy, setStrategy] = useState("manual");
@@ -35,7 +43,12 @@ export function PortabilityFeature({
   function guard(operation: () => Promise<void>): void {
     dispatch({ type: "busy", value: true });
     operation()
-      .catch((error: unknown) => dispatch({ type: "notice", value: noticeForError(toErrorMessage(error)) }))
+      .catch((error: unknown) =>
+        dispatch({
+          type: "notice",
+          value: noticeForError(toErrorMessage(error)),
+        }),
+      )
       .finally(() => dispatch({ type: "busy", value: false }));
   }
 
@@ -45,7 +58,10 @@ export function PortabilityFeature({
       dispatch({ type: "step", index: 1 });
       dispatch({
         type: "notice",
-        value: noticeForSuccess("Bundle scoped", String(preview.headline ?? "Preview ready")),
+        value: noticeForSuccess(
+          "Bundle scoped",
+          String(preview.headline ?? "Preview ready"),
+        ),
       });
     });
   }
@@ -61,7 +77,10 @@ export function PortabilityFeature({
       );
       dispatch({ type: "vector", value: vector });
       dispatch({ type: "step", index: 2 });
-      dispatch({ type: "notice", value: noticeForSuccess("Bundle sealed", id) });
+      dispatch({
+        type: "notice",
+        value: noticeForSuccess("Bundle sealed", id),
+      });
     });
   }
 
@@ -95,9 +114,15 @@ export function PortabilityFeature({
     guard(async () => {
       const decisions: Record<string, string> = {};
       for (const conflict of state.conflicts) {
-        if (conflict.resolution !== "unresolved") decisions[conflict.ref] = conflict.resolution;
+        if (conflict.resolution !== "unresolved")
+          decisions[conflict.ref] = conflict.resolution;
       }
-      const result = await client.resolveConflicts(previewId, decisions, "local", state.plan.deviceId);
+      const result = await client.resolveConflicts(
+        previewId,
+        decisions,
+        "local",
+        state.plan.deviceId,
+      );
       dispatch({
         type: "notice",
         value: noticeForSuccess(
@@ -121,14 +146,20 @@ export function PortabilityFeature({
   function handleCancel(): void {
     guard(async () => {
       if (!state.progress) return;
-      dispatch({ type: "progress", value: await client.cancelTransfer(state.progress.transferId) });
+      dispatch({
+        type: "progress",
+        value: await client.cancelTransfer(state.progress.transferId),
+      });
     });
   }
 
   function handleResume(): void {
     guard(async () => {
       if (!state.progress) return;
-      dispatch({ type: "progress", value: await client.resumeTransfer(state.progress.transferId) });
+      dispatch({
+        type: "progress",
+        value: await client.resumeTransfer(state.progress.transferId),
+      });
     });
   }
 
@@ -137,14 +168,21 @@ export function PortabilityFeature({
       title="Safe vault portability"
       subtitle="Move, verify, and merge vaults without losing a decision."
       actions={
-        <span className="portability-badge" data-tone={selectUnresolved(state) ? "warn" : "good"}>
+        <span
+          className="portability-badge"
+          data-tone={selectUnresolved(state) ? "warn" : "good"}
+        >
           {selectUnresolved(state)} unresolved
         </span>
       }
     >
       <div className="portability-feature">
         {state.notice && (
-          <div className="portability-notice" data-tone={state.notice.tone} role="status">
+          <div
+            className="portability-notice"
+            data-tone={state.notice.tone}
+            role="status"
+          >
             <strong>{state.notice.title}</strong>
             <span>{state.notice.message}</span>
           </div>
@@ -157,16 +195,36 @@ export function PortabilityFeature({
           onNext={handlePlanPreview}
         />
         <div className="portability-actions">
-          <button type="button" className="portability-button" onClick={handleCreate} disabled={state.busy}>
+          <button
+            type="button"
+            className="portability-button"
+            onClick={handleCreate}
+            disabled={state.busy}
+          >
             Seal encrypted bundle
           </button>
-          <button type="button" className="portability-button" onClick={handleVerify} disabled={state.busy || !bundleId}>
+          <button
+            type="button"
+            className="portability-button"
+            onClick={handleVerify}
+            disabled={state.busy || !bundleId}
+          >
             Verify receipt
           </button>
-          <button type="button" className="portability-button" onClick={handlePreview} disabled={state.busy || !bundleId}>
+          <button
+            type="button"
+            className="portability-button"
+            onClick={handlePreview}
+            disabled={state.busy || !bundleId}
+          >
             Run dry import
           </button>
-          <button type="button" className="portability-button" onClick={handleTransfer} disabled={state.busy || !bundleId}>
+          <button
+            type="button"
+            className="portability-button"
+            onClick={handleTransfer}
+            disabled={state.busy || !bundleId}
+          >
             Start transfer
           </button>
         </div>
@@ -185,8 +243,15 @@ export function PortabilityFeature({
           }
           onApply={handleApply}
         />
-        <TransferProgress progress={state.progress} onCancel={handleCancel} onResume={handleResume} />
-        <VerificationReceiptView receipt={state.receipt} onArchive={() => undefined} />
+        <TransferProgress
+          progress={state.progress}
+          onCancel={handleCancel}
+          onResume={handleResume}
+        />
+        <VerificationReceiptView
+          receipt={state.receipt}
+          onArchive={() => undefined}
+        />
       </div>
     </V3Panel>
   );

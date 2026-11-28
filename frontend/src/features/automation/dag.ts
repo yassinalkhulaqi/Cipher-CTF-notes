@@ -6,9 +6,11 @@ import { issue } from "./types";
 export function dependencyGraph(steps: StepDef[]): Record<string, string[]> {
   const graph: Record<string, string[]> = {};
   for (const step of steps) {
-    graph[step.id] = Array.from(new Set(step.depends_on ?? [])).filter(
-      (dependency) => dependency !== step.id,
-    ).sort();
+    graph[step.id] = Array.from(
+      new Set([...(graph[step.id] ?? []), ...(step.depends_on ?? [])]),
+    )
+      .filter((dependency) => dependency !== step.id)
+      .sort();
   }
   return graph;
 }
@@ -31,7 +33,8 @@ function visit(
     } else if (state === 1) {
       const cycle = [...stack.slice(stack.indexOf(dependency)), dependency];
       const reversed = [cycle[0], ...cycle.slice(1).reverse()];
-      const canonical = JSON.stringify(cycle) < JSON.stringify(reversed) ? cycle : reversed;
+      const canonical =
+        JSON.stringify(cycle) < JSON.stringify(reversed) ? cycle : reversed;
       const key = JSON.stringify(canonical);
       if (!found.has(key)) {
         found.add(key);
@@ -49,15 +52,22 @@ export function detectCycles(graph: Record<string, string[]>): string[][] {
   const found = new Set<string>();
   const cycles: string[][] = [];
   for (const node of Object.keys(graph).sort()) {
-    if ((color[node] ?? 0) === 0) visit(node, graph, color, stack, found, cycles);
+    if ((color[node] ?? 0) === 0)
+      visit(node, graph, color, stack, found, cycles);
   }
-  return cycles.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+  return cycles.sort((a, b) =>
+    JSON.stringify(a).localeCompare(JSON.stringify(b)),
+  );
 }
 
 export function topologicalOrder(graph: Record<string, string[]>): string[] {
   const nodes = Object.keys(graph);
-  const dependents: Record<string, string[]> = Object.fromEntries(nodes.map((node) => [node, []]));
-  const indegree: Record<string, number> = Object.fromEntries(nodes.map((node) => [node, 0]));
+  const dependents: Record<string, string[]> = Object.fromEntries(
+    nodes.map((node) => [node, []]),
+  );
+  const indegree: Record<string, number> = Object.fromEntries(
+    nodes.map((node) => [node, 0]),
+  );
   for (const node of nodes) {
     for (const dependency of graph[node] ?? []) {
       if (dependency in indegree) {
@@ -79,7 +89,8 @@ export function topologicalOrder(graph: Record<string, string[]>): string[] {
       }
     }
   }
-  if (order.length !== nodes.length) throw new Error("Step graph contains a cycle");
+  if (order.length !== nodes.length)
+    throw new Error("Step graph contains a cycle");
   return order;
 }
 
@@ -88,7 +99,11 @@ export function parallelLayers(graph: Record<string, string[]>): string[][] {
   const layers: string[][] = [];
   while (Object.keys(remaining).length) {
     const ready = Object.keys(remaining)
-      .filter((node) => (remaining[node] ?? []).every((dependency) => !(dependency in remaining)))
+      .filter((node) =>
+        (remaining[node] ?? []).every(
+          (dependency) => !(dependency in remaining),
+        ),
+      )
       .sort();
     if (!ready.length) break;
     layers.push(ready);
@@ -104,7 +119,9 @@ export function nextReady(
 ): string[] {
   const done = new Set(completed);
   return order.filter(
-    (node) => !done.has(node) && (graph[node] ?? []).every((dependency) => done.has(dependency)),
+    (node) =>
+      !done.has(node) &&
+      (graph[node] ?? []).every((dependency) => done.has(dependency)),
   );
 }
 
@@ -119,35 +136,71 @@ export function compileDag(steps: StepDef[]): DagCompilation {
   const graph = dependencyGraph(steps);
   const known = new Set(ids);
   const missing = Array.from(
-    new Set(Object.values(graph).flat().filter((dependency) => !known.has(dependency))),
+    new Set(
+      Object.values(graph)
+        .flat()
+        .filter((dependency) => !known.has(dependency)),
+    ),
   ).sort();
-  const selfDependencies = steps.filter((step) => (step.depends_on ?? []).includes(step.id))
+  const selfDependencies = steps
+    .filter((step) => (step.depends_on ?? []).includes(step.id))
     .map((step) => step.id)
     .sort();
   const cycles = detectCycles(graph);
   const problems: ValidationIssue[] = [];
   if (duplicates.length) {
-    problems.push(issue("duplicate_step", `Duplicate step ids: ${duplicates.join(", ")}`, "steps"));
+    problems.push(
+      issue(
+        "duplicate_step",
+        `Duplicate step ids: ${duplicates.join(", ")}`,
+        "steps",
+      ),
+    );
   }
   if (missing.length) {
-    problems.push(issue("missing_dependency", `Unknown dependencies: ${missing.join(", ")}`, "steps"));
+    problems.push(
+      issue(
+        "missing_dependency",
+        `Unknown dependencies: ${missing.join(", ")}`,
+        "steps",
+      ),
+    );
   }
   if (selfDependencies.length) {
     problems.push(
-      issue("self_dependency", `Steps cannot depend on themselves: ${selfDependencies.join(", ")}`, "steps"),
+      issue(
+        "self_dependency",
+        `Steps cannot depend on themselves: ${selfDependencies.join(", ")}`,
+        "steps",
+      ),
     );
   }
   for (const cycle of cycles) {
-    problems.push(issue("cycle_detected", `Cycle: ${cycle.join(" -> ")}`, "steps.depends_on"));
-  }
-  const outputs = steps.map((step) => step.output).filter((value): value is string => Boolean(value));
-  const repeatedOutputs = Array.from(new Set(outputs.filter((value, index) => outputs.indexOf(value) !== index))).sort();
-  if (repeatedOutputs.length) {
     problems.push(
-      issue("duplicate_output", `Output names must be unique: ${repeatedOutputs.join(", ")}`, "steps.output"),
+      issue(
+        "cycle_detected",
+        `Cycle: ${cycle.join(" -> ")}`,
+        "steps.depends_on",
+      ),
     );
   }
-  const valid = !duplicates.length && !missing.length && !cycles.length && !problems.length;
+  const outputs = steps
+    .map((step) => step.output)
+    .filter((value): value is string => Boolean(value));
+  const repeatedOutputs = Array.from(
+    new Set(outputs.filter((value, index) => outputs.indexOf(value) !== index)),
+  ).sort();
+  if (repeatedOutputs.length) {
+    problems.push(
+      issue(
+        "duplicate_output",
+        `Output names must be unique: ${repeatedOutputs.join(", ")}`,
+        "steps.output",
+      ),
+    );
+  }
+  const valid =
+    !duplicates.length && !missing.length && !cycles.length && !problems.length;
   let order: string[] = [];
   let layers: string[][] = [];
   let criticalPath: string[] = [];
@@ -157,7 +210,13 @@ export function compileDag(steps: StepDef[]): DagCompilation {
     layers = parallelLayers(graph);
     for (const node of order) {
       depth[node] =
-        1 + Math.max(0, ...(graph[node] ?? []).filter((item) => item in depth).map((item) => depth[item]));
+        1 +
+        Math.max(
+          0,
+          ...(graph[node] ?? [])
+            .filter((item) => item in depth)
+            .map((item) => depth[item]),
+        );
     }
     let end = order[0] ?? "";
     for (const node of order) {
@@ -167,8 +226,12 @@ export function compileDag(steps: StepDef[]): DagCompilation {
     let cursor: string | undefined = end;
     while (cursor && !chain.includes(cursor)) {
       chain.unshift(cursor);
-      const parents = (graph[cursor] ?? []).filter((parent) => parent in depth);
-      cursor = parents.sort((a, b) => (depth[b] ?? 0) - (depth[a] ?? 0))[0];
+      const parents: string[] = (graph[cursor] ?? []).filter(
+        (parent: string) => parent in depth,
+      );
+      cursor = parents.sort(
+        (a: string, b: string) => (depth[b] ?? 0) - (depth[a] ?? 0),
+      )[0];
     }
     criticalPath = chain;
   }
@@ -193,24 +256,38 @@ export interface ConnectResult {
 }
 
 /** Apply a drag-created dependency without mutating the input array. */
-export function connectSteps(steps: StepDef[], source: string, target: string): ConnectResult {
+export function connectSteps(
+  steps: StepDef[],
+  source: string,
+  target: string,
+): ConnectResult {
   const reject = (code: string, message: string): ConnectResult => ({
     steps,
     accepted: false,
     problem: issue(code, message, `steps.${target}.depends_on`),
   });
-  if (source === target) return reject("self_dependency", "A step cannot depend on itself");
+  if (source === target)
+    return reject("self_dependency", "A step cannot depend on itself");
   const ids = new Set(steps.map((step) => step.id));
   if (!ids.has(source) || !ids.has(target)) {
-    return reject("unknown_step", "Both ends of a connection must be existing steps");
+    return reject(
+      "unknown_step",
+      "Both ends of a connection must be existing steps",
+    );
   }
   const updated = steps.map((step) =>
     step.id === target
-      ? { ...step, depends_on: Array.from(new Set([...(step.depends_on ?? []), source])) }
+      ? {
+          ...step,
+          depends_on: Array.from(new Set([...(step.depends_on ?? []), source])),
+        }
       : step,
   );
   if (detectCycles(dependencyGraph(updated)).length) {
-    return reject("cycle_detected", `Connecting ${source} to ${target} would create a cycle`);
+    return reject(
+      "cycle_detected",
+      `Connecting ${source} to ${target} would create a cycle`,
+    );
   }
   return { steps: updated, accepted: true, problem: null };
 }
@@ -244,14 +321,25 @@ export function layoutDag(steps: StepDef[]): DagNodeLayout[] {
 
 function layersColumn(layer: string[], columns: Map<string, number>): number {
   if (!layer.length) return 0;
-  const parents = layer.flatMap((node) => columns.get(node) ?? -1).filter((value) => value >= 0);
-  return parents.length ? Math.max(...parents) + 1 : columns.size ? Math.max(...columns.values()) + 1 : 0;
+  const parents = layer
+    .flatMap((node) => columns.get(node) ?? -1)
+    .filter((value) => value >= 0);
+  return parents.length
+    ? Math.max(...parents) + 1
+    : columns.size
+      ? Math.max(...columns.values()) + 1
+      : 0;
 }
 
-export function edgesFor(steps: StepDef[]): Array<{ from: string; to: string }> {
+export function edgesFor(
+  steps: StepDef[],
+): Array<{ from: string; to: string }> {
   const edges: Array<{ from: string; to: string }> = [];
   for (const step of steps) {
-    for (const dependency of step.depends_on ?? []) edges.push({ from: dependency, to: step.id });
+    for (const dependency of step.depends_on ?? [])
+      edges.push({ from: dependency, to: step.id });
   }
-  return edges.sort((a, b) => `${a.from}>${a.to}`.localeCompare(`${b.from}>${b.to}`));
+  return edges.sort((a, b) =>
+    `${a.from}>${a.to}`.localeCompare(`${b.from}>${b.to}`),
+  );
 }

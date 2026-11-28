@@ -109,7 +109,9 @@ function surface(patch: Partial<SurfaceView> = {}): SurfaceView {
   };
 }
 
-function snapshot(patch: Partial<PreferenceSnapshotView> = {}): PreferenceSnapshotView {
+function snapshot(
+  patch: Partial<PreferenceSnapshotView> = {},
+): PreferenceSnapshotView {
   return {
     locale: "en",
     theme: "graphite",
@@ -175,14 +177,22 @@ test("locale normalization and catalogs cover additional languages", () => {
 });
 
 test("translation interpolates and falls back to English", () => {
-  assert.equal(translate("en", "v3.search.results", { count: 7 }).message, "7 results");
+  assert.equal(
+    translate("en", "v3.search.results", { count: 7 }).message,
+    "7 results",
+  );
   const portuguese = translate("pt-BR", "v3.search.results", { count: 3 });
   assert.equal(portuguese.message, "3 resultados");
   assert.equal(portuguese.missing, false);
   const missing = translate("it", "v3.not.a.key");
   assert.equal(missing.message, "v3.not.a.key");
   assert.equal(missing.missing, true);
-  assert.equal(translate("fa", "v3.layout.direction", { direction: "rtl" }).message.includes("rtl"), true);
+  assert.equal(
+    translate("fa", "v3.layout.direction", {
+      direction: "rtl",
+    }).message.includes("rtl"),
+    true,
+  );
   assert.equal(interpolate("{a} and {b}", { a: "1" }), "1 and {b}");
 });
 
@@ -218,10 +228,18 @@ test("contrast thresholds and evaluation follow WCAG 2.2", () => {
   assert.equal(requiredRatio("AAA"), 7);
   assert.equal(requiredRatio("AA", { graphical: true }), 3);
   assert.equal(requiredRatio("AA", { largeText: true }), 3);
-  const dark = evaluatePair({ name: "body", foreground: "#000000", background: "#ffffff" });
+  const dark = evaluatePair({
+    name: "body",
+    foreground: "#000000",
+    background: "#ffffff",
+  });
   assert.equal(dark.ratio, 21);
   assert.equal(dark.passed, true);
-  const faint = evaluatePair({ name: "muted", foreground: "#eeeeee", background: "#ffffff" });
+  const faint = evaluatePair({
+    name: "muted",
+    foreground: "#eeeeee",
+    background: "#ffffff",
+  });
   assert.equal(faint.passed, false);
   assert.equal(formatRatio(4.5), "4.50:1");
 });
@@ -246,21 +264,44 @@ test("contrast repair produces passing pairs", () => {
 });
 
 test("theme contrast comparison detects equivalence and shared failures", () => {
-  const passing = evaluatePair({ name: "body", foreground: "#111111", background: "#ffffff" });
-  const dark = evaluatePair({ name: "body", foreground: "#eeeeee", background: "#111111", level: "AAA" });
-  const compared = mergeThemeReports(buildContrastReport([passing]), buildContrastReport([dark]));
+  const passing = evaluatePair({
+    name: "body",
+    foreground: "#111111",
+    background: "#ffffff",
+  });
+  const dark = evaluatePair({
+    name: "body",
+    foreground: "#eeeeee",
+    background: "#111111",
+    level: "AAA",
+  });
+  const compared = mergeThemeReports(
+    buildContrastReport([passing]),
+    buildContrastReport([dark]),
+  );
   assert.equal(compared.passed, true);
   assert.equal(compared.equivalent, true);
-  const failure = evaluatePair({ name: "body", foreground: "#ffffff", background: "#ffffff" });
-  const shared = mergeThemeReports(buildContrastReport([failure]), buildContrastReport([failure]));
+  const failure = evaluatePair({
+    name: "body",
+    foreground: "#ffffff",
+    background: "#ffffff",
+  });
+  const shared = mergeThemeReports(
+    buildContrastReport([failure]),
+    buildContrastReport([failure]),
+  );
   assert.equal(shared.passed, false);
   assert.deepEqual(shared.shared, ["body"]);
 });
 
 test("WCAG rule catalog and level filtering", () => {
   assert.equal(rulesForLevel("A").length < rulesForLevel("AAA").length, true);
-  assert.ok(rulesForLevel("AA").some((rule) => rule.id === "focus.not_obscured"));
-  assert.ok(!rulesForLevel("AA").some((rule) => rule.id === "focus.appearance"));
+  assert.ok(
+    rulesForLevel("AA").some((rule) => rule.id === "focus.not_obscured"),
+  );
+  assert.ok(
+    !rulesForLevel("AA").some((rule) => rule.id === "focus.appearance"),
+  );
   assert.equal(severityWeight("critical"), 4);
   assert.equal(findingTone("serious"), "bad");
   assert.equal(findingTone("minor"), "neutral");
@@ -327,7 +368,10 @@ test("RTL layouts mirror panes and keep focus order logical", () => {
   assert.equal(sidesFor("rtl").end, "left");
   assert.equal(documentAttributes("ar", "rtl").dir, "rtl");
   assert.ok(paneNames().includes("a11y-refinement"));
-  assert.equal(warningForText("hello שלום", "he"), "isolate embedded Latin text");
+  assert.equal(
+    warningForText("hello שלום", "he"),
+    "isolate embedded Latin text",
+  );
   assert.equal(warningForText("hello", "en"), "");
 });
 
@@ -343,7 +387,11 @@ test("RTL manifest exposes CSS variables for every pane", () => {
 test("keyboard bindings normalize, resolve, and validate the full pass", () => {
   const map = keyboardMap();
   assert.deepEqual(normalizeBinding("Control+Shift+A"), ["ctrl", "shift", "a"]);
-  assert.deepEqual(normalizeBinding(["meta", "ctrl", "K"]), ["ctrl", "meta", "k"]);
+  assert.deepEqual(normalizeBinding(["meta", "ctrl", "K"]), [
+    "ctrl",
+    "meta",
+    "k",
+  ]);
   const save = findBindings(map, ["ctrl", "s"], "editor");
   assert.equal(save.length, 1);
   assert.equal(save[0].action, "save");
@@ -352,7 +400,9 @@ test("keyboard bindings normalize, resolve, and validate the full pass", () => {
   assert.equal(focusOrder(map, "navigation").length, NAVIGATION_ACTIONS.length);
   assert.equal(groupLabel("navigation"), "Surface navigation");
   assert.equal(displayBinding(save[0], "desktop"), "Ctrl+S");
-  assert.ok(helpLine(save[0], "{action}: {binding}", "en").includes("Save: Ctrl+S"));
+  assert.ok(
+    helpLine(save[0], "{action}: {binding}", "en").includes("Save: Ctrl+S"),
+  );
   const pass = keyboardPass(map);
   assert.equal(pass.complete, true);
   assert.equal(pass.enabled, NAVIGATION_ACTIONS.length + 1);
@@ -364,9 +414,14 @@ test("keyboard pass reports missing navigation bindings", () => {
   const partial: KeyboardMapView = {
     ...map,
     bindings: map.bindings.filter(
-      (binding) => binding.action !== "command_center" && binding.action !== "save",
+      (binding) =>
+        binding.action !== "command_center" && binding.action !== "save",
     ),
-    groups: { navigation: NAVIGATION_ACTIONS.filter((item) => item !== "command_center") },
+    groups: {
+      navigation: NAVIGATION_ACTIONS.filter(
+        (item) => item !== "command_center",
+      ),
+    },
     complete: false,
   };
   const pass = keyboardPass(partial);
@@ -375,7 +430,12 @@ test("keyboard pass reports missing navigation bindings", () => {
 });
 
 test("unified appearance controls theme, motion, and CSS", () => {
-  const custom = { ...DEFAULT_APPEARANCE, theme: "light", motion: "off" as const, font_scale: 1.4 };
+  const custom = {
+    ...DEFAULT_APPEARANCE,
+    theme: "light",
+    motion: "off" as const,
+    font_scale: 1.4,
+  };
   const css = appearanceCss(custom);
   assert.equal(css["--v3-theme"], "light");
   assert.equal(css["--v3-motion-slow"], "0ms");
@@ -383,7 +443,9 @@ test("unified appearance controls theme, motion, and CSS", () => {
   assert.equal(clampScale(9), 1.75);
   assert.equal(motionEquivalence("reduced").contentHidden, false);
   assert.equal(motionEquivalence("full").focusOrderPreserved, true);
-  const fromSnapshot = appearanceFromSnapshot(snapshot({ theme: "light", reduce_motion: true }));
+  const fromSnapshot = appearanceFromSnapshot(
+    snapshot({ theme: "light", reduce_motion: true }),
+  );
   assert.equal(fromSnapshot.motion, "reduced");
   assert.equal(fromSnapshot.density, "comfortable");
 });
@@ -396,7 +458,9 @@ test("appearance round-trips through preference snapshots", () => {
   assert.equal(updated.reduce_motion, true);
   assert.deepEqual(updated.shortcuts["v3.motion_mode"], ["off"]);
   assert.equal(appearanceFromSnapshot(updated).motion, "off");
-  const restored = appearanceFromSnapshot(snapshotWithAppearance(updated, DEFAULT_APPEARANCE));
+  const restored = appearanceFromSnapshot(
+    snapshotWithAppearance(updated, DEFAULT_APPEARANCE),
+  );
   assert.equal(restored.motion, "full");
   assert.equal(restored.theme, "graphite");
   assert.equal(clampScale(0.1), 0.75);
@@ -408,7 +472,10 @@ test("preference diff, checksum, and sync reporting", () => {
   assert.notEqual(checksum(local), checksum(remote));
   assert.equal(checksum(local), checksum(snapshot()));
   const changes = preferenceDiff(local, remote);
-  assert.deepEqual(changes.map((change) => change.field).sort(), ["locale", "theme"]);
+  assert.deepEqual(changes.map((change) => change.field).sort(), [
+    "locale",
+    "theme",
+  ]);
   const report: SyncReportView = {
     strategy: "merge",
     applied: true,
@@ -428,7 +495,10 @@ test("preference diff, checksum, and sync reporting", () => {
   assert.ok(syncSummary(report).includes("2 changed"));
   assert.equal(syncTone({ ...report, applied: false }), "bad");
   assert.equal(syncTone({ ...report, warnings: ["stale"] }), "warn");
-  assert.equal(directionPreference(snapshot({ direction: "rtl" }), "en"), "rtl");
+  assert.equal(
+    directionPreference(snapshot({ direction: "rtl" }), "en"),
+    "rtl",
+  );
   assert.equal(directionPreference(snapshot(), "ar"), "rtl");
   assert.equal(recordLabel(report.record), "default · r4 · remote");
 });

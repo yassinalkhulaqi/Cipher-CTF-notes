@@ -1,6 +1,12 @@
 /** One linkable activity row. */
 
-import { entryMeta, entryTone, formatClock, redactionNote, truncate } from "../format";
+import {
+  entryMeta,
+  entryTone,
+  formatClock,
+  redactionNote,
+  truncate,
+} from "../format";
 import type { ActivityEntry, DensityMode, JumpTarget } from "../types";
 
 export interface ActivityEntryRowProps {
@@ -41,9 +47,13 @@ export function ActivityEntryRow({
         <span className="activity-entry__severity">{entry.severity}</span>
         <span className="activity-entry__title">{entry.title}</span>
         {density !== "compact" && entry.summary && (
-          <span className="activity-entry__summary">{truncate(entry.summary, 120)}</span>
+          <span className="activity-entry__summary">
+            {truncate(entry.summary, 120)}
+          </span>
         )}
-        <span className="activity-entry__meta">{entryMeta(entry, density, now)}</span>
+        <span className="activity-entry__meta">
+          {entryMeta(entry, density, now)}
+        </span>
         {detail && <span className="activity-entry__redaction">{detail}</span>}
       </button>
       {jump?.resolvable && (

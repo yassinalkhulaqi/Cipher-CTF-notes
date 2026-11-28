@@ -48,14 +48,26 @@ export function TableVirtualizer<T>({
       onScroll={onScroll}
       data-testid="table-virtualizer"
     >
-      <div className="perf-table__head" style={{ gridTemplateColumns: template }}>
+      <div
+        className="perf-table__head"
+        style={{ gridTemplateColumns: template }}
+      >
         {columns.map((column) => (
           <span key={column.key}>{column.title}</span>
         ))}
       </div>
-      <div className="perf-virtual__viewport" style={{ height: height - rowHeight }}>
-        <div className="perf-virtual__spacer" style={{ height: window.totalHeight }}>
-          <div className="perf-virtual__slice" style={{ transform: `translateY(${window.offsetTop}px)` }}>
+      <div
+        className="perf-virtual__viewport"
+        style={{ height: height - rowHeight }}
+      >
+        <div
+          className="perf-virtual__spacer"
+          style={{ height: window.totalHeight }}
+        >
+          <div
+            className="perf-virtual__slice"
+            style={{ transform: `translateY(${window.offsetTop}px)` }}
+          >
             {visible.map((row, index) => (
               <div
                 className="perf-virtual__row perf-virtual__row--table"

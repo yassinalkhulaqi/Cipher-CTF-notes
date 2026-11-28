@@ -11,17 +11,47 @@ import type {
 } from "./types";
 
 export const WCAG22_RULES: RuleInfo[] = [
-  rule("focus.not_obscured", "2.4.11", "Focus Not Obscured (Minimum)", "AA", "focus"),
-  rule("focus.not_obscured.enhanced", "2.4.12", "Focus Not Obscured (Enhanced)", "AAA", "focus"),
+  rule(
+    "focus.not_obscured",
+    "2.4.11",
+    "Focus Not Obscured (Minimum)",
+    "AA",
+    "focus",
+  ),
+  rule(
+    "focus.not_obscured.enhanced",
+    "2.4.12",
+    "Focus Not Obscured (Enhanced)",
+    "AAA",
+    "focus",
+  ),
   rule("focus.appearance", "2.4.13", "Focus Appearance", "AAA", "focus"),
   rule("pointer.dragging", "2.5.7", "Dragging Movements", "AA", "pointer"),
-  rule("pointer.target_size", "2.5.8", "Target Size (Minimum)", "AA", "pointer"),
+  rule(
+    "pointer.target_size",
+    "2.5.8",
+    "Target Size (Minimum)",
+    "AA",
+    "pointer",
+  ),
   rule("help.consistent", "3.2.6", "Consistent Help", "A", "document"),
   rule("form.redundant_entry", "3.3.7", "Redundant Entry", "A", "form"),
   rule("auth.accessible", "3.3.8", "Accessible Authentication", "AA", "form"),
-  rule("auth.accessible.enhanced", "3.3.9", "Accessible Authentication (Enhanced)", "AAA", "form"),
+  rule(
+    "auth.accessible.enhanced",
+    "3.3.9",
+    "Accessible Authentication (Enhanced)",
+    "AAA",
+    "form",
+  ),
   rule("contrast.non_text", "1.4.11", "Non-text Contrast", "AA", "content"),
-  rule("content.hoverable", "1.4.13", "Content on Hover or Focus", "AA", "content"),
+  rule(
+    "content.hoverable",
+    "1.4.13",
+    "Content on Hover or Focus",
+    "AA",
+    "content",
+  ),
   rule("keyboard.reachable", "2.1.1", "Keyboard", "A", "focus"),
   rule("labels.screen_reader", "4.1.2", "Name, Role, Value", "A", "content"),
   rule("locale.direction", "3.1.1", "Language of Page", "A", "localization"),
@@ -104,7 +134,8 @@ function checks(surface: SurfaceView, level: WcagLevel): RuleFindingView[] {
     message: string,
     details: Record<string, unknown> = {},
   ): void => {
-    if (enabled && eligible.has(id)) findings.push(finding(surface, id, severity, message, details));
+    if (enabled && eligible.has(id))
+      findings.push(finding(surface, id, severity, message, details));
   };
   add(
     "keyboard.reachable",
@@ -158,9 +189,24 @@ function checks(surface: SurfaceView, level: WcagLevel): RuleFindingView[] {
     `Non-text contrast is ${surface.non_text_contrast.toFixed(2)}:1`,
     { ratio: surface.non_text_contrast },
   );
-  add("content.hoverable", surface.hover_content, "moderate", "Hover content may disappear");
-  add("help.consistent", !surface.has_help, "minor", "Help is missing from this surface");
-  add("form.redundant_entry", surface.repeated_entry, "moderate", "A value is requested twice");
+  add(
+    "content.hoverable",
+    surface.hover_content,
+    "moderate",
+    "Hover content may disappear",
+  );
+  add(
+    "help.consistent",
+    !surface.has_help,
+    "minor",
+    "Help is missing from this surface",
+  );
+  add(
+    "form.redundant_entry",
+    surface.repeated_entry,
+    "moderate",
+    "A value is requested twice",
+  );
   add(
     "auth.accessible",
     ["captcha", "puzzle", "cognitive"].includes(surface.auth_captcha),
@@ -169,7 +215,9 @@ function checks(surface: SurfaceView, level: WcagLevel): RuleFindingView[] {
   );
   add(
     "auth.accessible.enhanced",
-    ["puzzle", "cognitive", "object_recognition"].includes(surface.auth_captcha),
+    ["puzzle", "cognitive", "object_recognition"].includes(
+      surface.auth_captcha,
+    ),
     "moderate",
     "Authentication requires a cognitive function test",
   );
@@ -182,18 +230,27 @@ function checks(surface: SurfaceView, level: WcagLevel): RuleFindingView[] {
   return findings;
 }
 
-export function auditSurface(surface: SurfaceView, level: WcagLevel = surface.level): AuditRunView {
+export function auditSurface(
+  surface: SurfaceView,
+  level: WcagLevel = surface.level,
+): AuditRunView {
   const findings = checks(surface, level).sort(
-    (first, second) => severityWeight(second.severity) - severityWeight(first.severity),
+    (first, second) =>
+      severityWeight(second.severity) - severityWeight(first.severity),
   );
   const eligible = rulesForLevel(level);
   const fired = new Set(findings.map((item) => item.rule));
-  const penalty = findings.reduce((total, item) => total + Math.max(1, severityWeight(item.severity) * 2), 0);
+  const penalty = findings.reduce(
+    (total, item) => total + Math.max(1, severityWeight(item.severity) * 2),
+    0,
+  );
   return {
     surface: surface.name,
     level,
     findings,
-    passed_rules: eligible.filter((item) => !fired.has(item.id)).map((item) => item.id),
+    passed_rules: eligible
+      .filter((item) => !fired.has(item.id))
+      .map((item) => item.id),
     checked: eligible.length,
     score: Math.max(0, 100 - penalty),
     passed: !findings.some((item) => isBlocking(item.severity)),
@@ -221,7 +278,10 @@ export function summarizeAudits(runs: AuditRunView[]): AuditSummaryView {
   };
 }
 
-export function filterFindings(runs: AuditRunView[], level: Severity | "all"): RuleFindingView[] {
+export function filterFindings(
+  runs: AuditRunView[],
+  level: Severity | "all",
+): RuleFindingView[] {
   return runs.flatMap((run) =>
     run.findings.filter((item) => level === "all" || item.severity === level),
   );

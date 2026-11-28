@@ -1,6 +1,11 @@
 /** Client-side filter DSL helpers mirroring the Python activity DSL. */
 
-import type { FacetCounts, FilterChipData, FilterOperator, FilterValidation } from "./types";
+import type {
+  FacetCounts,
+  FilterChipData,
+  FilterOperator,
+  FilterValidation,
+} from "./types";
 
 export const FILTER_KEYS = [
   "kind",
@@ -16,10 +21,18 @@ export const FILTER_KEYS = [
 
 export const FILTER_OPERATORS: FilterOperator[] = ["include", "exclude"];
 
-export const SEVERITIES = ["trace", "info", "notice", "warning", "critical"] as const;
+export const SEVERITIES = [
+  "trace",
+  "info",
+  "notice",
+  "warning",
+  "critical",
+] as const;
 
 export function severityRank(value: string): number {
-  const index = SEVERITIES.indexOf(value.toLowerCase() as (typeof SEVERITIES)[number]);
+  const index = SEVERITIES.indexOf(
+    value.toLowerCase() as (typeof SEVERITIES)[number],
+  );
   return index < 0 ? -1 : index;
 }
 
@@ -73,9 +86,19 @@ export function tokenizeFilterQuery(query: string): string[] {
   return tokens;
 }
 
-export function makeChip(key: string, value: string, operator: FilterOperator = "include"): FilterChipData {
+export function makeChip(
+  key: string,
+  value: string,
+  operator: FilterOperator = "include",
+): FilterChipData {
   const prefix = operator === "exclude" ? "-" : "";
-  return { key, value, operator, label: value, token: `${prefix}${key}:${value}` };
+  return {
+    key,
+    value,
+    operator,
+    label: value,
+    token: `${prefix}${key}:${value}`,
+  };
 }
 
 export function chipFromToken(token: string): FilterChipData | null {
@@ -120,7 +143,10 @@ export function parseFilterQuery(query: string): {
       errors.push(`Unknown severity: ${chip.value}`);
       continue;
     }
-    if ((chip.key === "since" || chip.key === "until") && !isTimestamp(chip.value)) {
+    if (
+      (chip.key === "since" || chip.key === "until") &&
+      !isTimestamp(chip.value)
+    ) {
       errors.push(`Invalid timestamp for ${chip.key}: ${chip.value}`);
       continue;
     }
@@ -143,18 +169,27 @@ export function chipsToQuery(chips: FilterChipData[]): string {
   return chips.map((chip) => chip.token).join(" ");
 }
 
-export function hasChip(chips: FilterChipData[], candidate: FilterChipData): boolean {
+export function hasChip(
+  chips: FilterChipData[],
+  candidate: FilterChipData,
+): boolean {
   return chips.some((chip) => chip.token === candidate.token);
 }
 
-export function toggleChip(chips: FilterChipData[], candidate: FilterChipData): FilterChipData[] {
+export function toggleChip(
+  chips: FilterChipData[],
+  candidate: FilterChipData,
+): FilterChipData[] {
   if (hasChip(chips, candidate)) {
     return chips.filter((chip) => chip.token !== candidate.token);
   }
   return [...chips, candidate];
 }
 
-export function removeChip(chips: FilterChipData[], token: string): FilterChipData[] {
+export function removeChip(
+  chips: FilterChipData[],
+  token: string,
+): FilterChipData[] {
   return chips.filter((chip) => chip.token !== token);
 }
 
@@ -165,20 +200,36 @@ const FACET_KEYS: Record<keyof FacetCounts, string> = {
   subjects: "subject",
 };
 
-export function facetChips(facets: FacetCounts, key: keyof FacetCounts, limit = 8): FilterChipData[] {
+export function facetChips(
+  facets: FacetCounts,
+  key: keyof FacetCounts,
+  limit = 8,
+): FilterChipData[] {
   const counts = facets[key] ?? {};
   return Object.keys(counts)
-    .sort((left, right) => counts[right] - counts[left] || left.localeCompare(right))
+    .sort(
+      (left, right) =>
+        counts[right] - counts[left] || left.localeCompare(right),
+    )
     .slice(0, Math.max(0, limit))
     .map((value) => makeChip(FACET_KEYS[key], value));
 }
 
-export function chipsFromFilterBody(body: Record<string, unknown>): FilterChipData[] {
+export function chipsFromFilterBody(
+  body: Record<string, unknown>,
+): FilterChipData[] {
   const chips: FilterChipData[] = [];
   for (const key of ["kinds", "actors", "subjects", "tags"] as const) {
     const values = body[key];
     if (!Array.isArray(values)) continue;
-    const chipKey = key === "kinds" ? "kind" : key === "actors" ? "actor" : key === "subjects" ? "subject" : "tag";
+    const chipKey =
+      key === "kinds"
+        ? "kind"
+        : key === "actors"
+          ? "actor"
+          : key === "subjects"
+            ? "subject"
+            : "tag";
     for (const value of values) {
       if (typeof value === "string") chips.push(makeChip(chipKey, value));
     }
