@@ -47,12 +47,16 @@ export function UnifiedAppearanceControl({
         </span>
       }
     >
-      <div className="a11y-refine__appearance" data-density={draft.density} style={
-        {
-          "--v3-theme": css["--v3-theme"],
-          "--v3-motion-normal": css["--v3-motion-normal"],
-        } as CSSProperties
-      }>
+      <div
+        className="a11y-refine__appearance"
+        data-density={draft.density}
+        style={
+          {
+            "--v3-theme": css["--v3-theme"],
+            "--v3-motion-normal": css["--v3-motion-normal"],
+          } as CSSProperties
+        }
+      >
         <div className="a11y-refine__field">
           <label htmlFor="a11y-refine-theme">Theme</label>
           <select
@@ -67,12 +71,19 @@ export function UnifiedAppearanceControl({
             ))}
           </select>
           <span className="a11y-refine__sr-only">
-            {translate(locale, "v3.theme.changed", { theme: draft.theme }).message}
+            {
+              translate(locale, "v3.theme.changed", { theme: draft.theme })
+                .message
+            }
           </span>
         </div>
         <fieldset className="a11y-refine__field">
           <legend>Motion</legend>
-          <div className="a11y-refine__segmented" role="group" aria-label="Motion mode">
+          <div
+            className="a11y-refine__segmented"
+            role="group"
+            aria-label="Motion mode"
+          >
             {MOTIONS.map((mode) => (
               <button
                 key={mode}
@@ -86,11 +97,14 @@ export function UnifiedAppearanceControl({
             ))}
           </div>
           <span className="a11y-refine__hint" role="status">
-            {motion.contentHidden ? "content hidden" : "content visible"} · focus preserved
+            {motion.contentHidden ? "content hidden" : "content visible"} ·
+            focus preserved
           </span>
         </fieldset>
         <div className="a11y-refine__field">
-          <label htmlFor="a11y-refine-scale">Text scale ({draft.font_scale.toFixed(2)})</label>
+          <label htmlFor="a11y-refine-scale">
+            Text scale ({draft.font_scale.toFixed(2)})
+          </label>
           <input
             id="a11y-refine-scale"
             type="range"
@@ -98,7 +112,9 @@ export function UnifiedAppearanceControl({
             max={1.75}
             step={0.05}
             value={draft.font_scale}
-            onChange={(event) => update({ font_scale: clampScale(Number(event.target.value)) })}
+            onChange={(event) =>
+              update({ font_scale: clampScale(Number(event.target.value)) })
+            }
             aria-valuetext={`${Math.round(draft.font_scale * 100)} percent`}
           />
         </div>
@@ -107,7 +123,9 @@ export function UnifiedAppearanceControl({
             <input
               type="checkbox"
               checked={draft.high_contrast}
-              onChange={(event) => update({ high_contrast: event.target.checked })}
+              onChange={(event) =>
+                update({ high_contrast: event.target.checked })
+              }
             />
             High contrast
           </label>
@@ -115,7 +133,9 @@ export function UnifiedAppearanceControl({
             <input
               type="checkbox"
               checked={draft.focus_ring_boost}
-              onChange={(event) => update({ focus_ring_boost: event.target.checked })}
+              onChange={(event) =>
+                update({ focus_ring_boost: event.target.checked })
+              }
             />
             Stronger focus ring
           </label>
@@ -124,7 +144,9 @@ export function UnifiedAppearanceControl({
               type="checkbox"
               checked={draft.density === "compact"}
               onChange={(event) =>
-                update({ density: event.target.checked ? "compact" : "comfortable" })
+                update({
+                  density: event.target.checked ? "compact" : "comfortable",
+                })
               }
             />
             Compact density

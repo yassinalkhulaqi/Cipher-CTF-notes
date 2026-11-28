@@ -27,11 +27,18 @@ export class A11yRefinementClient {
     this.client = options.client ?? new V3Client(options);
   }
 
-  private call<T>(action: string, body: Record<string, unknown> = {}): Promise<T> {
+  private call<T>(
+    action: string,
+    body: Record<string, unknown> = {},
+  ): Promise<T> {
     return this.client.data<T>("a11y", action, body);
   }
 
-  health(): Promise<{ namespace: string; surfaces: number; wcag22_rules: number }> {
+  health(): Promise<{
+    namespace: string;
+    surfaces: number;
+    wcag22_rules: number;
+  }> {
     return this.call("health");
   }
 
@@ -59,11 +66,17 @@ export class A11yRefinementClient {
     return this.call("theme_contrast");
   }
 
-  format(locale: string, kind: string, value: unknown): Promise<FormatResultView> {
+  format(
+    locale: string,
+    kind: string,
+    value: unknown,
+  ): Promise<FormatResultView> {
     return this.call("format", { locale, kind, value });
   }
 
-  locales(acceptLanguage = ""): Promise<{ locales: unknown[]; matched: string }> {
+  locales(
+    acceptLanguage = "",
+  ): Promise<{ locales: unknown[]; matched: string }> {
     return this.call("locales", { accept_language: acceptLanguage });
   }
 
@@ -75,11 +88,16 @@ export class A11yRefinementClient {
     return this.call("keyboard", { locale, platform });
   }
 
-  preferences(profile = "default"): Promise<{ record: PreferenceRecordView; appearance: unknown }> {
+  preferences(
+    profile = "default",
+  ): Promise<{ record: PreferenceRecordView; appearance: unknown }> {
     return this.call("preferences", { profile });
   }
 
-  sync(payload: Record<string, unknown>, strategy = "merge"): Promise<SyncReportView> {
+  sync(
+    payload: Record<string, unknown>,
+    strategy = "merge",
+  ): Promise<SyncReportView> {
     return this.call("preferences_sync", { ...payload, strategy });
   }
 

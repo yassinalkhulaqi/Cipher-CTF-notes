@@ -18,7 +18,12 @@ const STATE_LABELS: Record<string, string> = {
   closed: "Closed",
 };
 
-export function FindingCard({ finding, selected = false, onSelect, compact = false }: FindingCardProps) {
+export function FindingCard({
+  finding,
+  selected = false,
+  onSelect,
+  compact = false,
+}: FindingCardProps) {
   const activate = () => onSelect?.(finding.ref);
   const handleKey = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key === "Enter" || event.key === " ") {
@@ -45,21 +50,34 @@ export function FindingCard({ finding, selected = false, onSelect, compact = fal
       <div className="finding-card__body">
         <div className="finding-card__heading">
           <span className="finding-card__ref">{shortRef(finding.ref)}</span>
-          <span className="finding-card__state">{STATE_LABELS[finding.state] ?? finding.state}</span>
+          <span className="finding-card__state">
+            {STATE_LABELS[finding.state] ?? finding.state}
+          </span>
         </div>
         <h3 className="finding-card__title">{finding.title}</h3>
-        {!compact && finding.summary && <p className="finding-card__summary">{finding.summary}</p>}
+        {!compact && finding.summary && (
+          <p className="finding-card__summary">{finding.summary}</p>
+        )}
         <div className="finding-card__meta">
-          <span className="finding-card__score" data-tone={severityTone(finding.severity)}>
+          <span
+            className="finding-card__score"
+            data-tone={severityTone(finding.severity)}
+          >
             {formatScore(finding.score)}
           </span>
           <span className="finding-card__severity">{finding.severity}</span>
-          {finding.duplicate_of && <span className="finding-card__badge">duplicate</span>}
+          {finding.duplicate_of && (
+            <span className="finding-card__badge">duplicate</span>
+          )}
           {finding.proof_blocks.length > 0 && (
-            <span className="finding-card__badge">{finding.proof_blocks.length} proof</span>
+            <span className="finding-card__badge">
+              {finding.proof_blocks.length} proof
+            </span>
           )}
           {finding.remediation.length > 0 && (
-            <span className="finding-card__badge">{finding.remediation_progress * 100}% fixed</span>
+            <span className="finding-card__badge">
+              {finding.remediation_progress * 100}% fixed
+            </span>
           )}
         </div>
         {!compact && finding.tags.length > 0 && (

@@ -13,7 +13,12 @@ export interface RecurrencePickerProps {
 
 const FREQUENCIES: Frequency[] = ["hourly", "daily", "weekly", "monthly"];
 
-export function RecurrencePicker({ rule, occurrences, onChange, onPreview }: RecurrencePickerProps) {
+export function RecurrencePicker({
+  rule,
+  occurrences,
+  onChange,
+  onPreview,
+}: RecurrencePickerProps) {
   const problems = validateRule(rule);
   return (
     <div className="automation-recurrence" data-automation="recurrence-picker">
@@ -23,7 +28,9 @@ export function RecurrencePicker({ rule, occurrences, onChange, onPreview }: Rec
           id="automation-frequency"
           data-automation="recurrence-frequency"
           value={rule.frequency}
-          onChange={(event) => onChange({ frequency: event.target.value as Frequency })}
+          onChange={(event) =>
+            onChange({ frequency: event.target.value as Frequency })
+          }
         >
           {FREQUENCIES.map((frequency) => (
             <option key={frequency} value={frequency}>
@@ -38,7 +45,9 @@ export function RecurrencePicker({ rule, occurrences, onChange, onPreview }: Rec
           type="number"
           min={1}
           value={rule.interval}
-          onChange={(event) => onChange({ interval: Number(event.target.value) })}
+          onChange={(event) =>
+            onChange({ interval: Number(event.target.value) })
+          }
         />
       </div>
       {rule.frequency === "weekly" && (
@@ -77,7 +86,9 @@ export function RecurrencePicker({ rule, occurrences, onChange, onPreview }: Rec
             max={31}
             data-automation="recurrence-month-day"
             value={rule.by_month_day ?? 1}
-            onChange={(event) => onChange({ by_month_day: Number(event.target.value) })}
+            onChange={(event) =>
+              onChange({ by_month_day: Number(event.target.value) })
+            }
           />
         </div>
       )}
@@ -102,19 +113,33 @@ export function RecurrencePicker({ rule, occurrences, onChange, onPreview }: Rec
           value={rule.minute}
           onChange={(event) => onChange({ minute: Number(event.target.value) })}
         />
-        <button type="button" data-automation="recurrence-preview" onClick={onPreview}>
+        <button
+          type="button"
+          data-automation="recurrence-preview"
+          onClick={onPreview}
+        >
           Preview
         </button>
       </div>
-      <p className="automation-recurrence__description" data-automation="recurrence-description">
+      <p
+        className="automation-recurrence__description"
+        data-automation="recurrence-description"
+      >
         {humanize(rule)}
       </p>
       {problems.map((problem) => (
-        <p key={problem.code} className="automation-recurrence__problem" data-severity={problem.severity}>
+        <p
+          key={problem.code}
+          className="automation-recurrence__problem"
+          data-severity={problem.severity}
+        >
           {problem.message}
         </p>
       ))}
-      <ul className="automation-recurrence__occurrences" data-automation="recurrence-occurrences">
+      <ul
+        className="automation-recurrence__occurrences"
+        data-automation="recurrence-occurrences"
+      >
         {occurrences.map((timestamp) => (
           <li key={timestamp}>{formatOccurrence(timestamp)}</li>
         ))}

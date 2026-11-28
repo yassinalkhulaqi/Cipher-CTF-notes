@@ -15,7 +15,9 @@ export interface PortabilityRequestOptions {
   etag?: string;
 }
 
-export function compact(value: Record<string, unknown>): Record<string, unknown> {
+export function compact(
+  value: Record<string, unknown>,
+): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [key, item] of Object.entries(value)) {
     if (item === undefined || item === null || item === "") continue;
@@ -101,13 +103,20 @@ export class PortabilityClient {
     body: Record<string, unknown>,
     options: PortabilityRequestOptions,
   ): Promise<T> {
-    const envelope = await this.client.call<T>(namespace, action, body, options);
+    const envelope = await this.client.call<T>(
+      namespace,
+      action,
+      body,
+      options,
+    );
     return envelope.data;
   }
 
   constructor(private readonly client: V3Client) {}
 
-  health(options: PortabilityRequestOptions = {}): Promise<Record<string, unknown>> {
+  health(
+    options: PortabilityRequestOptions = {},
+  ): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>("sync", "health", {}, options);
   }
 
@@ -118,8 +127,15 @@ export class PortabilityClient {
     return this.request("sync", "reasons", {}, options);
   }
 
-  devices(options: PortabilityRequestOptions = {}): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>("sync", "devices", {}, options);
+  devices(
+    options: PortabilityRequestOptions = {},
+  ): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(
+      "sync",
+      "devices",
+      {},
+      options,
+    );
   }
 
   registerDevice(
@@ -127,14 +143,24 @@ export class PortabilityClient {
     label: string,
     options: PortabilityRequestOptions = {},
   ): Promise<Record<string, unknown>> {
-    return this.request("sync", "device.register", { device_id: deviceId, label }, options);
+    return this.request(
+      "sync",
+      "device.register",
+      { device_id: deviceId, label },
+      options,
+    );
   }
 
   trustDevice(
     deviceId: string,
     options: PortabilityRequestOptions = {},
   ): Promise<Record<string, unknown>> {
-    return this.request("sync", "device.trust", { device_id: deviceId }, options);
+    return this.request(
+      "sync",
+      "device.trust",
+      { device_id: deviceId },
+      options,
+    );
   }
 
   compareVectors(
@@ -142,7 +168,12 @@ export class PortabilityClient {
     remote: Record<string, number>,
     options: PortabilityRequestOptions = {},
   ): Promise<VectorView> {
-    return this.request<VectorView>("sync", "vectors.compare", { local, remote }, options);
+    return this.request<VectorView>(
+      "sync",
+      "vectors.compare",
+      { local, remote },
+      options,
+    );
   }
 
   planBundle(
@@ -159,14 +190,24 @@ export class PortabilityClient {
     links: unknown[] = [],
     options: PortabilityRequestOptions = {},
   ): Promise<Record<string, unknown>> {
-    return this.request("sync", "bundle.create", bundleCreateRequest(plan, entities, links), options);
+    return this.request(
+      "sync",
+      "bundle.create",
+      bundleCreateRequest(plan, entities, links),
+      options,
+    );
   }
 
   inspectBundle(
     bundleId: string,
     options: PortabilityRequestOptions = {},
   ): Promise<Record<string, unknown>> {
-    return this.request("sync", "bundle.inspect", { bundle_id: bundleId }, options);
+    return this.request(
+      "sync",
+      "bundle.inspect",
+      { bundle_id: bundleId },
+      options,
+    );
   }
 
   openBundle(
@@ -174,7 +215,12 @@ export class PortabilityClient {
     passphrase: string,
     options: PortabilityRequestOptions = {},
   ): Promise<Record<string, unknown>> {
-    return this.request("sync", "bundle.open", bundleVerifyRequest(bundleId, passphrase), options);
+    return this.request(
+      "sync",
+      "bundle.open",
+      bundleVerifyRequest(bundleId, passphrase),
+      options,
+    );
   }
 
   verifyBundle(
@@ -219,7 +265,11 @@ export class PortabilityClient {
     actor?: string,
     device?: string,
     options: PortabilityRequestOptions = {},
-  ): Promise<{ merge: { conflicts: ConflictView[] }; receipt: ReceiptView; ledger_intact: boolean }> {
+  ): Promise<{
+    merge: { conflicts: ConflictView[] };
+    receipt: ReceiptView;
+    ledger_intact: boolean;
+  }> {
     return this.request(
       "sync",
       "conflicts.resolve",
@@ -232,14 +282,23 @@ export class PortabilityClient {
     receiptId: string,
     options: PortabilityRequestOptions = {},
   ): Promise<ReceiptView> {
-    return this.request("sync", "receipt.get", { receipt_id: receiptId }, options);
+    return this.request(
+      "sync",
+      "receipt.get",
+      { receipt_id: receiptId },
+      options,
+    );
   }
 
-  receipts(options: PortabilityRequestOptions = {}): Promise<{ count: number; receipts: ReceiptView[] }> {
+  receipts(
+    options: PortabilityRequestOptions = {},
+  ): Promise<{ count: number; receipts: ReceiptView[] }> {
     return this.request("sync", "receipt.list", {}, options);
   }
 
-  audit(options: PortabilityRequestOptions = {}): Promise<Record<string, unknown>> {
+  audit(
+    options: PortabilityRequestOptions = {},
+  ): Promise<Record<string, unknown>> {
     return this.request("sync", "audit.list", {}, options);
   }
 
@@ -274,31 +333,53 @@ export class PortabilityClient {
     transferId: string,
     options: PortabilityRequestOptions = {},
   ): Promise<ProgressView> {
-    return this.request("sync", "transfer.pause", { transfer_id: transferId }, options);
+    return this.request(
+      "sync",
+      "transfer.pause",
+      { transfer_id: transferId },
+      options,
+    );
   }
 
   resumeTransfer(
     transferId: string,
     options: PortabilityRequestOptions = {},
   ): Promise<ProgressView> {
-    return this.request("sync", "transfer.resume", { transfer_id: transferId }, options);
+    return this.request(
+      "sync",
+      "transfer.resume",
+      { transfer_id: transferId },
+      options,
+    );
   }
 
   cancelTransfer(
     transferId: string,
     options: PortabilityRequestOptions = {},
   ): Promise<ProgressView> {
-    return this.request("sync", "transfer.cancel", { transfer_id: transferId }, options);
+    return this.request(
+      "sync",
+      "transfer.cancel",
+      { transfer_id: transferId },
+      options,
+    );
   }
 
   finishTransfer(
     transferId: string,
     options: PortabilityRequestOptions = {},
   ): Promise<Record<string, unknown>> {
-    return this.request("sync", "transfer.finish", { transfer_id: transferId }, options);
+    return this.request(
+      "sync",
+      "transfer.finish",
+      { transfer_id: transferId },
+      options,
+    );
   }
 }
 
-export function createPortabilityClient(fetchImpl?: typeof globalThis.fetch): PortabilityClient {
+export function createPortabilityClient(
+  fetchImpl?: typeof globalThis.fetch,
+): PortabilityClient {
   return new PortabilityClient(new V3Client({ fetch: fetchImpl }));
 }

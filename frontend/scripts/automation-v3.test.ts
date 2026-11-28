@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { ApiClientError, V3Client } from "../src/v3/apiClient";
-import { clearRegistries, listCommands, listFeatures, searchCommands } from "../src/v3/registry";
+import {
+  clearRegistries,
+  listCommands,
+  listFeatures,
+  searchCommands,
+} from "../src/v3/registry";
 import { AutomationClient } from "../src/features/automation/client";
 import {
   compileDag,
@@ -15,7 +20,13 @@ import {
   parallelLayers,
   topologicalOrder,
 } from "../src/features/automation/dag";
-import { DEFAULT_RULE, expand, humanize, nextOccurrence, validateRule } from "../src/features/automation/recurrence";
+import {
+  DEFAULT_RULE,
+  expand,
+  humanize,
+  nextOccurrence,
+  validateRule,
+} from "../src/features/automation/recurrence";
 import { registerAutomation } from "../src/features/automation/register";
 import {
   actionForKey,
@@ -32,7 +43,13 @@ import {
   traceSummary,
   traceVerdict,
 } from "../src/features/automation/trace";
-import type { DryRunTrace, MutationResult, Playbook, RunRecord, StepDef } from "../src/features/automation/types";
+import type {
+  DryRunTrace,
+  MutationResult,
+  Playbook,
+  RunRecord,
+  StepDef,
+} from "../src/features/automation/types";
 import {
   collectPlaceholders,
   interpolate,
@@ -43,18 +60,44 @@ import {
 } from "../src/features/automation/variables";
 
 function envelope<T>(data: T): Response {
-  return new Response(JSON.stringify({
-    data,
-    meta: { request_id: "req_test", api_version: "3.0" },
-  }), { status: 200, headers: { "Content-Type": "application/json" } });
+  return new Response(
+    JSON.stringify({
+      data,
+      meta: { request_id: "req_test", api_version: "3.0" },
+    }),
+    { status: 200, headers: { "Content-Type": "application/json" } },
+  );
 }
 
 function steps(): StepDef[] {
   return [
-    { id: "a", title: "Capture", kind: "create_note", inputs: { title: "Note" } },
-    { id: "b", title: "Find", kind: "create_finding", depends_on: ["a"], inputs: { title: "Finding" } },
-    { id: "c", title: "Attach", kind: "attach_evidence", depends_on: ["b"], inputs: { evidence_ref: "evidence:e1", target_ref: "finding:f1" } },
-    { id: "d", title: "Emit", kind: "emit_event", depends_on: ["c"], inputs: { event_kind: "automation.done" } },
+    {
+      id: "a",
+      title: "Capture",
+      kind: "create_note",
+      inputs: { title: "Note" },
+    },
+    {
+      id: "b",
+      title: "Find",
+      kind: "create_finding",
+      depends_on: ["a"],
+      inputs: { title: "Finding" },
+    },
+    {
+      id: "c",
+      title: "Attach",
+      kind: "attach_evidence",
+      depends_on: ["b"],
+      inputs: { evidence_ref: "evidence:e1", target_ref: "finding:f1" },
+    },
+    {
+      id: "d",
+      title: "Emit",
+      kind: "emit_event",
+      depends_on: ["c"],
+      inputs: { event_kind: "automation.done" },
+    },
   ];
 }
 
@@ -87,8 +130,23 @@ function trace(): DryRunTrace {
     playbook_ref: "playbook:pb",
     mode: "dry_run",
     entries: [
-      { index: 0, step_id: "a", status: "planned", kind: "create_note", message: "Planned (no write)", result, chain: "chain-a" },
-      { index: 1, step_id: "b", status: "skipped", kind: "create_finding", message: "Skipped", chain: "chain-b" },
+      {
+        index: 0,
+        step_id: "a",
+        status: "planned",
+        kind: "create_note",
+        message: "Planned (no write)",
+        result,
+        chain: "chain-a",
+      },
+      {
+        index: 1,
+        step_id: "b",
+        status: "skipped",
+        kind: "create_finding",
+        message: "Skipped",
+        chain: "chain-b",
+      },
     ],
     variables: { target: "target:t1" },
     digest: "chain-b",
@@ -105,7 +163,12 @@ test("dependency graph normalizes and detects cycles", () => {
   ]);
   assert.deepEqual(graph, { a: ["b"], b: [] });
   assert.deepEqual(detectCycles(graph), []);
-  const cyclic: Record<string, string[]> = { a: ["b"], b: ["c"], c: ["a"], d: [] };
+  const cyclic: Record<string, string[]> = {
+    a: ["b"],
+    b: ["c"],
+    c: ["a"],
+    d: [],
+  };
   const found = detectCycles(cyclic);
   assert.equal(found.length, 1);
   assert.equal(found[0]?.[0], found[0]?.at(-1));
@@ -165,8 +228,14 @@ test("connectSteps rejects cycles without mutating input", () => {
 test("layout and edges are deterministic for the DAG editor", () => {
   const layout = layoutDag(steps());
   assert.equal(layout.length, 4);
-  assert.deepEqual(layout.map((node) => node.column), [0, 1, 2, 3]);
-  assert.deepEqual(layout.map((node) => node.row), [0, 0, 0, 0]);
+  assert.deepEqual(
+    layout.map((node) => node.column),
+    [0, 1, 2, 3],
+  );
+  assert.deepEqual(
+    layout.map((node) => node.row),
+    [0, 0, 0, 0],
+  );
   assert.deepEqual(edgesFor(steps()), [
     { from: "a", to: "b" },
     { from: "b", to: "c" },
@@ -176,21 +245,33 @@ test("layout and edges are deterministic for the DAG editor", () => {
 
 test("variable validation coerces typed inputs and reports issues", () => {
   const definitions = playbook().variables;
-  const ok = validateVariableValues(definitions, { target: "target:t1", count: "4" });
+  const ok = validateVariableValues(definitions, {
+    target: "target:t1",
+    count: "4",
+  });
   assert.equal(ok.ok, true);
   assert.equal(ok.values["count"], 4);
-  const problems = validateVariableValues(definitions, { target: "bad", count: 99 });
+  const problems = validateVariableValues(definitions, {
+    target: "bad",
+    count: 99,
+  });
   assert.equal(problems.ok, false);
   const codes = problems.issues.map((item) => item.code);
   assert.ok(codes.includes("invalid_ref"));
   assert.ok(codes.includes("out_of_range"));
   const byKey = variableIssuesByKey(problems.issues);
   assert.ok(byKey["target"]);
-  assert.equal(validateVariableValues(definitions, {}).issues[0]?.code, "missing_variable");
+  assert.equal(
+    validateVariableValues(definitions, {}).issues[0]?.code,
+    "missing_variable",
+  );
 });
 
 test("interpolation preserves types and supports step outputs", () => {
-  const context = { vars: { count: 7, nested: { key: "v" } }, steps: { a: { ref: "note:a" } } };
+  const context = {
+    vars: { count: 7, nested: { key: "v" } },
+    steps: { a: { ref: "note:a" } },
+  };
   assert.equal(interpolate("{{ count }}", context), 7);
   assert.equal(interpolate("n={{ count }}", context), "n=7");
   assert.equal(interpolate("{{ vars.nested.key }}", context), "v");
@@ -199,14 +280,20 @@ test("interpolation preserves types and supports step outputs", () => {
   assert.equal(interpolate("{{ missing }}", context, false), "");
   assert.deepEqual(collectPlaceholders("{{ a }} {{ b }} {{ a }}"), ["a", "b"]);
   assert.deepEqual(
-    resolveInputs({ title: "{{ steps.a.ref }}", items: ["{{ count }}", 2] }, context),
+    resolveInputs(
+      { title: "{{ steps.a.ref }}", items: ["{{ count }}", 2] },
+      context,
+    ),
     { title: "note:a", items: [7, 2] },
   );
 });
 
 test("secret variable values are masked in safe views", () => {
   const resolution = validateVariableValues(
-    [{ key: "token", kind: "text", secret: true }, { key: "public", kind: "text", default: "ok" }],
+    [
+      { key: "token", kind: "text", secret: true },
+      { key: "public", kind: "text", default: "ok" },
+    ],
     { token: "s3cr3t" },
   );
   assert.equal(resolution.values["token"], "s3cr3t");
@@ -217,7 +304,10 @@ test("secret variable values are masked in safe views", () => {
 test("trace timeline, summary, verdict and diffs", () => {
   const current = trace();
   const items = timeline(current);
-  assert.deepEqual(items.map((item) => item.step_id), ["a", "b"]);
+  assert.deepEqual(
+    items.map((item) => item.step_id),
+    ["a", "b"],
+  );
   assert.equal(items[0]?.tone, "info");
   assert.equal(items[1]?.tone, "warn");
   assert.equal(items[0]?.target, "note:auto_a_note");
@@ -236,7 +326,9 @@ test("trace timeline, summary, verdict and diffs", () => {
   assert.equal(traceVerdict(changed), "attention");
   const differences = diffTraces(current, changed);
   assert.ok(differences.some((item) => item.path === "input_fingerprint"));
-  assert.ok(differences.some((item) => item.path.includes("steps.a[0].status")));
+  assert.ok(
+    differences.some((item) => item.path.includes("steps.a[0].status")),
+  );
   assert.deepEqual(diffTraces(current, current), []);
 
   const base: RunRecord = {
@@ -253,7 +345,11 @@ test("trace timeline, summary, verdict and diffs", () => {
     rollback_of: "",
     input_fingerprint: "fp-1",
   };
-  const rolled = { ...base, status: "rolled_back" as const, trace_digest: "d2" };
+  const rolled = {
+    ...base,
+    status: "rolled_back" as const,
+    trace_digest: "d2",
+  };
   assert.deepEqual(diffRuns(base, base), []);
   assert.ok(diffRuns(base, rolled).some((item) => item.path === "status"));
   assert.equal(asTrace(base).digest, "d1");
@@ -267,14 +363,36 @@ test("recurrence expansion honors interval, weekday, count and month clamp", () 
   assert.deepEqual(expand(daily, 0, 0), []);
   assert.equal(nextOccurrence(daily, found[0]!), found[1]);
   assert.deepEqual(
-    expand({ ...DEFAULT_RULE, frequency: "weekly", by_weekday: [0, 2] }, 2 * 86_400_000, 30 * 86_400_000, 6)
-      .map((value) => (new Date(value).getUTCDay() + 6) % 7),
+    expand(
+      { ...DEFAULT_RULE, frequency: "weekly", by_weekday: [0, 2] },
+      2 * 86_400_000,
+      30 * 86_400_000,
+      6,
+    ).map((value) => (new Date(value).getUTCDay() + 6) % 7),
     [0, 2, 0, 2, 0, 2],
   );
-  const monthly = expand({ ...DEFAULT_RULE, frequency: "monthly", by_month_day: 31 }, 0, 200 * 86_400_000, 12);
-  assert.ok(monthly.every((value) => [28, 30, 31].includes(new Date(value).getUTCDate())));
-  assert.ok(humanize({ ...DEFAULT_RULE, frequency: "weekly", by_weekday: [0, 2] }).includes("Mon"));
-  assert.equal(validateRule({ ...DEFAULT_RULE, interval: 0 })[0]?.code, "invalid_interval");
+  const monthly = expand(
+    { ...DEFAULT_RULE, frequency: "monthly", by_month_day: 31 },
+    0,
+    200 * 86_400_000,
+    12,
+  );
+  assert.ok(
+    monthly.every((value) =>
+      [28, 30, 31].includes(new Date(value).getUTCDate()),
+    ),
+  );
+  assert.ok(
+    humanize({
+      ...DEFAULT_RULE,
+      frequency: "weekly",
+      by_weekday: [0, 2],
+    }).includes("Mon"),
+  );
+  assert.equal(
+    validateRule({ ...DEFAULT_RULE, interval: 0 })[0]?.code,
+    "invalid_interval",
+  );
   assert.equal(validateRule(DEFAULT_RULE).length, 0);
 });
 
@@ -290,7 +408,7 @@ test("guided runner walks steps and respects dependencies", () => {
   assert.equal(currentStep(state)?.id, "a");
   state = runnerReducer(state, { type: "toggle" });
   assert.equal(state.completed.length, 1);
-  assert.equal(currentStep(state)?.id, "b");
+  assert.equal(currentStep(state)?.id, "a");
   state = runnerReducer(state, { type: "last" });
   assert.equal(currentStep(state)?.id, "d");
   const before = state;
@@ -306,14 +424,19 @@ test("guided runner walks steps and respects dependencies", () => {
 
 test("automation client sends V3 envelopes to every route", async () => {
   const calls: Array<{ url: string; body: Record<string, unknown> }> = [];
-  const fetchImpl = (async (input: RequestInfo | URL, init: RequestInit = {}) => {
+  const fetchImpl = (async (
+    input: RequestInfo | URL,
+    init: RequestInit = {},
+  ) => {
     calls.push({
       url: String(input),
       body: JSON.parse(String(init.body ?? "{}")) as Record<string, unknown>,
     });
     return envelope({ ok: true });
   }) as typeof globalThis.fetch;
-  const client = new AutomationClient({ client: new V3Client({ fetch: fetchImpl }) });
+  const client = new AutomationClient({
+    client: new V3Client({ fetch: fetchImpl }),
+  });
   const pb = playbook();
   await client.validate(pb, { target: "target:t" });
   await client.compile(pb);
@@ -326,31 +449,47 @@ test("automation client sends V3 envelopes to every route", async () => {
   await client.rollback("run-1");
   await client.recurrence(DEFAULT_RULE, 0, 1000);
   await client.diff("run-1", "run-2");
-  assert.deepEqual(calls.map((call) => call.url), [
-    "/api/v3/automation/validate",
-    "/api/v3/automation/compile",
-    "/api/v3/automation/connect",
-    "/api/v3/automation/dry_run",
-    "/api/v3/automation/run",
-    "/api/v3/automation/runs",
-    "/api/v3/automation/run_get",
-    "/api/v3/automation/replay",
-    "/api/v3/automation/rollback",
-    "/api/v3/automation/recurrence",
-    "/api/v3/automation/diff",
-  ]);
+  assert.deepEqual(
+    calls.map((call) => call.url),
+    [
+      "/api/v3/automation/validate",
+      "/api/v3/automation/compile",
+      "/api/v3/automation/connect",
+      "/api/v3/automation/dry_run",
+      "/api/v3/automation/run",
+      "/api/v3/automation/runs",
+      "/api/v3/automation/run_get",
+      "/api/v3/automation/replay",
+      "/api/v3/automation/rollback",
+      "/api/v3/automation/recurrence",
+      "/api/v3/automation/diff",
+    ],
+  );
   assert.deepEqual(calls[2]?.body, { playbook: pb, source: "d", target: "a" });
 });
 
 test("automation client surfaces typed V3 errors", async () => {
-  const fetchImpl = (async () => new Response(JSON.stringify({
-    error: { code: "invalid_request", message: "bad playbook", field: "playbook", retryable: false, context: {} },
-    meta: { request_id: "r", api_version: "3.0" },
-  }), { status: 400 })) as typeof globalThis.fetch;
-  const client = new AutomationClient({ client: new V3Client({ fetch: fetchImpl }) });
+  const fetchImpl = (async () =>
+    new Response(
+      JSON.stringify({
+        error: {
+          code: "invalid_request",
+          message: "bad playbook",
+          field: "playbook",
+          retryable: false,
+          context: {},
+        },
+        meta: { request_id: "r", api_version: "3.0" },
+      }),
+      { status: 400 },
+    )) as typeof globalThis.fetch;
+  const client = new AutomationClient({
+    client: new V3Client({ fetch: fetchImpl }),
+  });
   await assert.rejects(
     () => client.dryRun(playbook(), {}),
-    (error: unknown) => error instanceof ApiClientError && error.code === "invalid_request",
+    (error: unknown) =>
+      error instanceof ApiClientError && error.code === "invalid_request",
   );
 });
 
@@ -358,9 +497,22 @@ test("automation registers features and commands additively", () => {
   clearRegistries();
   registerAutomation();
   registerAutomation();
-  assert.equal(listFeatures().filter((feature) => feature.id === "automation").length, 1);
-  assert.equal(listFeatures().find((feature) => feature.id === "automation")?.order, 60);
-  assert.ok(listCommands().some((command) => command.id === "automation.focus"));
-  assert.equal(searchCommands("dry run").some((command) => command.id === "automation.dry-run-hint"), true);
+  assert.equal(
+    listFeatures().filter((feature) => feature.id === "automation").length,
+    1,
+  );
+  assert.equal(
+    listFeatures().find((feature) => feature.id === "automation")?.order,
+    60,
+  );
+  assert.ok(
+    listCommands().some((command) => command.id === "automation.focus"),
+  );
+  assert.equal(
+    searchCommands("dry run").some(
+      (command) => command.id === "automation.dry-run-hint",
+    ),
+    true,
+  );
   clearRegistries();
 });

@@ -2,7 +2,12 @@
 
 export type DensityMode = "compact" | "comfortable" | "detailed";
 export type DigestPeriod = "daily" | "weekly";
-export type ActivitySeverity = "trace" | "info" | "notice" | "warning" | "critical";
+export type ActivitySeverity =
+  | "trace"
+  | "info"
+  | "notice"
+  | "warning"
+  | "critical";
 export type FilterOperator = "include" | "exclude";
 
 export interface JumpTarget {
