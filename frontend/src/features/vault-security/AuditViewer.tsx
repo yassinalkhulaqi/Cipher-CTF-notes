@@ -4,7 +4,8 @@ import { useState } from "react";
 
 import { V3Panel } from "../../v3/components/V3Panel";
 import { auditCounts, filterAudit, formatTimestamp } from "./pure";
-import type { AuditEntry, AuditFilterState } from "./types";
+import type { AuditFilterState } from "./pure";
+import type { AuditEntry } from "./types";
 
 export interface AuditViewerProps {
   entries: AuditEntry[];
@@ -20,14 +21,24 @@ const DEFAULT_FILTER: AuditFilterState = {
   limit: 50,
 };
 
-export function AuditViewer({ entries, busy, onFilter, onExport }: AuditViewerProps) {
+export function AuditViewer({
+  entries,
+  busy,
+  onFilter,
+  onExport,
+}: AuditViewerProps) {
   const [filter, setFilter] = useState<AuditFilterState>(DEFAULT_FILTER);
   const shown = filterAudit(entries, filter);
-  const counts = auditCounts({ entries, total: entries.length, filter: {}, stats: {
+  const counts = auditCounts({
+    entries,
     total: entries.length,
-    by_outcome: {},
-    by_action: {},
-  } });
+    filter: {},
+    stats: {
+      total: entries.length,
+      by_outcome: {},
+      by_action: {},
+    },
+  });
 
   const patch = (update: Partial<AuditFilterState>) => {
     const next = { ...filter, ...update };
@@ -42,10 +53,18 @@ export function AuditViewer({ entries, busy, onFilter, onExport }: AuditViewerPr
       kind="activity"
       actions={
         <div className="vs-audit__exports">
-          <button type="button" onClick={() => onExport("json")} disabled={busy}>
+          <button
+            type="button"
+            onClick={() => onExport("json")}
+            disabled={busy}
+          >
             Export JSON
           </button>
-          <button type="button" onClick={() => onExport("jsonl")} disabled={busy}>
+          <button
+            type="button"
+            onClick={() => onExport("jsonl")}
+            disabled={busy}
+          >
             Export JSONL
           </button>
         </div>
@@ -119,7 +138,9 @@ export function AuditViewer({ entries, busy, onFilter, onExport }: AuditViewerPr
           </tbody>
         </table>
       )}
-      <p className="vs-locked">Details are redacted before display and export.</p>
+      <p className="vs-locked">
+        Details are redacted before display and export.
+      </p>
     </V3Panel>
   );
 }

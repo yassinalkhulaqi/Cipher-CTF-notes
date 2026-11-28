@@ -50,8 +50,15 @@ export function ResponsivePolishChecklist({
         aria-label="Responsive polish checklist"
       >
         <div className="release-checklist__stats" data-role="checklist-stats">
-          <V3Stat label="Complete" value={`${progress.done}/${progress.total}`} />
-          <V3Stat label="Coverage" value={formatPercent(progress.percent)} tone="good" />
+          <V3Stat
+            label="Complete"
+            value={`${progress.done}/${progress.total}`}
+          />
+          <V3Stat
+            label="Coverage"
+            value={formatPercent(progress.percent)}
+            tone="good"
+          />
           <V3Stat label="Width" value={`${width}px`} hint={breakpoint} />
         </div>
         <div className="release-checklist__filters" data-role="area-filters">

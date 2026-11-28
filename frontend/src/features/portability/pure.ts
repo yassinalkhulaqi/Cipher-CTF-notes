@@ -17,13 +17,41 @@ import type {
   WizardStep,
 } from "./types";
 
-export const WIZARD_LABELS: Array<{ id: WizardStep["id"]; label: string; description: string }> = [
-  { id: "source", label: "Source", description: "Choose device and vault scope" },
-  { id: "scope", label: "Scope & key", description: "Select records and passphrase policy" },
-  { id: "dry-run", label: "Dry run", description: "Preview changes before writing" },
-  { id: "conflicts", label: "Conflicts", description: "Decide every explained difference" },
-  { id: "transfer", label: "Transfer", description: "Track and resume chunk progress" },
-  { id: "receipt", label: "Receipt", description: "Archive verification evidence" },
+export const WIZARD_LABELS: Array<{
+  id: WizardStep["id"];
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "source",
+    label: "Source",
+    description: "Choose device and vault scope",
+  },
+  {
+    id: "scope",
+    label: "Scope & key",
+    description: "Select records and passphrase policy",
+  },
+  {
+    id: "dry-run",
+    label: "Dry run",
+    description: "Preview changes before writing",
+  },
+  {
+    id: "conflicts",
+    label: "Conflicts",
+    description: "Decide every explained difference",
+  },
+  {
+    id: "transfer",
+    label: "Transfer",
+    description: "Track and resume chunk progress",
+  },
+  {
+    id: "receipt",
+    label: "Receipt",
+    description: "Archive verification evidence",
+  },
 ];
 
 export const REASON_CODES: ReasonCode[] = [
@@ -53,13 +81,16 @@ const REASON_LABELS: Record<ReasonCode, string> = {
 };
 
 const REASON_HELP: Record<ReasonCode, string> = {
-  field_both_edited: "Both devices changed the same field. Choose a side or merge it manually.",
+  field_both_edited:
+    "Both devices changed the same field. Choose a side or merge it manually.",
   delete_modify: "One device deleted the record while the other edited it.",
   concurrent_add: "Two records share an id but were created independently.",
   tag_set_divergence: "Both devices changed the tag set differently.",
   content_divergence: "Both devices edited the note body text.",
-  link_target_missing: "A relationship points to an entity outside the merged set.",
-  vector_regression: "An incoming vector is missing counters from the common ancestor.",
+  link_target_missing:
+    "A relationship points to an entity outside the merged set.",
+  vector_regression:
+    "An incoming vector is missing counters from the common ancestor.",
   schema_mismatch: "The bundle was written by an incompatible schema version.",
   checksum_mismatch: "A record no longer matches the manifest checksum.",
   unknown_field: "The payload contains a field this client does not recognize.",
@@ -89,7 +120,8 @@ export function formatBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes < 0) return "—";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes < 1024 * 1024 * 1024)
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
@@ -105,7 +137,10 @@ export function truncate(text: string, maximum = 80): string {
 
 export function formatTimestamp(timestamp: number): string {
   if (!Number.isFinite(timestamp) || timestamp <= 0) return "unknown";
-  return new Date(timestamp * 1000).toISOString().replace("T", " ").slice(0, 19) + " UTC";
+  return (
+    new Date(timestamp * 1000).toISOString().replace("T", " ").slice(0, 19) +
+    " UTC"
+  );
 }
 
 export function buildWizardSteps(): WizardStep[] {
@@ -123,7 +158,10 @@ export function advanceWizard(
   if (index < 0 || index >= steps.length) return steps;
   return steps.map((step, position) => {
     if (position === index) {
-      return { ...step, status: status ?? (step.status === "complete" ? "complete" : "active") };
+      return {
+        ...step,
+        status: status ?? (step.status === "complete" ? "complete" : "active"),
+      };
     }
     if (position < index && step.status !== "error") {
       return { ...step, status: "complete" };
@@ -170,18 +208,26 @@ export function passphraseScore(passphrase: string): number {
 }
 
 export function strengthLabel(score: number): string {
-  return ["Empty", "Weak", "Fair", "Strong", "Excellent"][clamp(score, 0, 4)] ?? "Weak";
+  return (
+    ["Empty", "Weak", "Fair", "Strong", "Excellent"][clamp(score, 0, 4)] ??
+    "Weak"
+  );
 }
 
 export function strengthTone(score: number): Tone {
-  return (["bad", "bad", "warn", "good", "good"] as Tone[])[clamp(score, 0, 4)] ?? "bad";
+  return (
+    (["bad", "bad", "warn", "good", "good"] as Tone[])[clamp(score, 0, 4)] ??
+    "bad"
+  );
 }
 
 export function validatePlan(plan: BundlePlan): string[] {
   const problems: string[] = [];
-  if (!plan.label.trim()) problems.push("Give this bundle a recognizable label.");
+  if (!plan.label.trim())
+    problems.push("Give this bundle a recognizable label.");
   if (!plan.deviceId.trim()) problems.push("Select the authoring device.");
-  if (passphraseScore(plan.passphrase) < 2) problems.push("Use a longer passphrase with mixed character types.");
+  if (passphraseScore(plan.passphrase) < 2)
+    problems.push("Use a longer passphrase with mixed character types.");
   if (!plan.scope.length) problems.push("Select at least one entity family.");
   return problems;
 }
@@ -191,7 +237,10 @@ export function reasonLabel(code: ReasonCode | string): string {
 }
 
 export function reasonHelp(code: ReasonCode | string): string {
-  return REASON_HELP[code as ReasonCode] ?? "This difference needs a manual decision.";
+  return (
+    REASON_HELP[code as ReasonCode] ??
+    "This difference needs a manual decision."
+  );
 }
 
 export function reasonTone(code: ReasonCode | string): Tone {
@@ -221,7 +270,11 @@ export function vectorRelationLabel(relation: string): string {
 }
 
 export function vectorTone(relation: string): Tone {
-  return relation === "concurrent" ? "warn" : relation === "equal" ? "good" : "info";
+  return relation === "concurrent"
+    ? "warn"
+    : relation === "equal"
+      ? "good"
+      : "info";
 }
 
 export function vectorSummary(vector: VectorView | null): string {
@@ -255,7 +308,8 @@ export function filterConflicts(
   const needle = (options.query ?? "").trim().toLowerCase();
   return conflicts.filter((conflict) => {
     if (options.reason && conflict.reason !== options.reason) return false;
-    if (options.unresolvedOnly && conflict.resolution !== "unresolved") return false;
+    if (options.unresolvedOnly && conflict.resolution !== "unresolved")
+      return false;
     if (!needle) return true;
     return `${conflict.ref} ${conflict.message} ${reasonLabel(conflict.reason)}`
       .toLowerCase()
@@ -263,7 +317,9 @@ export function filterConflicts(
   });
 }
 
-export function groupConflicts(conflicts: ConflictView[]): Array<[ReasonCode, ConflictView[]]> {
+export function groupConflicts(
+  conflicts: ConflictView[],
+): Array<[ReasonCode, ConflictView[]]> {
   const groups = new Map<ReasonCode, ConflictView[]>();
   for (const conflict of conflicts) {
     const list = groups.get(conflict.reason) ?? [];
@@ -273,7 +329,9 @@ export function groupConflicts(conflicts: ConflictView[]): Array<[ReasonCode, Co
   return Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
 }
 
-export function conflictCounts(conflicts: ConflictView[]): Record<string, number> {
+export function conflictCounts(
+  conflicts: ConflictView[],
+): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const conflict of conflicts) {
     counts[conflict.reason] = (counts[conflict.reason] ?? 0) + 1;
@@ -282,15 +340,22 @@ export function conflictCounts(conflicts: ConflictView[]): Record<string, number
 }
 
 export function unresolvedCount(conflicts: ConflictView[]): number {
-  return conflicts.filter((conflict) => conflict.resolution === "unresolved").length;
+  return conflicts.filter((conflict) => conflict.resolution === "unresolved")
+    .length;
 }
 
-export function suggestResolution(conflict: ConflictView, strategy: string): Resolution {
+export function suggestResolution(
+  conflict: ConflictView,
+  strategy: string,
+): Resolution {
   if (strategy === "keep_local") return "keep_local";
   if (strategy === "keep_remote") return "keep_remote";
   if (strategy === "skip") return "skip";
-  if (strategy === "merge_fields" && conflict.fields.length > 0) return "merge_fields";
-  return conflict.suggestion === "unresolved" ? "unresolved" : conflict.suggestion;
+  if (strategy === "merge_fields" && conflict.fields.length > 0)
+    return "merge_fields";
+  return conflict.suggestion === "unresolved"
+    ? "unresolved"
+    : conflict.suggestion;
 }
 
 export function applyResolution(
@@ -323,11 +388,14 @@ export function summarizeDryRun(report: DryRunView | null): string {
   if (!report) return "Run a dry preview to inspect the incoming bundle.";
   const changeCount = report.changes.length;
   const conflictCount = report.conflicts.length;
-  if (!report.valid) return `${changeCount} changes inspected · ${conflictCount} conflicts to resolve`;
+  if (!report.valid)
+    return `${changeCount} changes inspected · ${conflictCount} conflicts to resolve`;
   return `${report.headline} · ${changeCount} changes inspected`;
 }
 
-export function changesByAction(report: DryRunView | null): Record<string, number> {
+export function changesByAction(
+  report: DryRunView | null,
+): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const change of report?.changes ?? []) {
     counts[change.action] = (counts[change.action] ?? 0) + 1;
@@ -359,14 +427,18 @@ export function statusTone(phase: TransferPhase | string): Tone {
 export function canCancel(progress: ProgressView | null): boolean {
   return (
     progress !== null &&
-    (progress.phase === "active" || progress.phase === "preparing" || progress.phase === "paused")
+    (progress.phase === "active" ||
+      progress.phase === "preparing" ||
+      progress.phase === "paused")
   );
 }
 
 export function canResume(progress: ProgressView | null): boolean {
   return (
     progress !== null &&
-    (progress.phase === "paused" || progress.phase === "failed" || progress.phase === "active")
+    (progress.phase === "paused" ||
+      progress.phase === "failed" ||
+      progress.phase === "active")
   );
 }
 
@@ -383,7 +455,8 @@ interface CheckViewLike {
 
 export function receiptVerdict(receipt: ReceiptView | null): string {
   if (!receipt) return "Not verified yet";
-  if (!receipt.ok) return `Verification failed: ${failedChecks(receipt).length} check(s)`;
+  if (!receipt.ok)
+    return `Verification failed: ${failedChecks(receipt).length} check(s)`;
   return `Verified on ${formatTimestamp(receipt.verifiedAt)}`;
 }
 

@@ -141,5 +141,7 @@ export function focusRestoreTarget(state: PaletteState): string | null {
 }
 
 export function isCommandBarShortcut(event: KeyboardEvent): boolean {
-  return (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k";
+  return (
+    Boolean(event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k"
+  );
 }

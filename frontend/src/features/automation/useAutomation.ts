@@ -90,7 +90,8 @@ export function useAutomation(v3Client?: V3Client): AutomationController {
   const [diff, setDiff] = useState<DiffEntry[]>([]);
   const [replayOk, setReplayOk] = useState<boolean | null>(null);
   const [rollbackOk, setRollbackOk] = useState<boolean | null>(null);
-  const [recurrence, setRecurrenceState] = useState<RecurrenceRule>(DEFAULT_RULE);
+  const [recurrence, setRecurrenceState] =
+    useState<RecurrenceRule>(DEFAULT_RULE);
   const [occurrences, setOccurrences] = useState<number[]>([]);
   const [issue, setIssue] = useState<ValidationIssue | null>(null);
   const [error, setError] = useState("");
@@ -122,15 +123,21 @@ export function useAutomation(v3Client?: V3Client): AutomationController {
         depends_on: previous ? [previous] : [],
         inputs: { title: `Note ${index}` },
       };
-      return { ...current, steps: [...current.steps, step], version: current.version + 1 };
+      return {
+        ...current,
+        steps: [...current.steps, step],
+        version: (current.version ?? 0) + 1,
+      };
     });
   }, []);
 
   const updateStep = useCallback((id: string, changes: Partial<StepDef>) => {
     setPlaybook((current) => ({
       ...current,
-      steps: current.steps.map((step) => (step.id === id ? { ...step, ...changes } : step)),
-      version: current.version + 1,
+      steps: current.steps.map((step) =>
+        step.id === id ? { ...step, ...changes } : step,
+      ),
+      version: (current.version ?? 0) + 1,
     }));
   }, []);
 
@@ -139,23 +146,33 @@ export function useAutomation(v3Client?: V3Client): AutomationController {
       ...current,
       steps: current.steps
         .filter((step) => step.id !== id)
-        .map((step) => ({ ...step, depends_on: (step.depends_on ?? []).filter((value) => value !== id) })),
-      version: current.version + 1,
+        .map((step) => ({
+          ...step,
+          depends_on: (step.depends_on ?? []).filter((value) => value !== id),
+        })),
+      version: (current.version ?? 0) + 1,
     }));
   }, []);
 
-  const connect = useCallback((source: string, target: string) => {
-    const result = connectSteps(playbook.steps, source, target);
-    if (!result.accepted) {
-      setIssue(result.problem);
-      return;
-    }
-    setIssue(null);
-    setPlaybook((current) => ({ ...current, steps: result.steps, version: current.version + 1 }));
-  }, [playbook.steps]);
+  const connect = useCallback(
+    (source: string, target: string) => {
+      const result = connectSteps(playbook.steps, source, target);
+      if (!result.accepted) {
+        setIssue(result.problem);
+        return;
+      }
+      setIssue(null);
+      setPlaybook((current) => ({
+        ...current,
+        steps: result.steps,
+        version: (current.version ?? 0) + 1,
+      }));
+    },
+    [playbook.steps],
+  );
 
   const runGuarded = useCallback(
-    async <T,>(action: () => Promise<T>): Promise<T | null> => {
+    async <T>(action: () => Promise<T>): Promise<T | null> => {
       if (!dag.ok || !resolution.ok) {
         setError("Resolve the DAG and variable issues before running");
         return null;
@@ -182,7 +199,9 @@ export function useAutomation(v3Client?: V3Client): AutomationController {
   }, [client, playbook, values, runGuarded]);
 
   const refreshRuns = useCallback(async () => {
-    const result = await runGuarded(() => client.runs(`playbook:${playbook.id}`));
+    const result = await runGuarded(() =>
+      client.runs(`playbook:${playbook.id}`),
+    );
     if (result) setRuns(result.runs);
   }, [client, playbook.id, runGuarded]);
 
@@ -234,7 +253,8 @@ export function useAutomation(v3Client?: V3Client): AutomationController {
   }, []);
 
   const planRecurrence = useCallback(
-    (after: number, before: number) => setOccurrences(expand(recurrence, after, before)),
+    (after: number, before: number) =>
+      setOccurrences(expand(recurrence, after, before)),
     [recurrence],
   );
 

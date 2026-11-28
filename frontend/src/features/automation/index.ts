@@ -80,4 +80,7 @@ export {
   validateVariableValues,
   variableIssuesByKey,
 } from "./variables";
-export type { VariableResolution as FormResolution, VarValue } from "./variables";
+export type {
+  VariableResolution as FormResolution,
+  VarValue,
+} from "./variables";

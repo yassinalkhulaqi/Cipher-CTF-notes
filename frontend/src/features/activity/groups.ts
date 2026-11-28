@@ -19,7 +19,8 @@ export function groupEntries(
 ): DateGroup[] {
   const buckets = new Map<string, ActivityEntry[]>();
   for (const entry of sortEntries(entries)) {
-    const key = period === "weekly" ? entry.week_key || entry.date_key : entry.date_key;
+    const key =
+      period === "weekly" ? entry.week_key || entry.date_key : entry.date_key;
     const bucket = buckets.get(key) ?? [];
     bucket.push(entry);
     buckets.set(key, bucket);
@@ -35,15 +36,25 @@ export function groupEntries(
     }));
 }
 
-export function uniqueValues(entries: ActivityEntry[], key: "kind" | "actor" | "subject_ref"): string[] {
-  return Array.from(new Set(entries.map((entry) => entry[key]).filter(Boolean))).sort();
+export function uniqueValues(
+  entries: ActivityEntry[],
+  key: "kind" | "actor" | "subject_ref",
+): string[] {
+  return Array.from(
+    new Set(entries.map((entry) => entry[key]).filter(Boolean)),
+  ).sort();
 }
 
 export function jumpTargets(entries: ActivityEntry[]): JumpTarget[] {
-  return entries.flatMap((entry) => (entry.jump?.resolvable ? [entry.jump] : []));
+  return entries.flatMap((entry) =>
+    entry.jump?.resolvable ? [entry.jump] : [],
+  );
 }
 
-export function findEntry(entries: ActivityEntry[], sequence: number): ActivityEntry | undefined {
+export function findEntry(
+  entries: ActivityEntry[],
+  sequence: number,
+): ActivityEntry | undefined {
   return entries.find((entry) => entry.sequence === sequence);
 }
 
@@ -80,10 +91,15 @@ export function filterEntriesByChips(
   chips: FilterChipData[],
 ): ActivityEntry[] {
   if (!chips.length) return sortEntries(entries);
-  return sortEntries(entries.filter((entry) => chips.every((chip) => matchesChip(entry, chip))));
+  return sortEntries(
+    entries.filter((entry) => chips.every((chip) => matchesChip(entry, chip))),
+  );
 }
 
-export function mergeStreams(first: StreamResult, second: StreamResult): StreamResult {
+export function mergeStreams(
+  first: StreamResult,
+  second: StreamResult,
+): StreamResult {
   const entries = sortEntries([...first.entries, ...second.entries]);
   return {
     ...first,
@@ -94,14 +110,22 @@ export function mergeStreams(first: StreamResult, second: StreamResult): StreamR
   };
 }
 
-export function pageSlice(entries: ActivityEntry[], size: number, page: number): ActivityEntry[] {
+export function pageSlice(
+  entries: ActivityEntry[],
+  size: number,
+  page: number,
+): ActivityEntry[] {
   const safeSize = Math.max(1, size);
   const safePage = Math.max(1, page);
-  return sortEntries(entries).slice((safePage - 1) * safeSize, safePage * safeSize);
+  return sortEntries(entries).slice(
+    (safePage - 1) * safeSize,
+    safePage * safeSize,
+  );
 }
 
 export function countByKind(entries: ActivityEntry[]): Record<string, number> {
   const counts: Record<string, number> = {};
-  for (const entry of entries) counts[entry.kind] = (counts[entry.kind] ?? 0) + 1;
+  for (const entry of entries)
+    counts[entry.kind] = (counts[entry.kind] ?? 0) + 1;
   return counts;
 }

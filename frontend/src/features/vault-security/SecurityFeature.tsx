@@ -9,8 +9,9 @@ import { RecoveryFlow } from "./RecoveryFlow";
 import { SetupWizard } from "./SetupWizard";
 import { createVaultSecurityClient } from "./client";
 import { canShowContent, lockedMessage, needsUnlock } from "./pure";
+import type { AuditFilterState } from "./pure";
 import { useVaultSecurityStore } from "./store";
-import type { AuditFilterState, PolicyPreview, PolicyRule } from "./types";
+import type { PolicyPreview, PolicyRule } from "./types";
 
 export interface SecurityFeatureProps {
   basePath?: string;
@@ -31,7 +32,9 @@ export function SecurityFeature({ basePath }: SecurityFeatureProps) {
   const hydrate = useVaultSecurityStore((state) => state.hydrate);
   const setPolicy = useVaultSecurityStore((state) => state.setPolicy);
   const setAudit = useVaultSecurityStore((state) => state.setAudit);
-  const setRecoveryCodes = useVaultSecurityStore((state) => state.setRecoveryCodes);
+  const setRecoveryCodes = useVaultSecurityStore(
+    (state) => state.setRecoveryCodes,
+  );
   const setBusy = useVaultSecurityStore((state) => state.setBusy);
   const setError = useVaultSecurityStore((state) => state.setError);
   const clearError = useVaultSecurityStore((state) => state.clearError);
@@ -46,12 +49,13 @@ export function SecurityFeature({ basePath }: SecurityFeatureProps) {
   const refresh = useCallback(async () => {
     setBusy(true);
     try {
-      const [nextStatus, nextPosture, nextPolicy, nextAudit] = await Promise.all([
-        client.status(),
-        client.posture(),
-        client.policyGet(),
-        client.auditList(auditFilter as unknown as Record<string, unknown>),
-      ]);
+      const [nextStatus, nextPosture, nextPolicy, nextAudit] =
+        await Promise.all([
+          client.status(),
+          client.posture(),
+          client.policyGet(),
+          client.auditList(auditFilter as unknown as Record<string, unknown>),
+        ]);
       hydrate(nextStatus, nextPosture);
       setPolicy(nextPolicy);
       setAudit(nextAudit);
@@ -83,7 +87,11 @@ export function SecurityFeature({ basePath }: SecurityFeatureProps) {
   );
 
   if (!status || !posture) {
-    return <section className="vs-feature vs-locked">Loading security state...</section>;
+    return (
+      <section className="vs-feature vs-locked">
+        Loading security state...
+      </section>
+    );
   }
 
   const shownEntries = audit?.entries ?? [];
@@ -101,9 +109,11 @@ export function SecurityFeature({ basePath }: SecurityFeatureProps) {
           {status.state === "unlocked" ? (
             <button
               type="button"
-              onClick={() => void run(async () => {
-                await client.lock();
-              })}
+              onClick={() =>
+                void run(async () => {
+                  await client.lock();
+                })
+              }
               disabled={busy}
             >
               Lock vault
@@ -111,9 +121,11 @@ export function SecurityFeature({ basePath }: SecurityFeatureProps) {
           ) : (
             <button
               type="button"
-              onClick={() => void run(async () => {
-                await client.lock();
-              })}
+              onClick={() =>
+                void run(async () => {
+                  await client.lock();
+                })
+              }
               disabled={busy || status.state === "uninitialized"}
             >
               Lock vault
@@ -127,7 +139,11 @@ export function SecurityFeature({ basePath }: SecurityFeatureProps) {
         </p>
       )}
       <div className="vs-feature__grid">
-        <PostureDashboard report={posture} onRefresh={() => void refresh()} busy={busy} />
+        <PostureDashboard
+          report={posture}
+          onRefresh={() => void refresh()}
+          busy={busy}
+        />
         <SetupWizard
           state={status.state}
           codes={codes}
@@ -177,7 +193,9 @@ export function SecurityFeature({ basePath }: SecurityFeatureProps) {
             }
             onSave={(rules: PolicyRule[]) =>
               void run(async () => {
-                await client.policyUpdate(rules as unknown as Record<string, unknown>[]);
+                await client.policyUpdate(
+                  rules as unknown as Record<string, unknown>[],
+                );
               })
             }
           />

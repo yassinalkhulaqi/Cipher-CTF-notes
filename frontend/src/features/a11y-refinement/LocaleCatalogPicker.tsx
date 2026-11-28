@@ -1,6 +1,11 @@
 /** Locale picker with direction, coverage, and catalog metadata. */
 
-import { additionalLocaleOptions, catalogKeys, coverage, localeDirection } from "./catalogs";
+import {
+  additionalLocaleOptions,
+  catalogKeys,
+  coverage,
+  localeDirection,
+} from "./catalogs";
 import type { LocaleOptionView } from "./types";
 import { V3Panel } from "../../v3/components/V3Panel";
 
@@ -15,7 +20,9 @@ export function LocaleCatalogPicker({
   value,
   onChange,
 }: LocaleCatalogPickerProps) {
-  const options = [...locales].sort((first, second) => first.value.localeCompare(second.value));
+  const options = [...locales].sort((first, second) =>
+    first.value.localeCompare(second.value),
+  );
   const selected = options.find((option) => option.value === value);
   const direction = localeDirection(value);
   const percent = coverage(value);
@@ -25,7 +32,11 @@ export function LocaleCatalogPicker({
       title="Locale"
       subtitle={selected?.native_name ?? value}
       density="compact"
-      actions={<span className="a11y-refine__badge" data-dir={direction}>{direction}</span>}
+      actions={
+        <span className="a11y-refine__badge" data-dir={direction}>
+          {direction}
+        </span>
+      }
     >
       <div className="a11y-refine__locale">
         <label htmlFor="a11y-refine-locale">Language</label>
@@ -36,7 +47,11 @@ export function LocaleCatalogPicker({
           onChange={(event) => onChange?.(event.target.value)}
         >
           {options.map((option) => (
-            <option key={option.value} value={option.value} dir={option.direction}>
+            <option
+              key={option.value}
+              value={option.value}
+              dir={option.direction}
+            >
               {option.native_name} ({option.value})
             </option>
           ))}
@@ -50,7 +65,9 @@ export function LocaleCatalogPicker({
           <dd>{selected?.script ?? "Latn"}</dd>
         </dl>
         <p className="a11y-refine__hint" role="status">
-          {direction === "rtl" ? "Panels mirror automatically." : "Panels use left-to-right order."}
+          {direction === "rtl"
+            ? "Panels mirror automatically."
+            : "Panels use left-to-right order."}
         </p>
       </div>
     </V3Panel>

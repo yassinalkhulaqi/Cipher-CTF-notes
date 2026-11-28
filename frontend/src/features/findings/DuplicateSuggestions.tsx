@@ -21,7 +21,12 @@ export function DuplicateSuggestions({
     <section className="duplicates" data-testid="duplicate-suggestions">
       <header className="duplicates__header">
         <h3>Duplicate suggestions</h3>
-        <button type="button" className="duplicates__refresh" onClick={() => void onRefresh()} disabled={busy}>
+        <button
+          type="button"
+          className="duplicates__refresh"
+          onClick={() => void onRefresh()}
+          disabled={busy}
+        >
           Refresh
         </button>
       </header>
@@ -29,13 +34,19 @@ export function DuplicateSuggestions({
         fingerprint: {fingerprint ? fingerprint.slice(0, 12) : "—"}
       </p>
       {candidates.length === 0 ? (
-        <p className="duplicates__empty">No similar findings above the threshold.</p>
+        <p className="duplicates__empty">
+          No similar findings above the threshold.
+        </p>
       ) : (
         <ul className="duplicates__list">
           {candidates.map((candidate) => {
             const ref = candidate.candidate_ref.ref;
             return (
-              <li key={ref} data-tone={duplicateConfidence(candidate.score)} data-testid="duplicate-item">
+              <li
+                key={ref}
+                data-tone={duplicateConfidence(candidate.score)}
+                data-testid="duplicate-item"
+              >
                 <div className="duplicates__item-head">
                   <span className="duplicates__ref">{shortRef(ref)}</span>
                   <strong>{formatScore(candidate.score)}</strong>
@@ -51,7 +62,9 @@ export function DuplicateSuggestions({
                   className="duplicates__link"
                   disabled={busy || detail.finding.duplicate_of !== ""}
                   aria-label={`Mark ${shortRef(ref)} as canonical duplicate`}
-                  onClick={() => void onMark(ref, "Matched by studio duplicate detection")}
+                  onClick={() =>
+                    void onMark(ref, "Matched by studio duplicate detection")
+                  }
                 >
                   Mark as duplicate
                 </button>
