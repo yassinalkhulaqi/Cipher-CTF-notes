@@ -8,10 +8,7 @@ export { PostureDashboard } from "./PostureDashboard";
 export { RecoveryFlow } from "./RecoveryFlow";
 export { SetupWizard } from "./SetupWizard";
 export { SecurityFeature, default } from "./SecurityFeature";
-export {
-  VaultSecurityClient,
-  createVaultSecurityClient,
-} from "./client";
+export { VaultSecurityClient, createVaultSecurityClient } from "./client";
 export * from "./pure";
 export { useVaultSecurityStore, vaultSecuritySnapshot } from "./store";
 export * from "./types";

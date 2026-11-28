@@ -18,7 +18,6 @@ import {
 export const MAX_QUERY_LENGTH = 500;
 
 const SPECIALS = new Set(['"', ":", "(", ")", "|", "\n", "\r", "\t", " "]);
-const EMPTY_GROUP: AndGroupV2 = { clauses: [] };
 
 export function foldValue(value: string): string {
   return value.replace(/\s+/g, " ").trim().toLowerCase();

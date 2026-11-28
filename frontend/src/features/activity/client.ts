@@ -67,7 +67,11 @@ export class ActivityClient {
   constructor(private readonly client: V3Client) {}
 
   async stream(body: ActivityRequestBody = {}): Promise<StreamResult> {
-    return this.client.data<StreamResult>("activity", ROUTES.stream, body);
+    return this.client.data<StreamResult>(
+      "activity",
+      ROUTES.stream,
+      body as unknown as Record<string, unknown>,
+    );
   }
 
   async filters(): Promise<FilterMetadata> {
@@ -75,11 +79,17 @@ export class ActivityClient {
   }
 
   async validate(query: string): Promise<FilterValidation> {
-    return this.client.data<FilterValidation>("activity", ROUTES.validate, { query });
+    return this.client.data<FilterValidation>("activity", ROUTES.validate, {
+      query,
+    });
   }
 
   async digest(body: ActivityRequestBody = {}): Promise<DigestCollection> {
-    return this.client.data<DigestCollection>("activity", ROUTES.digest, body);
+    return this.client.data<DigestCollection>(
+      "activity",
+      ROUTES.digest,
+      body as unknown as Record<string, unknown>,
+    );
   }
 
   async since(identity: string, limit?: number): Promise<SinceLastVisit> {
@@ -106,21 +116,28 @@ export class ActivityClient {
     end: number,
     topLimit = 5,
   ): Promise<RetrospectiveSummary> {
-    return this.client.data<RetrospectiveSummary>("activity", ROUTES.retrospective, {
-      start,
-      end,
-      top_limit: topLimit,
-    });
+    return this.client.data<RetrospectiveSummary>(
+      "activity",
+      ROUTES.retrospective,
+      {
+        start,
+        end,
+        top_limit: topLimit,
+      },
+    );
   }
 
-  async redact(
-    payload: Record<string, unknown>,
-  ): Promise<{ payload: Record<string, unknown>; report: RedactionReportData }> {
+  async redact(payload: Record<string, unknown>): Promise<{
+    payload: Record<string, unknown>;
+    report: RedactionReportData;
+  }> {
     return this.client.data("activity", ROUTES.redact, { payload });
   }
 
   async entry(sequence: number): Promise<ActivityEntry> {
-    return this.client.data<ActivityEntry>("activity", ROUTES.entry, { sequence });
+    return this.client.data<ActivityEntry>("activity", ROUTES.entry, {
+      sequence,
+    });
   }
 
   async stats(): Promise<ActivityStats> {
@@ -136,6 +153,8 @@ export class ActivityClient {
   }
 }
 
-export function makeActivityClient(options: ConstructorParameters<typeof V3Client>[0] = {}): ActivityClient {
+export function makeActivityClient(
+  options: ConstructorParameters<typeof V3Client>[0] = {},
+): ActivityClient {
   return new ActivityClient(new V3Client(options));
 }

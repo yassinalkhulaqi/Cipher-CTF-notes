@@ -21,7 +21,9 @@ export function registerAutomation(): void {
     group: "Automation",
     keywords: ["playbook", "dag", "dry run", "automation"],
     run: () => {
-      const element = document.querySelector<HTMLElement>('[data-automation="feature"]');
+      const element = document.querySelector<HTMLElement>(
+        '[data-automation="feature"]',
+      );
       element?.focus?.();
       element?.scrollIntoView?.({ block: "start" });
     },

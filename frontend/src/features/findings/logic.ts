@@ -23,7 +23,12 @@ export const CVSS_METRICS: MetricOption[] = [
   {
     code: "AV",
     label: "Attack Vector",
-    values: valueList(["N", "Network"], ["A", "Adjacent"], ["L", "Local"], ["P", "Physical"]),
+    values: valueList(
+      ["N", "Network"],
+      ["A", "Adjacent"],
+      ["L", "Local"],
+      ["P", "Physical"],
+    ),
   },
   {
     code: "AC",
@@ -94,21 +99,42 @@ export const ENVIRONMENTAL_METRICS: MetricOption[] = [
   {
     code: "CR",
     label: "Confidentiality Requirement",
-    values: valueList(["X", "Not defined"], ["H", "High"], ["M", "Medium"], ["L", "Low"]),
+    values: valueList(
+      ["X", "Not defined"],
+      ["H", "High"],
+      ["M", "Medium"],
+      ["L", "Low"],
+    ),
   },
   {
     code: "IR",
     label: "Integrity Requirement",
-    values: valueList(["X", "Not defined"], ["H", "High"], ["M", "Medium"], ["L", "Low"]),
+    values: valueList(
+      ["X", "Not defined"],
+      ["H", "High"],
+      ["M", "Medium"],
+      ["L", "Low"],
+    ),
   },
   {
     code: "AR",
     label: "Availability Requirement",
-    values: valueList(["X", "Not defined"], ["H", "High"], ["M", "Medium"], ["L", "Low"]),
+    values: valueList(
+      ["X", "Not defined"],
+      ["H", "High"],
+      ["M", "Medium"],
+      ["L", "Low"],
+    ),
   },
 ];
 
-export const SEVERITY_BANDS: SeverityBand[] = ["none", "low", "medium", "high", "critical"];
+export const SEVERITY_BANDS: SeverityBand[] = [
+  "none",
+  "low",
+  "medium",
+  "high",
+  "critical",
+];
 
 export const FINDING_STATES: FindingState[] = [
   "draft",
@@ -118,9 +144,18 @@ export const FINDING_STATES: FindingState[] = [
   "closed",
 ];
 
-export const TASK_STATUSES: TaskStatusValue[] = ["todo", "in_progress", "done", "skipped"];
+export const TASK_STATUSES: TaskStatusValue[] = [
+  "todo",
+  "in_progress",
+  "done",
+  "skipped",
+];
 
-export const RETEST_VERDICTS: RetestVerdictValue[] = ["pass", "fail", "partial"];
+export const RETEST_VERDICTS: RetestVerdictValue[] = [
+  "pass",
+  "fail",
+  "partial",
+];
 
 export const SEVERITY_RANK: Record<SeverityBand, number> = {
   none: 0,
@@ -167,10 +202,24 @@ export class VectorParseError extends Error {
 }
 
 const METRIC_VALUE_SETS: Record<string, string[]> = {};
-for (const metric of [...CVSS_METRICS, THREAT_METRIC, ...ENVIRONMENTAL_METRICS]) {
+for (const metric of [
+  ...CVSS_METRICS,
+  THREAT_METRIC,
+  ...ENVIRONMENTAL_METRICS,
+]) {
   METRIC_VALUE_SETS[metric.code] = metric.values.map((value) => value.code);
 }
-for (const modified of ["MAV", "MAC", "MAT", "MPR", "MUI", "MVC", "MVI", "MVA", "MSC"]) {
+for (const modified of [
+  "MAV",
+  "MAC",
+  "MAT",
+  "MPR",
+  "MUI",
+  "MVC",
+  "MVI",
+  "MVA",
+  "MSC",
+]) {
   const base = modified.slice(1);
   METRIC_VALUE_SETS[modified] = ["X", ...(METRIC_VALUE_SETS[base] ?? [])];
 }
@@ -179,29 +228,38 @@ METRIC_VALUE_SETS.MSA = ["X", "H", "L", "N", "S"];
 
 export function parseVector(vector: string): Record<string, string> {
   const parts = vector.trim().split("/");
-  if (parts[0] !== "CVSS:4.0") throw new VectorParseError("Vector must start with CVSS:4.0");
+  if (parts[0] !== "CVSS:4.0")
+    throw new VectorParseError("Vector must start with CVSS:4.0");
   const metrics: Record<string, string> = {};
   for (const part of parts.slice(1)) {
     const [name, value] = part.split(":");
-    if (!name || !value || value.includes(":")) throw new VectorParseError(`Invalid metric: ${part}`);
-    if (name in metrics) throw new VectorParseError(`Duplicate metric: ${name}`);
+    if (!name || !value || value.includes(":"))
+      throw new VectorParseError(`Invalid metric: ${part}`);
+    if (name in metrics)
+      throw new VectorParseError(`Duplicate metric: ${name}`);
     const allowed = METRIC_VALUE_SETS[name];
     if (!allowed) throw new VectorParseError(`Unknown metric: ${name}`);
-    if (!allowed.includes(value)) throw new VectorParseError(`Invalid value for ${name}: ${value}`);
+    if (!allowed.includes(value))
+      throw new VectorParseError(`Invalid value for ${name}: ${value}`);
     metrics[name] = value;
   }
   return metrics;
 }
 
 export function buildVector(metrics: Record<string, string>): string {
-  const ordered = [...BASE_METRIC_CODES, "E", ...ENVIRONMENTAL_METRICS.map((m) => m.code)];
+  const ordered = [
+    ...BASE_METRIC_CODES,
+    "E",
+    ...ENVIRONMENTAL_METRICS.map((m) => m.code),
+  ];
   const parts = ["CVSS:4.0"];
   for (const code of ordered) {
     const value = metrics[code];
     if (value) parts.push(`${code}:${value}`);
   }
   for (const code of Object.keys(metrics).sort()) {
-    if (!ordered.includes(code) && metrics[code]) parts.push(`${code}:${metrics[code]}`);
+    if (!ordered.includes(code) && metrics[code])
+      parts.push(`${code}:${metrics[code]}`);
   }
   return parts.join("/");
 }
@@ -227,9 +285,11 @@ export function isCompleteVector(vector: string): boolean {
 }
 
 export function metricLabel(code: string): string {
-  const metric = [...CVSS_METRICS, THREAT_METRIC, ...ENVIRONMENTAL_METRICS].find(
-    (item) => item.code === code,
-  );
+  const metric = [
+    ...CVSS_METRICS,
+    THREAT_METRIC,
+    ...ENVIRONMENTAL_METRICS,
+  ].find((item) => item.code === code);
   return metric ? metric.label : code;
 }
 
@@ -241,15 +301,26 @@ export interface FindingFilter {
   owner?: string;
 }
 
-export function filterFindings(findings: FindingWire[], filter: FindingFilter): FindingWire[] {
+export function filterFindings(
+  findings: FindingWire[],
+  filter: FindingFilter,
+): FindingWire[] {
   const needle = (filter.query ?? "").trim().toLowerCase();
   return findings.filter((finding) => {
     if (filter.state && finding.state !== filter.state) return false;
     if (filter.severity && finding.severity !== filter.severity) return false;
-    if (filter.tag && !finding.tags.some((tag) => tag.toLowerCase() === filter.tag?.toLowerCase())) {
+    if (
+      filter.tag &&
+      !finding.tags.some(
+        (tag) => tag.toLowerCase() === filter.tag?.toLowerCase(),
+      )
+    ) {
       return false;
     }
-    if (filter.owner && !finding.owner.toLowerCase().includes(filter.owner.toLowerCase())) {
+    if (
+      filter.owner &&
+      !finding.owner.toLowerCase().includes(filter.owner.toLowerCase())
+    ) {
       return false;
     }
     if (!needle) return true;
@@ -270,13 +341,19 @@ export function filterFindings(findings: FindingWire[], filter: FindingFilter): 
 
 export type SortKey = "score" | "title" | "updated" | "state";
 
-export function sortFindings(findings: FindingWire[], key: SortKey): FindingWire[] {
+export function sortFindings(
+  findings: FindingWire[],
+  key: SortKey,
+): FindingWire[] {
   const copy = [...findings];
   return copy.sort((left, right) => {
-    if (key === "score") return right.score - left.score || left.title.localeCompare(right.title);
+    if (key === "score")
+      return right.score - left.score || left.title.localeCompare(right.title);
     if (key === "title") return left.title.localeCompare(right.title);
     if (key === "updated") return right.updated_at - left.updated_at;
-    return FINDING_STATES.indexOf(left.state) - FINDING_STATES.indexOf(right.state);
+    return (
+      FINDING_STATES.indexOf(left.state) - FINDING_STATES.indexOf(right.state)
+    );
   });
 }
 
@@ -290,7 +367,8 @@ export function canTransition(
   action: string,
   guide: TransitionGuide,
 ): boolean {
-  const lastVerdict = guide.lastVerdict ?? finding.retests[finding.retests.length - 1]?.verdict;
+  const lastVerdict =
+    guide.lastVerdict ?? finding.retests[finding.retests.length - 1]?.verdict;
   switch (action) {
     case "confirm":
       return finding.state === "draft";
@@ -318,12 +396,19 @@ export function canTransition(
 
 export function remediationPercent(tasks: RemediationTaskWire[]): number {
   if (tasks.length === 0) return 0;
-  const settled = tasks.filter((task) => task.status === "done" || task.status === "skipped");
+  const settled = tasks.filter(
+    (task) => task.status === "done" || task.status === "skipped",
+  );
   return Math.round((settled.length / tasks.length) * 100);
 }
 
-export function nextTask(tasks: RemediationTaskWire[]): RemediationTaskWire | null {
-  return tasks.find((task) => task.status !== "done" && task.status !== "skipped") ?? null;
+export function nextTask(
+  tasks: RemediationTaskWire[],
+): RemediationTaskWire | null {
+  return (
+    tasks.find((task) => task.status !== "done" && task.status !== "skipped") ??
+    null
+  );
 }
 
 export function proofIssueCount(blocks: ProofBlockWire[]): number {
@@ -343,13 +428,25 @@ export function duplicateConfidence(score: number): Tone {
   return "neutral";
 }
 
-export const EDITOR_SECTIONS = ["details", "cvss", "remediation", "retest", "duplicates"] as const;
+export const EDITOR_SECTIONS = [
+  "details",
+  "cvss",
+  "remediation",
+  "retest",
+  "duplicates",
+] as const;
 
 export type EditorSection = (typeof EDITOR_SECTIONS)[number];
 
-export function nextSection(current: EditorSection, direction: -1 | 1): EditorSection {
+export function nextSection(
+  current: EditorSection,
+  direction: -1 | 1,
+): EditorSection {
   const index = EDITOR_SECTIONS.indexOf(current);
-  const next = Math.min(EDITOR_SECTIONS.length - 1, Math.max(0, index + direction));
+  const next = Math.min(
+    EDITOR_SECTIONS.length - 1,
+    Math.max(0, index + direction),
+  );
   return EDITOR_SECTIONS[next];
 }
 

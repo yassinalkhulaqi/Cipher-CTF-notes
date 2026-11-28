@@ -15,18 +15,29 @@ interface Props {
   onNext: () => void;
 }
 
-const FAMILIES = ["note", "finding", "evidence", "report", "target", "playbook"];
+const FAMILIES = [
+  "note",
+  "finding",
+  "evidence",
+  "report",
+  "target",
+  "playbook",
+];
 
 export function BundleWizard({ plan, wizard, busy, onChange, onNext }: Props) {
   const problems = validatePlan(plan);
   const score = passphraseScore(plan.passphrase);
   return (
-    <section className="portability-card portability-wizard" aria-label="Bundle wizard">
+    <section
+      className="portability-card portability-wizard"
+      aria-label="Bundle wizard"
+    >
       <header className="portability-card__header">
         <div>
           <h3>Create encrypted bundle</h3>
           <p className="portability-card__subtitle">
-            Choose what moves, protect it with a passphrase, then inspect before writing.
+            Choose what moves, protect it with a passphrase, then inspect before
+            writing.
           </p>
         </div>
         <span className="portability-badge" data-tone="info">
@@ -36,7 +47,11 @@ export function BundleWizard({ plan, wizard, busy, onChange, onNext }: Props) {
 
       <ol className="portability-steps" aria-label="Bundle wizard steps">
         {wizard.map((step, index) => (
-          <li key={step.id} className="portability-step" data-status={step.status}>
+          <li
+            key={step.id}
+            className="portability-step"
+            data-status={step.status}
+          >
             <span className="portability-step__index" aria-hidden="true">
               {index + 1}
             </span>
@@ -119,7 +134,9 @@ export function BundleWizard({ plan, wizard, busy, onChange, onNext }: Props) {
             <input
               type="checkbox"
               checked={plan.includeDeleted}
-              onChange={(event) => onChange({ includeDeleted: event.target.checked })}
+              onChange={(event) =>
+                onChange({ includeDeleted: event.target.checked })
+              }
             />
             Include deleted records
           </label>
@@ -127,7 +144,9 @@ export function BundleWizard({ plan, wizard, busy, onChange, onNext }: Props) {
             <input
               type="checkbox"
               checked={plan.includeLinks}
-              onChange={(event) => onChange({ includeLinks: event.target.checked })}
+              onChange={(event) =>
+                onChange({ includeLinks: event.target.checked })
+              }
             />
             Include typed links
           </label>
@@ -150,7 +169,12 @@ export function BundleWizard({ plan, wizard, busy, onChange, onNext }: Props) {
         </ul>
       )}
       <footer className="portability-card__footer">
-        <button type="button" className="portability-button" onClick={onNext} disabled={busy || problems.length > 0}>
+        <button
+          type="button"
+          className="portability-button"
+          onClick={onNext}
+          disabled={busy || problems.length > 0}
+        >
           Continue to preview
         </button>
       </footer>

@@ -28,8 +28,17 @@ export function EmptyAndFirstRun({
     (surface === "report" && counts.reports === 0);
   if (!spec || !isEmpty || dismissed.includes(spec.surface)) {
     return (
-      <V3Panel title="Ready" subtitle="This surface has content." kind="report" density="compact">
-        <p data-surface="empty-first-run" data-state="content" aria-label="Surface has content">
+      <V3Panel
+        title="Ready"
+        subtitle="This surface has content."
+        kind="report"
+        density="compact"
+      >
+        <p
+          data-surface="empty-first-run"
+          data-state="content"
+          aria-label="Surface has content"
+        >
           Nothing to set up here.
         </p>
       </V3Panel>
@@ -37,14 +46,22 @@ export function EmptyAndFirstRun({
   }
 
   return (
-    <V3Panel title={spec.title} subtitle={`Surface: ${spec.surface}`} kind="folder">
+    <V3Panel
+      title={spec.title}
+      subtitle={`Surface: ${spec.surface}`}
+      kind="folder"
+    >
       <div
         className="release-empty"
         data-surface="empty-first-run"
         data-surface-name={spec.surface}
         aria-label={`${spec.title} empty state`}
       >
-        <span className="release-empty__icon" data-icon={spec.icon} aria-hidden="true">
+        <span
+          className="release-empty__icon"
+          data-icon={spec.icon}
+          aria-hidden="true"
+        >
           {spec.icon}
         </span>
         <p className="release-empty__body">{spec.body}</p>

@@ -46,13 +46,13 @@ export class FocusManager {
       interruptions: 0,
       ended_at: 0,
     };
-    return this.current();
+    return this.currentSession as FocusSession;
   }
 
   private replace(changes: Partial<FocusSession>): FocusSession {
     if (!this.currentSession) throw new FocusError("No active focus session");
     this.currentSession = { ...this.currentSession, ...changes };
-    return this.current();
+    return this.currentSession as FocusSession;
   }
 
   pause(): FocusSession {
