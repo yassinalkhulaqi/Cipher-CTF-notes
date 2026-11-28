@@ -1,5 +1,10 @@
 import type { ReceiptView } from "../types";
-import { failedChecks, formatTimestamp, receiptVerdict, shortDigest } from "../pure";
+import {
+  failedChecks,
+  formatTimestamp,
+  receiptVerdict,
+  shortDigest,
+} from "../pure";
 
 interface Props {
   receipt: ReceiptView | null;
@@ -8,7 +13,10 @@ interface Props {
 
 export function VerificationReceiptView({ receipt, onArchive }: Props) {
   return (
-    <section className="portability-card portability-receipt" aria-label="Verification receipt">
+    <section
+      className="portability-card portability-receipt"
+      aria-label="Verification receipt"
+    >
       <header className="portability-card__header">
         <div>
           <h3>Verification receipt</h3>
@@ -16,7 +24,10 @@ export function VerificationReceiptView({ receipt, onArchive }: Props) {
             {receiptVerdict(receipt)}
           </p>
         </div>
-        <span className="portability-badge" data-tone={receipt?.ok ? "good" : "bad"}>
+        <span
+          className="portability-badge"
+          data-tone={receipt?.ok ? "good" : "bad"}
+        >
           {receipt?.status ?? "pending"}
         </span>
       </header>
@@ -49,7 +60,9 @@ export function VerificationReceiptView({ receipt, onArchive }: Props) {
                   {check.passed ? "PASS" : "FAIL"}
                 </span>
                 <span className="portability-check__name">{check.name}</span>
-                <span className="portability-check__detail">{check.detail}</span>
+                <span className="portability-check__detail">
+                  {check.detail}
+                </span>
                 <code className="portability-check__code">{check.code}</code>
               </li>
             ))}
@@ -74,11 +87,18 @@ export function VerificationReceiptView({ receipt, onArchive }: Props) {
           )}
         </>
       ) : (
-        <p className="portability-empty">Verify a bundle to generate its receipt.</p>
+        <p className="portability-empty">
+          Verify a bundle to generate its receipt.
+        </p>
       )}
 
       <footer className="portability-card__footer">
-        <button type="button" className="portability-button" onClick={onArchive} disabled={!receipt?.ok}>
+        <button
+          type="button"
+          className="portability-button"
+          onClick={onArchive}
+          disabled={!receipt?.ok}
+        >
           Archive receipt
         </button>
       </footer>

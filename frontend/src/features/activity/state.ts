@@ -72,7 +72,10 @@ export function initialActivityState(
   };
 }
 
-export function activityReducer(state: ActivityState, action: ActivityAction): ActivityState {
+export function activityReducer(
+  state: ActivityState,
+  action: ActivityAction,
+): ActivityState {
   switch (action.type) {
     case "loading":
       return { ...state, loading: action.value ?? true, error: "" };
@@ -83,7 +86,9 @@ export function activityReducer(state: ActivityState, action: ActivityAction): A
     case "chips":
       return { ...state, chips: [...action.value] };
     case "toggle-chip": {
-      const exists = state.chips.some((chip) => chip.token === action.value.token);
+      const exists = state.chips.some(
+        (chip) => chip.token === action.value.token,
+      );
       return {
         ...state,
         chips: exists
@@ -92,7 +97,10 @@ export function activityReducer(state: ActivityState, action: ActivityAction): A
       };
     }
     case "remove-chip":
-      return { ...state, chips: state.chips.filter((chip) => chip.token !== action.value) };
+      return {
+        ...state,
+        chips: state.chips.filter((chip) => chip.token !== action.value),
+      };
     case "clear-chips":
       return { ...state, chips: [], query: "" };
     case "density":
@@ -121,7 +129,9 @@ export function activityReducer(state: ActivityState, action: ActivityAction): A
 }
 
 export function effectiveQuery(state: ActivityState): string {
-  return [state.query.trim(), chipsToQuery(state.chips)].filter(Boolean).join(" ");
+  return [state.query.trim(), chipsToQuery(state.chips)]
+    .filter(Boolean)
+    .join(" ");
 }
 
 export function streamRequest(state: ActivityState): ActivityRequestBody {
@@ -138,7 +148,9 @@ export function digestRequest(state: ActivityState): ActivityRequestBody {
   return { period: state.period, generated_at: state.now };
 }
 
-export function retrospectiveRequest(state: ActivityState): ActivityRequestBody {
+export function retrospectiveRequest(
+  state: ActivityState,
+): ActivityRequestBody {
   const end = state.now || 1;
   return {
     start: Math.max(0, end - 30 * 24 * 60 * 60),

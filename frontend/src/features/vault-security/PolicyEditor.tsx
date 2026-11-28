@@ -3,7 +3,12 @@
 import { useState } from "react";
 
 import { V3Panel } from "../../v3/components/V3Panel";
-import { CONSENT_SCOPES, consentLabel, effectiveRules, redactionNotice } from "./pure";
+import {
+  CONSENT_SCOPES,
+  consentLabel,
+  effectiveRules,
+  redactionNotice,
+} from "./pure";
 import type { PolicyPreview, PolicyRule, PolicySnapshot } from "./types";
 
 export interface PolicyEditorProps {
@@ -69,12 +74,16 @@ export function PolicyEditor({
             <input
               aria-label="Rule id"
               value={rule.rule_id}
-              onChange={(event) => updateRule(index, { rule_id: event.target.value })}
+              onChange={(event) =>
+                updateRule(index, { rule_id: event.target.value })
+              }
             />
             <select
               aria-label="Pattern"
               value={rule.pattern}
-              onChange={(event) => updateRule(index, { pattern: event.target.value })}
+              onChange={(event) =>
+                updateRule(index, { pattern: event.target.value })
+              }
             >
               <option value="*">all patterns</option>
               {snapshot.patterns.map((pattern) => (
@@ -87,7 +96,9 @@ export function PolicyEditor({
               aria-label="Mode"
               value={rule.mode}
               onChange={(event) =>
-                updateRule(index, { mode: event.target.value as PolicyRule["mode"] })
+                updateRule(index, {
+                  mode: event.target.value as PolicyRule["mode"],
+                })
               }
             >
               <option value="mask">mask</option>
@@ -98,17 +109,23 @@ export function PolicyEditor({
               aria-label="Priority"
               type="number"
               value={rule.priority}
-              onChange={(event) => updateRule(index, { priority: Number(event.target.value) })}
+              onChange={(event) =>
+                updateRule(index, { priority: Number(event.target.value) })
+              }
             />
             <label className="vs-checkbox">
               <input
                 type="checkbox"
                 checked={rule.enabled}
-                onChange={(event) => updateRule(index, { enabled: event.target.checked })}
+                onChange={(event) =>
+                  updateRule(index, { enabled: event.target.checked })
+                }
               />
               <span>enabled</span>
             </label>
-            {!rule.effective && <span className="vs-locked">Pattern unavailable</span>}
+            {!rule.effective && (
+              <span className="vs-locked">Pattern unavailable</span>
+            )}
           </div>
         ))}
         <button
@@ -135,7 +152,10 @@ export function PolicyEditor({
             rows={3}
           />
         </label>
-        <select value={scope} onChange={(event) => setScope(event.target.value)}>
+        <select
+          value={scope}
+          onChange={(event) => setScope(event.target.value)}
+        >
           {CONSENT_SCOPES.map((item) => (
             <option value={item.value} key={item.value}>
               {item.label}

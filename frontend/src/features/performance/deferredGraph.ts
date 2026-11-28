@@ -89,6 +89,9 @@ export function scheduleDeferred(callback: () => void, delay = 0): () => void {
   return () => clearTimeout(handle);
 }
 
-export function graphNodeTask(id: string, cost = 1.1): DeferredTask<{ id: string }> {
+export function graphNodeTask(
+  id: string,
+  cost = 1.1,
+): DeferredTask<{ id: string }> {
   return { id, label: id, cost, payload: { id } };
 }

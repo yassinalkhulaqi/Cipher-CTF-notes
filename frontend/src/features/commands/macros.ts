@@ -28,9 +28,12 @@ export function expandMacro(
   return macro.steps.map((step) => {
     const missing = Array.from(
       new Set(
-        Array.from(step.arguments.values())
+        Object.values(step.arguments)
           .flatMap((value) =>
-            Array.from(value.matchAll(PLACEHOLDER), (match) => match[1]),
+            Array.from(
+              String(value).matchAll(PLACEHOLDER),
+              (match) => match[1],
+            ),
           )
           .filter((key) => !(key in values)),
       ),
