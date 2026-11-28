@@ -10,7 +10,11 @@ import type {
   RetrospectiveSummary,
 } from "./types";
 
-export const DENSITY_OPTIONS: DensityMode[] = ["compact", "comfortable", "detailed"];
+export const DENSITY_OPTIONS: DensityMode[] = [
+  "compact",
+  "comfortable",
+  "detailed",
+];
 export const PERIOD_OPTIONS: DigestPeriod[] = ["daily", "weekly"];
 
 const MINUTE = 60;
@@ -25,7 +29,9 @@ export function formatCount(value: number): string {
 export function truncate(value: string, length: number): string {
   if (length < 1) return "";
   const text = value.replace(/\s+/g, " ").trim();
-  return text.length <= length ? text : `${text.slice(0, Math.max(0, length - 1))}…`;
+  return text.length <= length
+    ? text
+    : `${text.slice(0, Math.max(0, length - 1))}…`;
 }
 
 export function shortRef(ref: string): string {
@@ -93,7 +99,8 @@ export function digestCardData(digest: Digest): {
   highlights: ActivityEntry[];
 } {
   const kinds = Object.keys(digest.counts).sort(
-    (left, right) => digest.counts[right] - digest.counts[left] || left.localeCompare(right),
+    (left, right) =>
+      digest.counts[right] - digest.counts[left] || left.localeCompare(right),
   );
   return {
     title: digest.label,

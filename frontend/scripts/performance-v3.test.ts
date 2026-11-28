@@ -1,9 +1,27 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { DeferredQueue, graphNodeTask, planChunks, projectTask, shouldDefer } from "../src/features/performance/deferredGraph";
-import { FRAME_BUDGET_MS, FrameMonitor, formatFrameStats, frameTone, percentile, summarizeFrames } from "../src/features/performance/frameMonitor";
-import { buildFreshness, freshnessLabel, freshnessTone, shouldRefresh } from "../src/features/performance/freshness";
+import {
+  DeferredQueue,
+  graphNodeTask,
+  planChunks,
+  projectTask,
+  shouldDefer,
+} from "../src/features/performance/deferredGraph";
+import {
+  FRAME_BUDGET_MS,
+  FrameMonitor,
+  formatFrameStats,
+  frameTone,
+  percentile,
+  summarizeFrames,
+} from "../src/features/performance/frameMonitor";
+import {
+  buildFreshness,
+  freshnessLabel,
+  freshnessTone,
+  shouldRefresh,
+} from "../src/features/performance/freshness";
 import {
   clamp,
   computeWindow,
@@ -62,16 +80,25 @@ test("virtual window handles empty and degenerate inputs", () => {
 test("slice window returns exactly the rendered rows", () => {
   const rows = Array.from({ length: 100 }, (_, index) => index);
   const window = computeWindow(100, 200, 100, 20, 2);
-  assert.deepEqual(sliceWindow(rows, window), rows.slice(window.start, window.end));
+  assert.deepEqual(
+    sliceWindow(rows, window),
+    rows.slice(window.start, window.end),
+  );
   assert.equal(sliceWindow(rows, window).length, window.rendered);
 });
 
 test("flatten tree respects expanded state and parent links", () => {
   const collapsed = flattenTree(tree, new Set());
-  assert.deepEqual(collapsed.map((row) => row.key), ["root-a", "root-b"]);
+  assert.deepEqual(
+    collapsed.map((row) => row.key),
+    ["root-a", "root-b"],
+  );
 
   const expanded = flattenTree(tree, new Set(["root-a"]));
-  assert.deepEqual(expanded.map((row) => row.key), ["root-a", "child-a", "child-b", "root-b"]);
+  assert.deepEqual(
+    expanded.map((row) => row.key),
+    ["root-a", "child-a", "child-b", "root-b"],
+  );
   assert.equal(expanded[1].parent, "root-a");
   assert.equal(expanded[1].depth, 1);
   assert.equal(expanded[1].expanded, false);
@@ -130,7 +157,9 @@ test("frame statistics and tones", () => {
 });
 
 test("deferred graph chunks respect per-frame cost", () => {
-  const tasks = Array.from({ length: 40 }, (_, index) => graphNodeTask(`node-${index}`, 3));
+  const tasks = Array.from({ length: 40 }, (_, index) =>
+    graphNodeTask(`node-${index}`, 3),
+  );
   const chunks = planChunks(tasks, 10);
   assert.equal(chunks.length, 14);
   assert.ok(chunks.every((chunk) => chunk.cost <= 9.001));

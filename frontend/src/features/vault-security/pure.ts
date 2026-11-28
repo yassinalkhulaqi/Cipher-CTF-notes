@@ -73,7 +73,10 @@ export function maskRecoveryCode(code: string): string {
 
 export function formatTimestamp(timestamp: number): string {
   if (!Number.isFinite(timestamp) || timestamp <= 0) return "unknown";
-  return new Date(timestamp * 1000).toISOString().slice(0, 19).replace("T", " ");
+  return new Date(timestamp * 1000)
+    .toISOString()
+    .slice(0, 19)
+    .replace("T", " ");
 }
 
 export interface PassphraseCheck {
@@ -81,7 +84,10 @@ export interface PassphraseCheck {
   reason: string;
 }
 
-export function checkPassphrase(value: string, confirmation = value): PassphraseCheck {
+export function checkPassphrase(
+  value: string,
+  confirmation = value,
+): PassphraseCheck {
   if (value.length < 12) {
     return { valid: false, reason: "Use at least 12 characters" };
   }
@@ -102,7 +108,11 @@ export interface WizardStep {
 
 export function wizardSteps(state: VaultState, codes: string[]): WizardStep[] {
   return [
-    { id: "confirm", label: "Confirm setup", complete: state !== "uninitialized" },
+    {
+      id: "confirm",
+      label: "Confirm setup",
+      complete: state !== "uninitialized",
+    },
     {
       id: "passphrase",
       label: "Choose a passphrase",
@@ -150,7 +160,10 @@ export interface AuditFilterState {
   limit: number;
 }
 
-export function filterAudit(entries: AuditEntry[], filter: AuditFilterState): AuditEntry[] {
+export function filterAudit(
+  entries: AuditEntry[],
+  filter: AuditFilterState,
+): AuditEntry[] {
   const action = filter.action.trim().toLowerCase();
   const outcome = filter.outcome.trim().toLowerCase();
   const actor = filter.actor.trim().toLowerCase();
@@ -162,7 +175,11 @@ export function filterAudit(entries: AuditEntry[], filter: AuditFilterState): Au
     .slice(0, limit);
 }
 
-export function auditCounts(list: AuditList): { success: number; denied: number; other: number } {
+export function auditCounts(list: AuditList): {
+  success: number;
+  denied: number;
+  other: number;
+} {
   let success = 0;
   let denied = 0;
   for (const entry of list.entries) {
@@ -183,10 +200,16 @@ export function effectiveRules(
       effective: rule.pattern === "*" || patterns.has(rule.pattern),
       precedence: rule.priority,
     }))
-    .sort((a, b) => b.precedence - a.precedence || a.rule_id.localeCompare(b.rule_id));
+    .sort(
+      (a, b) =>
+        b.precedence - a.precedence || a.rule_id.localeCompare(b.rule_id),
+    );
 }
 
-export function consentLabel(scope: ConsentScopeValue, granted: boolean): string {
+export function consentLabel(
+  scope: ConsentScopeValue,
+  granted: boolean,
+): string {
   return `${scope.label}: ${granted ? "granted" : "not granted"}`;
 }
 

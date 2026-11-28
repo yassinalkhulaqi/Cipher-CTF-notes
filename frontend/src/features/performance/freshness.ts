@@ -38,5 +38,8 @@ function round(value: number): number {
 }
 
 export function shouldRefresh(freshness: IndexFreshness, maxLag = 10): boolean {
-  return freshness.indexedGeneration < freshness.generation || freshness.lagSeconds > maxLag;
+  return (
+    freshness.indexedGeneration < freshness.generation ||
+    freshness.lagSeconds > maxLag
+  );
 }

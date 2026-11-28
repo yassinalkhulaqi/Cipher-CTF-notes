@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-import { DeferredQueue, graphNodeTask, scheduleDeferred, shouldDefer } from "./deferredGraph";
+import {
+  DeferredQueue,
+  graphNodeTask,
+  scheduleDeferred,
+  shouldDefer,
+} from "./deferredGraph";
 
 export interface DeferredGraphProps {
   nodes: readonly string[];
@@ -46,13 +51,24 @@ export function DeferredGraph({
 
   const isReady = ready && (!deferred || rendered.length >= nodes.length);
   return (
-    <div className="perf-deferred-graph" data-ready={isReady} data-deferred={deferred}>
+    <div
+      className="perf-deferred-graph"
+      data-ready={isReady}
+      data-deferred={deferred}
+    >
       {!isReady ? (
         <span>{emptyLabel}</span>
       ) : (
-        <div className="perf-deferred-graph__layer" aria-label="Deferred graph layer">
+        <div
+          className="perf-deferred-graph__layer"
+          aria-label="Deferred graph layer"
+        >
           {rendered.map((node) => (
-            <span className="perf-deferred-graph__node" key={node} data-node={node} />
+            <span
+              className="perf-deferred-graph__node"
+              key={node}
+              data-node={node}
+            />
           ))}
         </div>
       )}

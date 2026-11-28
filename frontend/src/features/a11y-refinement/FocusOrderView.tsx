@@ -10,7 +10,11 @@ export interface FocusOrderViewProps {
   onStep?: (action: string) => void;
 }
 
-export function FocusOrderView({ runs, focusOrder, onStep }: FocusOrderViewProps) {
+export function FocusOrderView({
+  runs,
+  focusOrder,
+  onStep,
+}: FocusOrderViewProps) {
   const blocked = runs.filter((run) => !run.passed);
   const focusIssues = runs.flatMap((run) =>
     run.findings.filter((item) => item.rule.startsWith("focus.")),
@@ -23,7 +27,8 @@ export function FocusOrderView({ runs, focusOrder, onStep }: FocusOrderViewProps
       density="compact"
     >
       <p className="a11y-refine__hint" id="a11y-refine-focus-hint">
-        Start at the skip link, then follow the ordered panes. Every step is reachable with Tab.
+        Start at the skip link, then follow the ordered panes. Every step is
+        reachable with Tab.
       </p>
       <ol
         className="a11y-refine__focus-list"
@@ -44,7 +49,10 @@ export function FocusOrderView({ runs, focusOrder, onStep }: FocusOrderViewProps
       {focusIssues.length > 0 && (
         <ul className="a11y-refine__issues" aria-label="Focus findings">
           {focusIssues.map((issue, index) => (
-            <li key={`${issue.rule}-${index}`} data-tone={findingTone(issue.severity)}>
+            <li
+              key={`${issue.rule}-${index}`}
+              data-tone={findingTone(issue.severity)}
+            >
               <strong>{issue.criterion}</strong> {issue.message}
             </li>
           ))}

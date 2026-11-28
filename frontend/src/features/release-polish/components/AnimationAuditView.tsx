@@ -2,7 +2,11 @@
 
 import { V3Panel, V3Stat } from "../../../v3/components/V3Panel";
 import { ANIMATION_AUDITS } from "../config";
-import { animationsWithInvalidTokens, auditAnimations, formatPercent } from "../pure";
+import {
+  animationsWithInvalidTokens,
+  auditAnimations,
+  formatPercent,
+} from "../pure";
 
 export interface AnimationAuditViewProps {
   reducedMotion: boolean;
@@ -24,7 +28,11 @@ export function AnimationAuditView({ reducedMotion }: AnimationAuditViewProps) {
         aria-label="Animation audit"
       >
         <div className="release-motion__stats" data-role="motion-stats">
-          <V3Stat label="Safe surfaces" value={`${summary.safe}/${summary.total}`} tone="good" />
+          <V3Stat
+            label="Safe surfaces"
+            value={`${summary.safe}/${summary.total}`}
+            tone="good"
+          />
           <V3Stat label="Coverage" value={formatPercent(summary.percent)} />
           <V3Stat
             label="Open items"
@@ -51,7 +59,13 @@ export function AnimationAuditView({ reducedMotion }: AnimationAuditViewProps) {
               <code>{audit.durationToken}</code>
               <span>{audit.surface}</span>
               <span>{audit.property}</span>
-              <span aria-label={audit.reducedMotionSafe ? "Reduced motion safe" : "Needs fallback"}>
+              <span
+                aria-label={
+                  audit.reducedMotionSafe
+                    ? "Reduced motion safe"
+                    : "Needs fallback"
+                }
+              >
                 {audit.reducedMotionSafe ? "safe" : "needs fallback"}
               </span>
             </li>
