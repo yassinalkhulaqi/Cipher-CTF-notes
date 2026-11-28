@@ -1,7 +1,12 @@
 /** Contrast automation helpers for the refined V3 surfaces. */
 
 import { contrastRatio, suggestedForeground } from "../../a11y/contrast";
-import type { ContrastFixView, ContrastPairView, ContrastReportView, WcagLevel } from "./types";
+import type {
+  ContrastFixView,
+  ContrastPairView,
+  ContrastReportView,
+  WcagLevel,
+} from "./types";
 
 const LIGHT = "#ffffff";
 const DARK = "#000000";
@@ -72,16 +77,22 @@ export function suggestFix(pair: ContrastPairView): ContrastFixView {
   };
 }
 
-export function buildContrastReport(pairs: ContrastPairView[], repair = true): ContrastReportView {
+export function buildContrastReport(
+  pairs: ContrastPairView[],
+  repair = true,
+): ContrastReportView {
   const failures = pairs.filter((pair) => !pair.passed);
   const fixes = repair ? failures.map(suggestFix) : [];
-  const score = pairs.length ? ((pairs.length - failures.length) / pairs.length) * 100 : 100;
+  const score = pairs.length
+    ? ((pairs.length - failures.length) / pairs.length) * 100
+    : 100;
   return {
     pairs,
     failures,
     fixes,
     suggestions: fixes.map(
-      (fix) => `${fix.name}: set foreground to ${fix.foreground} (${fix.after}:1)`,
+      (fix) =>
+        `${fix.name}: set foreground to ${fix.foreground} (${fix.after}:1)`,
     ),
     level: pairs[0]?.level ?? "AA",
     score: Math.round(score * 10) / 10,
@@ -112,7 +123,14 @@ export function applyFixToPairs(
   fix: ContrastFixView,
 ): ContrastPairView[] {
   return pairs.map((pair) =>
-    pair.name === fix.name ? { ...pair, foreground: fix.foreground, ratio: fix.after, passed: fix.after >= fix.required } : pair,
+    pair.name === fix.name
+      ? {
+          ...pair,
+          foreground: fix.foreground,
+          ratio: fix.after,
+          passed: fix.after >= fix.required,
+        }
+      : pair,
   );
 }
 
@@ -129,7 +147,8 @@ export function mergeThemeReports(
   const darkNames = new Set(failureNames(dark));
   const shared = [...lightNames].filter((name) => darkNames.has(name)).sort();
   return {
-    equivalent: lightNames.size === darkNames.size && shared.length === lightNames.size,
+    equivalent:
+      lightNames.size === darkNames.size && shared.length === lightNames.size,
     shared,
     score: Math.round(((light.score + dark.score) / 2) * 10) / 10,
     passed: light.passed && dark.passed,

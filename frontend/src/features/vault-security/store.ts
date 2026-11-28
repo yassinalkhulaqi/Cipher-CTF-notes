@@ -39,7 +39,8 @@ export const useVaultSecurityStore = create<VaultSecurityStore>((set) => ({
   hydrate: (status, posture) => set({ status, posture, error: "" }),
   setPolicy: (policy) => set({ policy }),
   setAudit: (audit) => set({ audit }),
-  setRecoveryCodes: (recoveryCodes) => set({ recoveryCodes: [...recoveryCodes] }),
+  setRecoveryCodes: (recoveryCodes) =>
+    set({ recoveryCodes: [...recoveryCodes] }),
   setBusy: (busy) => set({ busy }),
   setError: (message) => set({ error: safeErrorText(message), busy: false }),
   clearError: () => set({ error: "" }),

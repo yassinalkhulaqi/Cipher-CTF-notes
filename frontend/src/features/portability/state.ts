@@ -47,7 +47,14 @@ export function portabilityReducer(
     case "conflicts":
       return { ...state, conflicts: action.value };
     case "resolve":
-      return { ...state, conflicts: applyResolution(state.conflicts, action.ref, action.resolution) };
+      return {
+        ...state,
+        conflicts: applyResolution(
+          state.conflicts,
+          action.ref,
+          action.resolution,
+        ),
+      };
     case "vector":
       return { ...state, vector: action.value };
     case "progress":

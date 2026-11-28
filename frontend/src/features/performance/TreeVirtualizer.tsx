@@ -4,7 +4,12 @@ import { useMemo, useState } from "react";
 import type { UIEvent } from "react";
 
 import { SkeletonTree } from "./Skeletons";
-import { computeWindow, flattenTree, sliceWindow, toggleExpanded } from "./virtual";
+import {
+  computeWindow,
+  flattenTree,
+  sliceWindow,
+  toggleExpanded,
+} from "./virtual";
 import type { TreeSource } from "./types";
 
 export interface TreeVirtualizerProps {
@@ -29,7 +34,9 @@ export function TreeVirtualizer({
   className = "",
 }: TreeVirtualizerProps) {
   const [scrollTop, setScrollTop] = useState(0);
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set<string>());
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(
+    () => new Set<string>(),
+  );
   const rows = useMemo(() => flattenTree(roots, expanded), [roots, expanded]);
   const window = useMemo(
     () => computeWindow(rows.length, scrollTop, height, rowHeight, overscan),
@@ -49,8 +56,14 @@ export function TreeVirtualizer({
       onScroll={onScroll}
       data-testid="tree-virtualizer"
     >
-      <div className="perf-virtual__spacer" style={{ height: window.totalHeight }}>
-        <div className="perf-virtual__slice" style={{ transform: `translateY(${window.offsetTop}px)` }}>
+      <div
+        className="perf-virtual__spacer"
+        style={{ height: window.totalHeight }}
+      >
+        <div
+          className="perf-virtual__slice"
+          style={{ transform: `translateY(${window.offsetTop}px)` }}
+        >
           {visible.map((row) => (
             <button
               type="button"
@@ -60,7 +73,8 @@ export function TreeVirtualizer({
               data-kind={row.kind}
               style={{ height: rowHeight, paddingLeft: 8 + row.depth * 14 }}
               onClick={() => {
-                if (row.hasChildren) setExpanded((current) => toggleExpanded(current, row.key));
+                if (row.hasChildren)
+                  setExpanded((current) => toggleExpanded(current, row.key));
                 onSelect?.(row.key);
               }}
             >
@@ -68,7 +82,9 @@ export function TreeVirtualizer({
                 {row.hasChildren ? (row.expanded ? "▾" : "▸") : "·"}
               </span>
               <span className="perf-virtual__label">{row.label}</span>
-              {row.count > 0 && <span className="perf-virtual__count">{row.count}</span>}
+              {row.count > 0 && (
+                <span className="perf-virtual__count">{row.count}</span>
+              )}
             </button>
           ))}
         </div>

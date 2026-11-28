@@ -17,7 +17,9 @@
   font-size: var(--v3-font-md);
   padding: var(--v3-space-2) var(--v3-space-3);
   text-transform: capitalize;
-  transition: color var(--v3-motion-fast), border-color var(--v3-motion-fast);
+  transition:
+    color var(--v3-motion-fast),
+    border-color var(--v3-motion-fast);
 }
 
 .activity-tabs button[data-active="true"] {

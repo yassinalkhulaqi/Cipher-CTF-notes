@@ -11,7 +11,13 @@ export interface FilterChipsProps {
   onClear: () => void;
 }
 
-export function FilterChips({ chips, facets, validation, onChange, onClear }: FilterChipsProps) {
+export function FilterChips({
+  chips,
+  facets,
+  validation,
+  onChange,
+  onClear,
+}: FilterChipsProps) {
   const suggestions = [
     ...facetChips(facets, "kinds", 5),
     ...facetChips(facets, "actors", 3),
@@ -19,8 +25,14 @@ export function FilterChips({ chips, facets, validation, onChange, onClear }: Fi
   ];
   return (
     <div className="activity-filters">
-      <div className="activity-filters__active" role="group" aria-label="Active filters">
-        {chips.length === 0 && <span className="activity-filters__empty">No filters</span>}
+      <div
+        className="activity-filters__active"
+        role="group"
+        aria-label="Active filters"
+      >
+        {chips.length === 0 && (
+          <span className="activity-filters__empty">No filters</span>
+        )}
         {chips.map((chip) => (
           <button
             key={chip.token}
@@ -36,14 +48,24 @@ export function FilterChips({ chips, facets, validation, onChange, onClear }: Fi
           </button>
         ))}
         {chips.length > 0 && (
-          <button type="button" className="activity-filters__clear" onClick={onClear}>
+          <button
+            type="button"
+            className="activity-filters__clear"
+            onClick={onClear}
+          >
             Clear
           </button>
         )}
       </div>
-      <div className="activity-filters__suggestions" role="group" aria-label="Suggested filters">
+      <div
+        className="activity-filters__suggestions"
+        role="group"
+        aria-label="Suggested filters"
+      >
         {suggestions
-          .filter((chip) => !chips.some((active) => active.token === chip.token))
+          .filter(
+            (chip) => !chips.some((active) => active.token === chip.token),
+          )
           .map((chip) => (
             <button
               key={`suggestion-${chip.token}`}
