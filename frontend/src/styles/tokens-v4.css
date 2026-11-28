@@ -1,0 +1,220 @@
+/* RedScribe v4 design tokens.
+ *
+ * Every v4 feature imports this file and uses these variables; no feature
+ * redefines a token. Tokens cover spacing, type, elevation, semantic colors,
+ * focus rings, density modes, and motion durations.
+ */
+
+:root {
+  /* Palette — warm light */
+  --v4-bg: #f7f5f0;
+  --v4-surface: #ffffff;
+  --v4-surface-2: #f1eee7;
+  --v4-surface-3: #e8e3d9;
+  --v4-text: #23211d;
+  --v4-text-muted: #6d685e;
+  --v4-text-faint: #9a9488;
+  --v4-border: #ddd7cb;
+  --v4-border-strong: #c7bfb0;
+
+  /* Semantic colors */
+  --v4-accent: #b4532a;
+  --v4-accent-hover: #9c4523;
+  --v4-accent-soft: #f6e3d8;
+  --v4-success: #3f7d52;
+  --v4-success-soft: #dcefe2;
+  --v4-warning: #a87b1e;
+  --v4-warning-soft: #f7ebcd;
+  --v4-danger: #b23b3b;
+  --v4-danger-soft: #f7dede;
+  --v4-info: #3a6ea5;
+  --v4-info-soft: #dbe8f5;
+
+  /* Spacing scale (4px base) */
+  --v4-space-0: 0;
+  --v4-space-1: 4px;
+  --v4-space-2: 8px;
+  --v4-space-3: 12px;
+  --v4-space-4: 16px;
+  --v4-space-5: 20px;
+  --v4-space-6: 24px;
+  --v4-space-8: 32px;
+  --v4-space-10: 40px;
+  --v4-space-12: 48px;
+  --v4-space-16: 64px;
+
+  /* Radius */
+  --v4-radius-sm: 6px;
+  --v4-radius-md: 10px;
+  --v4-radius-lg: 16px;
+  --v4-radius-pill: 999px;
+
+  /* Type scale */
+  --v4-font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --v4-font-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", monospace;
+  --v4-text-xs: 11px;
+  --v4-text-sm: 13px;
+  --v4-text-md: 15px;
+  --v4-text-lg: 18px;
+  --v4-text-xl: 24px;
+  --v4-text-2xl: 32px;
+  --v4-leading-tight: 1.25;
+  --v4-leading-normal: 1.5;
+  --v4-leading-relaxed: 1.7;
+
+  /* Elevation */
+  --v4-shadow-sm: 0 1px 2px rgba(35, 33, 29, 0.08);
+  --v4-shadow-md: 0 4px 14px rgba(35, 33, 29, 0.12);
+  --v4-shadow-lg: 0 12px 36px rgba(35, 33, 29, 0.18);
+
+  /* Focus */
+  --v4-focus-color: var(--v4-accent);
+  --v4-focus-width: 2px;
+  --v4-focus-offset: 2px;
+
+  /* Motion */
+  --v4-duration-fast: 120ms;
+  --v4-duration-normal: 220ms;
+  --v4-duration-slow: 380ms;
+  --v4-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Layout */
+  --v4-header-h: 52px;
+  --v4-sidebar-w: 268px;
+  --v4-content-max: 1180px;
+  --v4-density-row: 36px;
+}
+
+:root[data-v4-theme="graphite"] {
+  --v4-bg: #15171a;
+  --v4-surface: #1d2024;
+  --v4-surface-2: #24282d;
+  --v4-surface-3: #2d3238;
+  --v4-text: #eef0f2;
+  --v4-text-muted: #aeb4bd;
+  --v4-text-faint: #7d848e;
+  --v4-border: #343a41;
+  --v4-border-strong: #454d56;
+  --v4-accent: #e08a5f;
+  --v4-accent-hover: #ef9c72;
+  --v4-accent-soft: #3a2a20;
+  --v4-success: #6cc08a;
+  --v4-success-soft: #20362a;
+  --v4-warning: #e2b75b;
+  --v4-warning-soft: #3a3220;
+  --v4-danger: #ef8585;
+  --v4-danger-soft: #3a2424;
+  --v4-info: #79aee6;
+  --v4-info-soft: #202f3e;
+  --v4-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --v4-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.55);
+  --v4-shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-v4-density="compact"] {
+  --v4-density-row: 28px;
+  --v4-space-4: 12px;
+  --v4-space-6: 18px;
+}
+
+:root[data-v4-density="comfortable"] {
+  --v4-density-row: 44px;
+  --v4-space-4: 20px;
+  --v4-space-6: 30px;
+}
+
+.v4-focus-ring:focus-visible {
+  outline: var(--v4-focus-width) solid var(--v4-focus-color);
+  outline-offset: var(--v4-focus-offset);
+}
+
+.v4-panel {
+  background: var(--v4-surface);
+  border: 1px solid var(--v4-border);
+  border-radius: var(--v4-radius-md);
+  box-shadow: var(--v4-shadow-sm);
+}
+
+.v4-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--v4-space-1);
+  padding: 2px var(--v4-space-2);
+  border-radius: var(--v4-radius-pill);
+  background: var(--v4-surface-2);
+  color: var(--v4-text-muted);
+  font-size: var(--v4-text-xs);
+  border: 1px solid var(--v4-border);
+}
+
+.v4-chip--accent {
+  background: var(--v4-accent-soft);
+  color: var(--v4-accent);
+  border-color: transparent;
+}
+
+.v4-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--v4-space-2);
+  min-height: 32px;
+  padding: 0 var(--v4-space-4);
+  border-radius: var(--v4-radius-sm);
+  border: 1px solid var(--v4-border);
+  background: var(--v4-surface);
+  color: var(--v4-text);
+  font: inherit;
+  font-size: var(--v4-text-sm);
+  cursor: pointer;
+  transition: background var(--v4-duration-fast) var(--v4-ease);
+}
+
+.v4-btn:hover {
+  background: var(--v4-surface-2);
+}
+
+.v4-btn--primary {
+  background: var(--v4-accent);
+  border-color: var(--v4-accent);
+  color: #fff;
+}
+
+.v4-btn--primary:hover {
+  background: var(--v4-accent-hover);
+}
+
+.v4-scroll {
+  overflow: auto;
+  scrollbar-color: var(--v4-border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.v4-empty {
+  display: grid;
+  place-items: center;
+  gap: var(--v4-space-3);
+  padding: var(--v4-space-12) var(--v4-space-6);
+  color: var(--v4-text-muted);
+  text-align: center;
+}
+
+.v4-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --v4-duration-fast: 0ms;
+    --v4-duration-normal: 0ms;
+    --v4-duration-slow: 0ms;
+  }
+}

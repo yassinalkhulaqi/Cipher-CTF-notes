@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { V3Panel, V3Stat } from "../../v3/components/V3Panel";
-import { groupHitsByCluster } from "../clusters";
-import { createSearchIntelClient } from "../client";
-import { toggleFacetValue } from "../facets";
-import { formatCount } from "../format";
-import { completeQuery, parseQueryV2, serializeQueryV2 } from "../query";
+import { groupHitsByCluster } from "./clusters";
+import { createSearchIntelClient } from "./client";
+import { toggleFacetValue } from "./facets";
+import { formatCount } from "./format";
+import { completeQuery, parseQueryV2, serializeQueryV2 } from "./query";
 import type {
   ClusterGroupV2,
   PivotContextV2,
@@ -16,7 +16,7 @@ import type {
   SavedSearchDraftV2,
   SavedSearchV2,
   SearchResponseV2,
-} from "../types";
+} from "./types";
 import { ClusterGroups } from "./components/ClusterGroups";
 import { FacetSidebar } from "./components/FacetSidebar";
 import { PivotChips } from "./components/PivotChips";

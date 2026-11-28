@@ -26,7 +26,11 @@ export function OnboardingFlow({
       subtitle={`${progress.done} of ${progress.total} steps complete`}
       kind="note"
     >
-      <div className="release-onboarding" data-surface="onboarding-flow" aria-label="Onboarding">
+      <div
+        className="release-onboarding"
+        data-surface="onboarding-flow"
+        aria-label="Onboarding"
+      >
         <ol className="release-onboarding__steps" data-role="step-list">
           {steps.map((step, index) => {
             const done = completed.includes(step.id);
@@ -59,11 +63,16 @@ export function OnboardingFlow({
             );
           })}
         </ol>
-        <footer className="release-onboarding__footer" data-role="onboarding-footer">
+        <footer
+          className="release-onboarding__footer"
+          data-role="onboarding-footer"
+        >
           <span data-role="progress" aria-live="polite">
             Required {progress.requiredDone}/{progress.required}
           </span>
-          <span data-role="next-step">{active?.title ?? "All required steps complete"}</span>
+          <span data-role="next-step">
+            {active?.title ?? "All required steps complete"}
+          </span>
           <button
             aria-label="Skip optional onboarding steps"
             className="release-v3-focusable"
